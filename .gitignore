@@ -1,0 +1,61 @@
+# --- Secrets ---
+.env
+.env.*
+!.env.example
+
+# --- Local databases ---
+*.db
+*.sqlite
+*.sqlite3
+
+# --- Python ---
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+
+# --- Node / frontend build ---
+node_modules/
+dist/
+dist-ssr/
+frontend/dist/
+frontend/build/
+.vite/
+
+# --- Logs and generated debug output ---
+*.log
+npm-debug.log*
+
+# --- Test artifacts ---
+frontend/playwright-report/
+frontend/test-results/
+frontend/trace_check/
+coverage/
+.coverage
+
+# --- Editor / OS ---
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Local test data
+login*.json
+register*.json
+test-results/
+
+
+# Database backups
+backend/migrations/backup-*.sql
+
+backend/migrations/backup-*.sql
+backend/migrations/backup-*.sql
+backend/migrations/backup-*.sql

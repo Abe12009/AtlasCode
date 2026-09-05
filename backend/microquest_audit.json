@@ -1,0 +1,2944 @@
+[
+  {
+    "lesson_id": 1,
+    "slug": "what-is-programming",
+    "order": 1,
+    "title_en": "What Is Programming?",
+    "module_id": 1,
+    "module_title": "Getting Started",
+    "course_id": 1,
+    "course_title": "Python Foundations",
+    "difficulty": "beginner",
+    "estimated_minutes": 30,
+    "n_exercises": 3,
+    "exercise_types": [
+      "code_writing",
+      "prediction"
+    ],
+    "exercise_ids": [
+      1,
+      2,
+      3
+    ],
+    "n_reading_blocks": 3,
+    "already_microquest": false,
+    "single_exercise": false,
+    "suggested_blueprint": null
+  },
+  {
+    "lesson_id": 2,
+    "slug": "variables-and-values",
+    "order": 2,
+    "title_en": "Variables and Values",
+    "module_id": 1,
+    "module_title": "Getting Started",
+    "course_id": 1,
+    "course_title": "Python Foundations",
+    "difficulty": "beginner",
+    "estimated_minutes": 30,
+    "n_exercises": 2,
+    "exercise_types": [
+      "code_writing",
+      "fill_blank"
+    ],
+    "exercise_ids": [
+      4,
+      5
+    ],
+    "n_reading_blocks": 3,
+    "already_microquest": false,
+    "single_exercise": false,
+    "suggested_blueprint": null
+  },
+  {
+    "lesson_id": 3,
+    "slug": "data-types",
+    "order": 3,
+    "title_en": "Data Types",
+    "module_id": 1,
+    "module_title": "Getting Started",
+    "course_id": 1,
+    "course_title": "Python Foundations",
+    "difficulty": "beginner",
+    "estimated_minutes": 30,
+    "n_exercises": 2,
+    "exercise_types": [
+      "multiple_choice",
+      "prediction"
+    ],
+    "exercise_ids": [
+      6,
+      7
+    ],
+    "n_reading_blocks": 3,
+    "already_microquest": false,
+    "single_exercise": false,
+    "suggested_blueprint": null
+  },
+  {
+    "lesson_id": 4,
+    "slug": "operators-and-expressions",
+    "order": 4,
+    "title_en": "Operators and Expressions",
+    "module_id": 1,
+    "module_title": "Getting Started",
+    "course_id": 1,
+    "course_title": "Python Foundations",
+    "difficulty": "beginner",
+    "estimated_minutes": 30,
+    "n_exercises": 2,
+    "exercise_types": [
+      "code_writing",
+      "multiple_choice"
+    ],
+    "exercise_ids": [
+      8,
+      9
+    ],
+    "n_reading_blocks": 3,
+    "already_microquest": false,
+    "single_exercise": false,
+    "suggested_blueprint": null
+  },
+  {
+    "lesson_id": 5,
+    "slug": "user-input-output",
+    "order": 5,
+    "title_en": "User Input and Output",
+    "module_id": 1,
+    "module_title": "Getting Started",
+    "course_id": 1,
+    "course_title": "Python Foundations",
+    "difficulty": "beginner",
+    "estimated_minutes": 35,
+    "n_exercises": 2,
+    "exercise_types": [
+      "code_writing",
+      "multiple_choice"
+    ],
+    "exercise_ids": [
+      10,
+      11
+    ],
+    "n_reading_blocks": 3,
+    "already_microquest": false,
+    "single_exercise": false,
+    "suggested_blueprint": null
+  },
+  {
+    "lesson_id": 6,
+    "slug": "conditions",
+    "order": 1,
+    "title_en": "Conditions",
+    "module_id": 2,
+    "module_title": "Control Flow",
+    "course_id": 1,
+    "course_title": "Python Foundations",
+    "difficulty": "beginner",
+    "estimated_minutes": 35,
+    "n_exercises": 2,
+    "exercise_types": [
+      "code_writing",
+      "debugging"
+    ],
+    "exercise_ids": [
+      12,
+      13
+    ],
+    "n_reading_blocks": 3,
+    "already_microquest": false,
+    "single_exercise": false,
+    "suggested_blueprint": null
+  },
+  {
+    "lesson_id": 7,
+    "slug": "loops",
+    "order": 2,
+    "title_en": "Loops",
+    "module_id": 2,
+    "module_title": "Control Flow",
+    "course_id": 1,
+    "course_title": "Python Foundations",
+    "difficulty": "beginner",
+    "estimated_minutes": 35,
+    "n_exercises": 2,
+    "exercise_types": [
+      "code_writing",
+      "visual_programming"
+    ],
+    "exercise_ids": [
+      14,
+      15
+    ],
+    "n_reading_blocks": 3,
+    "already_microquest": false,
+    "single_exercise": false,
+    "suggested_blueprint": null
+  },
+  {
+    "lesson_id": 8,
+    "slug": "loop-control",
+    "order": 3,
+    "title_en": "Loop Control",
+    "module_id": 2,
+    "module_title": "Control Flow",
+    "course_id": 1,
+    "course_title": "Python Foundations",
+    "difficulty": "beginner",
+    "estimated_minutes": 35,
+    "n_exercises": 2,
+    "exercise_types": [
+      "code_writing",
+      "ordering"
+    ],
+    "exercise_ids": [
+      16,
+      17
+    ],
+    "n_reading_blocks": 3,
+    "already_microquest": false,
+    "single_exercise": false,
+    "suggested_blueprint": null
+  },
+  {
+    "lesson_id": 9,
+    "slug": "problem-solving-control-flow",
+    "order": 4,
+    "title_en": "Problem Solving with Control Flow",
+    "module_id": 2,
+    "module_title": "Control Flow",
+    "course_id": 1,
+    "course_title": "Python Foundations",
+    "difficulty": "intermediate",
+    "estimated_minutes": 40,
+    "n_exercises": 1,
+    "exercise_types": [
+      "code_writing"
+    ],
+    "exercise_ids": [
+      18
+    ],
+    "n_reading_blocks": 6,
+    "already_microquest": true,
+    "single_exercise": true,
+    "suggested_blueprint": "order_steps"
+  },
+  {
+    "lesson_id": 10,
+    "slug": "functions",
+    "order": 1,
+    "title_en": "Functions",
+    "module_id": 3,
+    "module_title": "Functions",
+    "course_id": 1,
+    "course_title": "Python Foundations",
+    "difficulty": "beginner",
+    "estimated_minutes": 35,
+    "n_exercises": 2,
+    "exercise_types": [
+      "code_writing",
+      "visual_programming"
+    ],
+    "exercise_ids": [
+      19,
+      20
+    ],
+    "n_reading_blocks": 3,
+    "already_microquest": false,
+    "single_exercise": false,
+    "suggested_blueprint": null
+  },
+  {
+    "lesson_id": 11,
+    "slug": "function-parameters",
+    "order": 2,
+    "title_en": "Function Parameters",
+    "module_id": 3,
+    "module_title": "Functions",
+    "course_id": 1,
+    "course_title": "Python Foundations",
+    "difficulty": "beginner",
+    "estimated_minutes": 35,
+    "n_exercises": 1,
+    "exercise_types": [
+      "code_writing"
+    ],
+    "exercise_ids": [
+      21
+    ],
+    "n_reading_blocks": 3,
+    "already_microquest": false,
+    "single_exercise": true,
+    "suggested_blueprint": "match_pairs"
+  },
+  {
+    "lesson_id": 12,
+    "slug": "scope-and-function-design",
+    "order": 3,
+    "title_en": "Scope and Function Design",
+    "module_id": 3,
+    "module_title": "Functions",
+    "course_id": 1,
+    "course_title": "Python Foundations",
+    "difficulty": "intermediate",
+    "estimated_minutes": 35,
+    "n_exercises": 1,
+    "exercise_types": [
+      "prediction"
+    ],
+    "exercise_ids": [
+      22
+    ],
+    "n_reading_blocks": 6,
+    "already_microquest": true,
+    "single_exercise": true,
+    "suggested_blueprint": "match_pairs"
+  },
+  {
+    "lesson_id": 13,
+    "slug": "decomposition-problem-solving",
+    "order": 4,
+    "title_en": "Decomposition and Problem Solving",
+    "module_id": 3,
+    "module_title": "Functions",
+    "course_id": 1,
+    "course_title": "Python Foundations",
+    "difficulty": "intermediate",
+    "estimated_minutes": 40,
+    "n_exercises": 1,
+    "exercise_types": [
+      "code_writing"
+    ],
+    "exercise_ids": [
+      23
+    ],
+    "n_reading_blocks": 3,
+    "already_microquest": false,
+    "single_exercise": true,
+    "suggested_blueprint": "match_pairs"
+  },
+  {
+    "lesson_id": 14,
+    "slug": "lists",
+    "order": 1,
+    "title_en": "Lists",
+    "module_id": 4,
+    "module_title": "Data Structures",
+    "course_id": 1,
+    "course_title": "Python Foundations",
+    "difficulty": "beginner",
+    "estimated_minutes": 35,
+    "n_exercises": 2,
+    "exercise_types": [
+      "code_writing",
+      "multiple_choice"
+    ],
+    "exercise_ids": [
+      24,
+      25
+    ],
+    "n_reading_blocks": 3,
+    "already_microquest": false,
+    "single_exercise": false,
+    "suggested_blueprint": null
+  },
+  {
+    "lesson_id": 15,
+    "slug": "tuples-and-sets",
+    "order": 2,
+    "title_en": "Tuples and Sets",
+    "module_id": 4,
+    "module_title": "Data Structures",
+    "course_id": 1,
+    "course_title": "Python Foundations",
+    "difficulty": "beginner",
+    "estimated_minutes": 35,
+    "n_exercises": 1,
+    "exercise_types": [
+      "fill_blank"
+    ],
+    "exercise_ids": [
+      26
+    ],
+    "n_reading_blocks": 3,
+    "already_microquest": false,
+    "single_exercise": true,
+    "suggested_blueprint": "match_pairs"
+  },
+  {
+    "lesson_id": 16,
+    "slug": "dictionaries",
+    "order": 3,
+    "title_en": "Dictionaries",
+    "module_id": 4,
+    "module_title": "Data Structures",
+    "course_id": 1,
+    "course_title": "Python Foundations",
+    "difficulty": "beginner",
+    "estimated_minutes": 35,
+    "n_exercises": 1,
+    "exercise_types": [
+      "code_writing"
+    ],
+    "exercise_ids": [
+      27
+    ],
+    "n_reading_blocks": 3,
+    "already_microquest": false,
+    "single_exercise": true,
+    "suggested_blueprint": "match_pairs"
+  },
+  {
+    "lesson_id": 17,
+    "slug": "data-structures-real-problems",
+    "order": 4,
+    "title_en": "Data Structures in Real Problems",
+    "module_id": 4,
+    "module_title": "Data Structures",
+    "course_id": 1,
+    "course_title": "Python Foundations",
+    "difficulty": "intermediate",
+    "estimated_minutes": 40,
+    "n_exercises": 1,
+    "exercise_types": [
+      "code_writing"
+    ],
+    "exercise_ids": [
+      28
+    ],
+    "n_reading_blocks": 3,
+    "already_microquest": false,
+    "single_exercise": true,
+    "suggested_blueprint": "match_pairs"
+  },
+  {
+    "lesson_id": 18,
+    "slug": "how-web-works",
+    "order": 1,
+    "title_en": "How the Web Works",
+    "module_id": 5,
+    "module_title": "HTML Basics",
+    "course_id": 2,
+    "course_title": "Web Fundamentals",
+    "difficulty": "beginner",
+    "estimated_minutes": 30,
+    "n_exercises": 1,
+    "exercise_types": [
+      "multiple_choice"
+    ],
+    "exercise_ids": [
+      29
+    ],
+    "n_reading_blocks": 3,
+    "already_microquest": false,
+    "single_exercise": true,
+    "suggested_blueprint": "match_pairs"
+  },
+  {
+    "lesson_id": 19,
+    "slug": "html-structure",
+    "order": 2,
+    "title_en": "HTML Structure",
+    "module_id": 5,
+    "module_title": "HTML Basics",
+    "course_id": 2,
+    "course_title": "Web Fundamentals",
+    "difficulty": "beginner",
+    "estimated_minutes": 35,
+    "n_exercises": 1,
+    "exercise_types": [
+      "code_writing"
+    ],
+    "exercise_ids": [
+      30
+    ],
+    "n_reading_blocks": 3,
+    "already_microquest": false,
+    "single_exercise": true,
+    "suggested_blueprint": "match_pairs"
+  },
+  {
+    "lesson_id": 20,
+    "slug": "text-links-images",
+    "order": 3,
+    "title_en": "Text, Links and Images",
+    "module_id": 5,
+    "module_title": "HTML Basics",
+    "course_id": 2,
+    "course_title": "Web Fundamentals",
+    "difficulty": "beginner",
+    "estimated_minutes": 35,
+    "n_exercises": 1,
+    "exercise_types": [
+      "fill_blank"
+    ],
+    "exercise_ids": [
+      31
+    ],
+    "n_reading_blocks": 3,
+    "already_microquest": false,
+    "single_exercise": true,
+    "suggested_blueprint": "match_pairs"
+  },
+  {
+    "lesson_id": 21,
+    "slug": "lists-tables-forms",
+    "order": 4,
+    "title_en": "Lists, Tables and Forms",
+    "module_id": 5,
+    "module_title": "HTML Basics",
+    "course_id": 2,
+    "course_title": "Web Fundamentals",
+    "difficulty": "beginner",
+    "estimated_minutes": 40,
+    "n_exercises": 1,
+    "exercise_types": [
+      "code_writing"
+    ],
+    "exercise_ids": [
+      32
+    ],
+    "n_reading_blocks": 3,
+    "already_microquest": false,
+    "single_exercise": true,
+    "suggested_blueprint": "match_pairs"
+  },
+  {
+    "lesson_id": 22,
+    "slug": "css-fundamentals",
+    "order": 1,
+    "title_en": "CSS Fundamentals",
+    "module_id": 6,
+    "module_title": "CSS Basics",
+    "course_id": 2,
+    "course_title": "Web Fundamentals",
+    "difficulty": "beginner",
+    "estimated_minutes": 35,
+    "n_exercises": 1,
+    "exercise_types": [
+      "prediction"
+    ],
+    "exercise_ids": [
+      33
+    ],
+    "n_reading_blocks": 3,
+    "already_microquest": false,
+    "single_exercise": true,
+    "suggested_blueprint": "match_pairs"
+  },
+  {
+    "lesson_id": 23,
+    "slug": "selectors-properties",
+    "order": 2,
+    "title_en": "Selectors and Properties",
+    "module_id": 6,
+    "module_title": "CSS Basics",
+    "course_id": 2,
+    "course_title": "Web Fundamentals",
+    "difficulty": "beginner",
+    "estimated_minutes": 35,
+    "n_exercises": 1,
+    "exercise_types": [
+      "multiple_choice"
+    ],
+    "exercise_ids": [
+      34
+    ],
+    "n_reading_blocks": 3,
+    "already_microquest": false,
+    "single_exercise": true,
+    "suggested_blueprint": "match_pairs"
+  },
+  {
+    "lesson_id": 24,
+    "slug": "flexbox-layout",
+    "order": 3,
+    "title_en": "Layout with Flexbox",
+    "module_id": 6,
+    "module_title": "CSS Basics",
+    "course_id": 2,
+    "course_title": "Web Fundamentals",
+    "difficulty": "intermediate",
+    "estimated_minutes": 40,
+    "n_exercises": 1,
+    "exercise_types": [
+      "code_writing"
+    ],
+    "exercise_ids": [
+      35
+    ],
+    "n_reading_blocks": 3,
+    "already_microquest": false,
+    "single_exercise": true,
+    "suggested_blueprint": "match_pairs"
+  },
+  {
+    "lesson_id": 25,
+    "slug": "responsive-design",
+    "order": 4,
+    "title_en": "Responsive Web Design",
+    "module_id": 6,
+    "module_title": "CSS Basics",
+    "course_id": 2,
+    "course_title": "Web Fundamentals",
+    "difficulty": "intermediate",
+    "estimated_minutes": 40,
+    "n_exercises": 1,
+    "exercise_types": [
+      "fill_blank"
+    ],
+    "exercise_ids": [
+      36
+    ],
+    "n_reading_blocks": 3,
+    "already_microquest": false,
+    "single_exercise": true,
+    "suggested_blueprint": "match_pairs"
+  },
+  {
+    "lesson_id": 26,
+    "slug": "databases-and-tables",
+    "order": 1,
+    "title_en": "Databases and Tables",
+    "module_id": 7,
+    "module_title": "SQL Fundamentals",
+    "course_id": 3,
+    "course_title": "SQL & Databases",
+    "difficulty": "beginner",
+    "estimated_minutes": 35,
+    "n_exercises": 1,
+    "exercise_types": [
+      "multiple_choice"
+    ],
+    "exercise_ids": [
+      37
+    ],
+    "n_reading_blocks": 3,
+    "already_microquest": false,
+    "single_exercise": true,
+    "suggested_blueprint": "match_pairs"
+  },
+  {
+    "lesson_id": 27,
+    "slug": "select-and-filtering",
+    "order": 2,
+    "title_en": "SELECT and Filtering",
+    "module_id": 7,
+    "module_title": "SQL Fundamentals",
+    "course_id": 3,
+    "course_title": "SQL & Databases",
+    "difficulty": "beginner",
+    "estimated_minutes": 35,
+    "n_exercises": 1,
+    "exercise_types": [
+      "code_writing"
+    ],
+    "exercise_ids": [
+      38
+    ],
+    "n_reading_blocks": 3,
+    "already_microquest": false,
+    "single_exercise": true,
+    "suggested_blueprint": "match_pairs"
+  },
+  {
+    "lesson_id": 28,
+    "slug": "insert-update-delete",
+    "order": 3,
+    "title_en": "INSERT, UPDATE and DELETE",
+    "module_id": 7,
+    "module_title": "SQL Fundamentals",
+    "course_id": 3,
+    "course_title": "SQL & Databases",
+    "difficulty": "beginner",
+    "estimated_minutes": 35,
+    "n_exercises": 1,
+    "exercise_types": [
+      "prediction"
+    ],
+    "exercise_ids": [
+      39
+    ],
+    "n_reading_blocks": 3,
+    "already_microquest": false,
+    "single_exercise": true,
+    "suggested_blueprint": "match_pairs"
+  },
+  {
+    "lesson_id": 29,
+    "slug": "sorting-grouping-aggregation",
+    "order": 4,
+    "title_en": "Sorting, Grouping and Aggregation",
+    "module_id": 7,
+    "module_title": "SQL Fundamentals",
+    "course_id": 3,
+    "course_title": "SQL & Databases",
+    "difficulty": "intermediate",
+    "estimated_minutes": 40,
+    "n_exercises": 1,
+    "exercise_types": [
+      "code_writing"
+    ],
+    "exercise_ids": [
+      40
+    ],
+    "n_reading_blocks": 3,
+    "already_microquest": false,
+    "single_exercise": true,
+    "suggested_blueprint": "match_pairs"
+  },
+  {
+    "lesson_id": 30,
+    "slug": "joins-relational-thinking",
+    "order": 5,
+    "title_en": "JOINs and Relational Thinking",
+    "module_id": 7,
+    "module_title": "SQL Fundamentals",
+    "course_id": 3,
+    "course_title": "SQL & Databases",
+    "difficulty": "intermediate",
+    "estimated_minutes": 45,
+    "n_exercises": 1,
+    "exercise_types": [
+      "multiple_choice"
+    ],
+    "exercise_ids": [
+      41
+    ],
+    "n_reading_blocks": 3,
+    "already_microquest": false,
+    "single_exercise": true,
+    "suggested_blueprint": "match_pairs"
+  },
+  {
+    "lesson_id": 31,
+    "slug": "version-control-git",
+    "order": 1,
+    "title_en": "Version Control and Git",
+    "module_id": 8,
+    "module_title": "Git & GitHub",
+    "course_id": 4,
+    "course_title": "Git & GitHub",
+    "difficulty": "beginner",
+    "estimated_minutes": 35,
+    "n_exercises": 1,
+    "exercise_types": [
+      "multiple_choice"
+    ],
+    "exercise_ids": [
+      42
+    ],
+    "n_reading_blocks": 3,
+    "already_microquest": false,
+    "single_exercise": true,
+    "suggested_blueprint": "match_pairs"
+  },
+  {
+    "lesson_id": 32,
+    "slug": "commits-and-history",
+    "order": 2,
+    "title_en": "Commits and History",
+    "module_id": 8,
+    "module_title": "Git & GitHub",
+    "course_id": 4,
+    "course_title": "Git & GitHub",
+    "difficulty": "beginner",
+    "estimated_minutes": 35,
+    "n_exercises": 1,
+    "exercise_types": [
+      "ordering"
+    ],
+    "exercise_ids": [
+      43
+    ],
+    "n_reading_blocks": 3,
+    "already_microquest": false,
+    "single_exercise": true,
+    "suggested_blueprint": "match_pairs"
+  },
+  {
+    "lesson_id": 33,
+    "slug": "branches-and-merging",
+    "order": 3,
+    "title_en": "Branches and Merging",
+    "module_id": 8,
+    "module_title": "Git & GitHub",
+    "course_id": 4,
+    "course_title": "Git & GitHub",
+    "difficulty": "intermediate",
+    "estimated_minutes": 40,
+    "n_exercises": 1,
+    "exercise_types": [
+      "debugging"
+    ],
+    "exercise_ids": [
+      44
+    ],
+    "n_reading_blocks": 3,
+    "already_microquest": false,
+    "single_exercise": true,
+    "suggested_blueprint": "spot_the_bug"
+  },
+  {
+    "lesson_id": 34,
+    "slug": "github-remote-repos",
+    "order": 4,
+    "title_en": "GitHub and Remote Repositories",
+    "module_id": 8,
+    "module_title": "Git & GitHub",
+    "course_id": 4,
+    "course_title": "Git & GitHub",
+    "difficulty": "beginner",
+    "estimated_minutes": 35,
+    "n_exercises": 1,
+    "exercise_types": [
+      "code_writing"
+    ],
+    "exercise_ids": [
+      45
+    ],
+    "n_reading_blocks": 3,
+    "already_microquest": false,
+    "single_exercise": true,
+    "suggested_blueprint": "match_pairs"
+  },
+  {
+    "lesson_id": 35,
+    "slug": "collaboration-pull-requests",
+    "order": 5,
+    "title_en": "Collaboration and Pull Requests",
+    "module_id": 8,
+    "module_title": "Git & GitHub",
+    "course_id": 4,
+    "course_title": "Git & GitHub",
+    "difficulty": "intermediate",
+    "estimated_minutes": 40,
+    "n_exercises": 1,
+    "exercise_types": [
+      "prediction"
+    ],
+    "exercise_ids": [
+      46
+    ],
+    "n_reading_blocks": 3,
+    "already_microquest": false,
+    "single_exercise": true,
+    "suggested_blueprint": "match_pairs"
+  },
+  {
+    "lesson_id": 36,
+    "slug": "what-is-algorithm",
+    "order": 1,
+    "title_en": "What Is an Algorithm?",
+    "module_id": 9,
+    "module_title": "Algorithms",
+    "course_id": 5,
+    "course_title": "CS Fundamentals",
+    "difficulty": "beginner",
+    "estimated_minutes": 35,
+    "n_exercises": 1,
+    "exercise_types": [
+      "multiple_choice"
+    ],
+    "exercise_ids": [
+      47
+    ],
+    "n_reading_blocks": 6,
+    "already_microquest": true,
+    "single_exercise": true,
+    "suggested_blueprint": "match_pairs"
+  },
+  {
+    "lesson_id": 37,
+    "slug": "complexity-big-o",
+    "order": 2,
+    "title_en": "Complexity and Big-O",
+    "module_id": 9,
+    "module_title": "Algorithms",
+    "course_id": 5,
+    "course_title": "CS Fundamentals",
+    "difficulty": "intermediate",
+    "estimated_minutes": 40,
+    "n_exercises": 1,
+    "exercise_types": [
+      "code_writing"
+    ],
+    "exercise_ids": [
+      48
+    ],
+    "n_reading_blocks": 3,
+    "already_microquest": false,
+    "single_exercise": true,
+    "suggested_blueprint": "match_pairs"
+  },
+  {
+    "lesson_id": 38,
+    "slug": "searching-algorithms",
+    "order": 3,
+    "title_en": "Searching Algorithms",
+    "module_id": 9,
+    "module_title": "Algorithms",
+    "course_id": 5,
+    "course_title": "CS Fundamentals",
+    "difficulty": "intermediate",
+    "estimated_minutes": 40,
+    "n_exercises": 1,
+    "exercise_types": [
+      "debugging"
+    ],
+    "exercise_ids": [
+      49
+    ],
+    "n_reading_blocks": 6,
+    "already_microquest": true,
+    "single_exercise": true,
+    "suggested_blueprint": "spot_the_bug"
+  },
+  {
+    "lesson_id": 39,
+    "slug": "sorting-algorithms",
+    "order": 4,
+    "title_en": "Sorting Algorithms",
+    "module_id": 9,
+    "module_title": "Algorithms",
+    "course_id": 5,
+    "course_title": "CS Fundamentals",
+    "difficulty": "intermediate",
+    "estimated_minutes": 45,
+    "n_exercises": 1,
+    "exercise_types": [
+      "ordering"
+    ],
+    "exercise_ids": [
+      50
+    ],
+    "n_reading_blocks": 3,
+    "already_microquest": false,
+    "single_exercise": true,
+    "suggested_blueprint": "match_pairs"
+  },
+  {
+    "lesson_id": 40,
+    "slug": "objects-and-classes",
+    "order": 1,
+    "title_en": "Objects and Classes",
+    "module_id": 10,
+    "module_title": "Object-Oriented Programming",
+    "course_id": 5,
+    "course_title": "CS Fundamentals",
+    "difficulty": "beginner",
+    "estimated_minutes": 35,
+    "n_exercises": 1,
+    "exercise_types": [
+      "code_writing"
+    ],
+    "exercise_ids": [
+      51
+    ],
+    "n_reading_blocks": 3,
+    "already_microquest": false,
+    "single_exercise": true,
+    "suggested_blueprint": "match_pairs"
+  },
+  {
+    "lesson_id": 41,
+    "slug": "attributes-and-methods",
+    "order": 2,
+    "title_en": "Attributes and Methods",
+    "module_id": 10,
+    "module_title": "Object-Oriented Programming",
+    "course_id": 5,
+    "course_title": "CS Fundamentals",
+    "difficulty": "beginner",
+    "estimated_minutes": 35,
+    "n_exercises": 1,
+    "exercise_types": [
+      "multiple_choice"
+    ],
+    "exercise_ids": [
+      52
+    ],
+    "n_reading_blocks": 3,
+    "already_microquest": false,
+    "single_exercise": true,
+    "suggested_blueprint": "match_pairs"
+  },
+  {
+    "lesson_id": 42,
+    "slug": "encapsulation-abstraction",
+    "order": 3,
+    "title_en": "Encapsulation and Abstraction",
+    "module_id": 10,
+    "module_title": "Object-Oriented Programming",
+    "course_id": 5,
+    "course_title": "CS Fundamentals",
+    "difficulty": "intermediate",
+    "estimated_minutes": 35,
+    "n_exercises": 1,
+    "exercise_types": [
+      "code_writing"
+    ],
+    "exercise_ids": [
+      53
+    ],
+    "n_reading_blocks": 3,
+    "already_microquest": false,
+    "single_exercise": true,
+    "suggested_blueprint": "match_pairs"
+  },
+  {
+    "lesson_id": 43,
+    "slug": "inheritance-polymorphism",
+    "order": 4,
+    "title_en": "Inheritance and Polymorphism",
+    "module_id": 10,
+    "module_title": "Object-Oriented Programming",
+    "course_id": 5,
+    "course_title": "CS Fundamentals",
+    "difficulty": "intermediate",
+    "estimated_minutes": 40,
+    "n_exercises": 1,
+    "exercise_types": [
+      "visual_programming"
+    ],
+    "exercise_ids": [
+      54
+    ],
+    "n_reading_blocks": 3,
+    "already_microquest": false,
+    "single_exercise": true,
+    "suggested_blueprint": "match_pairs"
+  },
+  {
+    "lesson_id": 44,
+    "slug": "data-representation",
+    "order": 1,
+    "title_en": "How Computers Represent Data",
+    "module_id": 11,
+    "module_title": "Systems",
+    "course_id": 5,
+    "course_title": "CS Fundamentals",
+    "difficulty": "beginner",
+    "estimated_minutes": 35,
+    "n_exercises": 1,
+    "exercise_types": [
+      "prediction"
+    ],
+    "exercise_ids": [
+      55
+    ],
+    "n_reading_blocks": 3,
+    "already_microquest": false,
+    "single_exercise": true,
+    "suggested_blueprint": "match_pairs"
+  },
+  {
+    "lesson_id": 45,
+    "slug": "memory-and-storage",
+    "order": 2,
+    "title_en": "Memory and Storage",
+    "module_id": 11,
+    "module_title": "Systems",
+    "course_id": 5,
+    "course_title": "CS Fundamentals",
+    "difficulty": "beginner",
+    "estimated_minutes": 35,
+    "n_exercises": 1,
+    "exercise_types": [
+      "multiple_choice"
+    ],
+    "exercise_ids": [
+      56
+    ],
+    "n_reading_blocks": 3,
+    "already_microquest": false,
+    "single_exercise": true,
+    "suggested_blueprint": "match_pairs"
+  },
+  {
+    "lesson_id": 46,
+    "slug": "os-processes",
+    "order": 3,
+    "title_en": "Operating Systems and Processes",
+    "module_id": 11,
+    "module_title": "Systems",
+    "course_id": 5,
+    "course_title": "CS Fundamentals",
+    "difficulty": "intermediate",
+    "estimated_minutes": 35,
+    "n_exercises": 1,
+    "exercise_types": [
+      "fill_blank"
+    ],
+    "exercise_ids": [
+      57
+    ],
+    "n_reading_blocks": 3,
+    "already_microquest": false,
+    "single_exercise": true,
+    "suggested_blueprint": "order_steps"
+  },
+  {
+    "lesson_id": 47,
+    "slug": "networks-internet",
+    "order": 4,
+    "title_en": "Networks and the Internet",
+    "module_id": 11,
+    "module_title": "Systems",
+    "course_id": 5,
+    "course_title": "CS Fundamentals",
+    "difficulty": "intermediate",
+    "estimated_minutes": 40,
+    "n_exercises": 1,
+    "exercise_types": [
+      "multiple_choice"
+    ],
+    "exercise_ids": [
+      58
+    ],
+    "n_reading_blocks": 3,
+    "already_microquest": false,
+    "single_exercise": true,
+    "suggested_blueprint": "match_pairs"
+  },
+  {
+    "lesson_id": 48,
+    "slug": "what-is-a-database",
+    "order": 1,
+    "title_en": "What Is a Database?",
+    "module_id": 12,
+    "module_title": "Database Fundamentals",
+    "course_id": 6,
+    "course_title": "Databases",
+    "difficulty": "beginner",
+    "estimated_minutes": 25,
+    "n_exercises": 1,
+    "exercise_types": [
+      "multiple_choice"
+    ],
+    "exercise_ids": [
+      59
+    ],
+    "n_reading_blocks": 2,
+    "already_microquest": false,
+    "single_exercise": true,
+    "suggested_blueprint": "match_pairs"
+  },
+  {
+    "lesson_id": 49,
+    "slug": "the-relational-model",
+    "order": 1,
+    "title_en": "The Relational Model",
+    "module_id": 13,
+    "module_title": "Relational Databases",
+    "course_id": 6,
+    "course_title": "Databases",
+    "difficulty": "beginner",
+    "estimated_minutes": 25,
+    "n_exercises": 1,
+    "exercise_types": [
+      "multiple_choice"
+    ],
+    "exercise_ids": [
+      60
+    ],
+    "n_reading_blocks": 2,
+    "already_microquest": false,
+    "single_exercise": true,
+    "suggested_blueprint": "match_pairs"
+  },
+  {
+    "lesson_id": 50,
+    "slug": "entity-modeling",
+    "order": 1,
+    "title_en": "Modeling Entities",
+    "module_id": 14,
+    "module_title": "Database Design",
+    "course_id": 6,
+    "course_title": "Databases",
+    "difficulty": "beginner",
+    "estimated_minutes": 25,
+    "n_exercises": 1,
+    "exercise_types": [
+      "multiple_choice"
+    ],
+    "exercise_ids": [
+      61
+    ],
+    "n_reading_blocks": 1,
+    "already_microquest": false,
+    "single_exercise": true,
+    "suggested_blueprint": "match_pairs"
+  },
+  {
+    "lesson_id": 51,
+    "slug": "primary-and-foreign-keys",
+    "order": 1,
+    "title_en": "Primary and Foreign Keys",
+    "module_id": 15,
+    "module_title": "Relationships and Keys",
+    "course_id": 6,
+    "course_title": "Databases",
+    "difficulty": "beginner",
+    "estimated_minutes": 25,
+    "n_exercises": 1,
+    "exercise_types": [
+      "multiple_choice"
+    ],
+    "exercise_ids": [
+      62
+    ],
+    "n_reading_blocks": 1,
+    "already_microquest": false,
+    "single_exercise": true,
+    "suggested_blueprint": "match_pairs"
+  },
+  {
+    "lesson_id": 52,
+    "slug": "why-normalize",
+    "order": 1,
+    "title_en": "Why Normalize?",
+    "module_id": 16,
+    "module_title": "Normalization",
+    "course_id": 6,
+    "course_title": "Databases",
+    "difficulty": "beginner",
+    "estimated_minutes": 25,
+    "n_exercises": 1,
+    "exercise_types": [
+      "multiple_choice"
+    ],
+    "exercise_ids": [
+      63
+    ],
+    "n_reading_blocks": 1,
+    "already_microquest": false,
+    "single_exercise": true,
+    "suggested_blueprint": "match_pairs"
+  },
+  {
+    "lesson_id": 53,
+    "slug": "sql-and-the-dbms",
+    "order": 1,
+    "title_en": "SQL and the DBMS",
+    "module_id": 17,
+    "module_title": "SQL in Database Systems",
+    "course_id": 6,
+    "course_title": "Databases",
+    "difficulty": "beginner",
+    "estimated_minutes": 25,
+    "n_exercises": 1,
+    "exercise_types": [
+      "multiple_choice"
+    ],
+    "exercise_ids": [
+      64
+    ],
+    "n_reading_blocks": 1,
+    "already_microquest": false,
+    "single_exercise": true,
+    "suggested_blueprint": "match_pairs"
+  },
+  {
+    "lesson_id": 54,
+    "slug": "acid-transactions",
+    "order": 1,
+    "title_en": "ACID Transactions",
+    "module_id": 18,
+    "module_title": "Transactions",
+    "course_id": 6,
+    "course_title": "Databases",
+    "difficulty": "beginner",
+    "estimated_minutes": 25,
+    "n_exercises": 1,
+    "exercise_types": [
+      "multiple_choice"
+    ],
+    "exercise_ids": [
+      65
+    ],
+    "n_reading_blocks": 1,
+    "already_microquest": false,
+    "single_exercise": true,
+    "suggested_blueprint": "match_pairs"
+  },
+  {
+    "lesson_id": 55,
+    "slug": "what-is-an-index",
+    "order": 1,
+    "title_en": "What Is an Index?",
+    "module_id": 19,
+    "module_title": "Indexes",
+    "course_id": 6,
+    "course_title": "Databases",
+    "difficulty": "beginner",
+    "estimated_minutes": 25,
+    "n_exercises": 1,
+    "exercise_types": [
+      "multiple_choice"
+    ],
+    "exercise_ids": [
+      66
+    ],
+    "n_reading_blocks": 1,
+    "already_microquest": false,
+    "single_exercise": true,
+    "suggested_blueprint": "match_pairs"
+  },
+  {
+    "lesson_id": 56,
+    "slug": "nosql-data-models",
+    "order": 1,
+    "title_en": "NoSQL Data Models",
+    "module_id": 20,
+    "module_title": "NoSQL",
+    "course_id": 6,
+    "course_title": "Databases",
+    "difficulty": "beginner",
+    "estimated_minutes": 25,
+    "n_exercises": 1,
+    "exercise_types": [
+      "multiple_choice"
+    ],
+    "exercise_ids": [
+      67
+    ],
+    "n_reading_blocks": 1,
+    "already_microquest": false,
+    "single_exercise": true,
+    "suggested_blueprint": "match_pairs"
+  },
+  {
+    "lesson_id": 57,
+    "slug": "clients-connections-scaling",
+    "order": 1,
+    "title_en": "Clients, Connections, and Scaling",
+    "module_id": 21,
+    "module_title": "Database Architecture",
+    "course_id": 6,
+    "course_title": "Databases",
+    "difficulty": "beginner",
+    "estimated_minutes": 25,
+    "n_exercises": 1,
+    "exercise_types": [
+      "multiple_choice"
+    ],
+    "exercise_ids": [
+      68
+    ],
+    "n_reading_blocks": 1,
+    "already_microquest": false,
+    "single_exercise": true,
+    "suggested_blueprint": "match_pairs"
+  },
+  {
+    "lesson_id": 58,
+    "slug": "variables-and-types",
+    "order": 1,
+    "title_en": "Variables and Data Types",
+    "module_id": 22,
+    "module_title": "JavaScript Introduction",
+    "course_id": 7,
+    "course_title": "JavaScript",
+    "difficulty": "beginner",
+    "estimated_minutes": 25,
+    "n_exercises": 1,
+    "exercise_types": [
+      "multiple_choice"
+    ],
+    "exercise_ids": [
+      69
+    ],
+    "n_reading_blocks": 2,
+    "already_microquest": false,
+    "single_exercise": true,
+    "suggested_blueprint": "match_pairs"
+  },
+  {
+    "lesson_id": 59,
+    "slug": "conditions-and-loops",
+    "order": 1,
+    "title_en": "Conditions and Loops",
+    "module_id": 23,
+    "module_title": "Operators, Conditions and Loops",
+    "course_id": 7,
+    "course_title": "JavaScript",
+    "difficulty": "beginner",
+    "estimated_minutes": 25,
+    "n_exercises": 1,
+    "exercise_types": [
+      "multiple_choice"
+    ],
+    "exercise_ids": [
+      70
+    ],
+    "n_reading_blocks": 2,
+    "already_microquest": false,
+    "single_exercise": true,
+    "suggested_blueprint": "match_pairs"
+  },
+  {
+    "lesson_id": 60,
+    "slug": "functions-and-arrow-functions",
+    "order": 1,
+    "title_en": "Functions and Arrow Functions",
+    "module_id": 24,
+    "module_title": "Functions and Scope",
+    "course_id": 7,
+    "course_title": "JavaScript",
+    "difficulty": "beginner",
+    "estimated_minutes": 25,
+    "n_exercises": 1,
+    "exercise_types": [
+      "multiple_choice"
+    ],
+    "exercise_ids": [
+      71
+    ],
+    "n_reading_blocks": 2,
+    "already_microquest": false,
+    "single_exercise": true,
+    "suggested_blueprint": "match_pairs"
+  },
+  {
+    "lesson_id": 61,
+    "slug": "arrays-and-objects",
+    "order": 1,
+    "title_en": "Arrays and Objects",
+    "module_id": 25,
+    "module_title": "Arrays, Objects and Destructuring",
+    "course_id": 7,
+    "course_title": "JavaScript",
+    "difficulty": "beginner",
+    "estimated_minutes": 25,
+    "n_exercises": 1,
+    "exercise_types": [
+      "multiple_choice"
+    ],
+    "exercise_ids": [
+      72
+    ],
+    "n_reading_blocks": 2,
+    "already_microquest": false,
+    "single_exercise": true,
+    "suggested_blueprint": "match_pairs"
+  },
+  {
+    "lesson_id": 62,
+    "slug": "dom-and-events",
+    "order": 1,
+    "title_en": "The DOM and Events",
+    "module_id": 26,
+    "module_title": "DOM, Events and Forms",
+    "course_id": 7,
+    "course_title": "JavaScript",
+    "difficulty": "beginner",
+    "estimated_minutes": 25,
+    "n_exercises": 1,
+    "exercise_types": [
+      "multiple_choice"
+    ],
+    "exercise_ids": [
+      73
+    ],
+    "n_reading_blocks": 2,
+    "already_microquest": false,
+    "single_exercise": true,
+    "suggested_blueprint": "match_pairs"
+  },
+  {
+    "lesson_id": 63,
+    "slug": "promises-and-async-await",
+    "order": 1,
+    "title_en": "Promises and async/await",
+    "module_id": 27,
+    "module_title": "Asynchronous JavaScript",
+    "course_id": 7,
+    "course_title": "JavaScript",
+    "difficulty": "beginner",
+    "estimated_minutes": 25,
+    "n_exercises": 1,
+    "exercise_types": [
+      "multiple_choice"
+    ],
+    "exercise_ids": [
+      74
+    ],
+    "n_reading_blocks": 2,
+    "already_microquest": false,
+    "single_exercise": true,
+    "suggested_blueprint": "match_pairs"
+  },
+  {
+    "lesson_id": 64,
+    "slug": "es-modules",
+    "order": 1,
+    "title_en": "ES Modules",
+    "module_id": 28,
+    "module_title": "Modules and APIs",
+    "course_id": 7,
+    "course_title": "JavaScript",
+    "difficulty": "beginner",
+    "estimated_minutes": 25,
+    "n_exercises": 1,
+    "exercise_types": [
+      "multiple_choice"
+    ],
+    "exercise_ids": [
+      75
+    ],
+    "n_reading_blocks": 2,
+    "already_microquest": false,
+    "single_exercise": true,
+    "suggested_blueprint": "match_pairs"
+  },
+  {
+    "lesson_id": 65,
+    "slug": "semantic-elements",
+    "order": 1,
+    "title_en": "Semantic Elements",
+    "module_id": 29,
+    "module_title": "Semantic HTML",
+    "course_id": 8,
+    "course_title": "Frontend Development",
+    "difficulty": "beginner",
+    "estimated_minutes": 25,
+    "n_exercises": 1,
+    "exercise_types": [
+      "multiple_choice"
+    ],
+    "exercise_ids": [
+      76
+    ],
+    "n_reading_blocks": 2,
+    "already_microquest": false,
+    "single_exercise": true,
+    "suggested_blueprint": "match_pairs"
+  },
+  {
+    "lesson_id": 66,
+    "slug": "the-box-model",
+    "order": 1,
+    "title_en": "The CSS Box Model",
+    "module_id": 30,
+    "module_title": "CSS Fundamentals",
+    "course_id": 8,
+    "course_title": "Frontend Development",
+    "difficulty": "beginner",
+    "estimated_minutes": 25,
+    "n_exercises": 1,
+    "exercise_types": [
+      "multiple_choice"
+    ],
+    "exercise_ids": [
+      77
+    ],
+    "n_reading_blocks": 2,
+    "already_microquest": false,
+    "single_exercise": true,
+    "suggested_blueprint": "match_pairs"
+  },
+  {
+    "lesson_id": 67,
+    "slug": "flexbox-basics",
+    "order": 1,
+    "title_en": "Flexbox Basics",
+    "module_id": 31,
+    "module_title": "Flexbox and CSS Grid",
+    "course_id": 8,
+    "course_title": "Frontend Development",
+    "difficulty": "beginner",
+    "estimated_minutes": 25,
+    "n_exercises": 1,
+    "exercise_types": [
+      "multiple_choice"
+    ],
+    "exercise_ids": [
+      78
+    ],
+    "n_reading_blocks": 2,
+    "already_microquest": false,
+    "single_exercise": true,
+    "suggested_blueprint": "match_pairs"
+  },
+  {
+    "lesson_id": 68,
+    "slug": "media-queries",
+    "order": 1,
+    "title_en": "Media Queries",
+    "module_id": 32,
+    "module_title": "Responsive Design",
+    "course_id": 8,
+    "course_title": "Frontend Development",
+    "difficulty": "beginner",
+    "estimated_minutes": 25,
+    "n_exercises": 1,
+    "exercise_types": [
+      "multiple_choice"
+    ],
+    "exercise_ids": [
+      79
+    ],
+    "n_reading_blocks": 2,
+    "already_microquest": false,
+    "single_exercise": true,
+    "suggested_blueprint": "match_pairs"
+  },
+  {
+    "lesson_id": 69,
+    "slug": "connecting-js-to-html",
+    "order": 1,
+    "title_en": "Connecting JavaScript to HTML",
+    "module_id": 33,
+    "module_title": "JavaScript in the Browser",
+    "course_id": 8,
+    "course_title": "Frontend Development",
+    "difficulty": "beginner",
+    "estimated_minutes": 25,
+    "n_exercises": 1,
+    "exercise_types": [
+      "multiple_choice"
+    ],
+    "exercise_ids": [
+      80
+    ],
+    "n_reading_blocks": 2,
+    "already_microquest": false,
+    "single_exercise": true,
+    "suggested_blueprint": "match_pairs"
+  },
+  {
+    "lesson_id": 70,
+    "slug": "fetching-data-and-a11y",
+    "order": 1,
+    "title_en": "Fetching Data and Accessibility Basics",
+    "module_id": 34,
+    "module_title": "APIs and Accessibility",
+    "course_id": 8,
+    "course_title": "Frontend Development",
+    "difficulty": "beginner",
+    "estimated_minutes": 25,
+    "n_exercises": 1,
+    "exercise_types": [
+      "multiple_choice"
+    ],
+    "exercise_ids": [
+      81
+    ],
+    "n_reading_blocks": 2,
+    "already_microquest": false,
+    "single_exercise": true,
+    "suggested_blueprint": "match_pairs"
+  },
+  {
+    "lesson_id": 71,
+    "slug": "client-server-model",
+    "order": 1,
+    "title_en": "The Client-Server Model",
+    "module_id": 35,
+    "module_title": "How the Web Works",
+    "course_id": 9,
+    "course_title": "Backend Development",
+    "difficulty": "beginner",
+    "estimated_minutes": 25,
+    "n_exercises": 1,
+    "exercise_types": [
+      "code_writing"
+    ],
+    "exercise_ids": [
+      82
+    ],
+    "n_reading_blocks": 1,
+    "already_microquest": false,
+    "single_exercise": true,
+    "suggested_blueprint": "match_pairs"
+  },
+  {
+    "lesson_id": 72,
+    "slug": "http-methods-and-status-codes",
+    "order": 1,
+    "title_en": "HTTP Methods and Status Codes",
+    "module_id": 36,
+    "module_title": "HTTP Fundamentals",
+    "course_id": 9,
+    "course_title": "Backend Development",
+    "difficulty": "beginner",
+    "estimated_minutes": 25,
+    "n_exercises": 1,
+    "exercise_types": [
+      "code_writing"
+    ],
+    "exercise_ids": [
+      83
+    ],
+    "n_reading_blocks": 1,
+    "already_microquest": false,
+    "single_exercise": true,
+    "suggested_blueprint": "match_pairs"
+  },
+  {
+    "lesson_id": 73,
+    "slug": "rest-principles",
+    "order": 1,
+    "title_en": "REST Principles",
+    "module_id": 37,
+    "module_title": "REST APIs",
+    "course_id": 9,
+    "course_title": "Backend Development",
+    "difficulty": "beginner",
+    "estimated_minutes": 25,
+    "n_exercises": 1,
+    "exercise_types": [
+      "code_writing"
+    ],
+    "exercise_ids": [
+      84
+    ],
+    "n_reading_blocks": 1,
+    "already_microquest": false,
+    "single_exercise": true,
+    "suggested_blueprint": "match_pairs"
+  },
+  {
+    "lesson_id": 74,
+    "slug": "validating-input",
+    "order": 1,
+    "title_en": "Validating Input",
+    "module_id": 38,
+    "module_title": "Routing and Validation",
+    "course_id": 9,
+    "course_title": "Backend Development",
+    "difficulty": "beginner",
+    "estimated_minutes": 25,
+    "n_exercises": 1,
+    "exercise_types": [
+      "code_writing"
+    ],
+    "exercise_ids": [
+      85
+    ],
+    "n_reading_blocks": 1,
+    "already_microquest": false,
+    "single_exercise": true,
+    "suggested_blueprint": "match_pairs"
+  },
+  {
+    "lesson_id": 75,
+    "slug": "try-except-in-api-code",
+    "order": 1,
+    "title_en": "try/except in API Code",
+    "module_id": 39,
+    "module_title": "Error Handling",
+    "course_id": 9,
+    "course_title": "Backend Development",
+    "difficulty": "beginner",
+    "estimated_minutes": 25,
+    "n_exercises": 1,
+    "exercise_types": [
+      "code_writing"
+    ],
+    "exercise_ids": [
+      86
+    ],
+    "n_reading_blocks": 1,
+    "already_microquest": false,
+    "single_exercise": true,
+    "suggested_blueprint": "match_pairs"
+  },
+  {
+    "lesson_id": 76,
+    "slug": "tokens-and-sessions",
+    "order": 1,
+    "title_en": "Tokens and Sessions",
+    "module_id": 40,
+    "module_title": "Authentication Concepts",
+    "course_id": 9,
+    "course_title": "Backend Development",
+    "difficulty": "beginner",
+    "estimated_minutes": 25,
+    "n_exercises": 1,
+    "exercise_types": [
+      "multiple_choice"
+    ],
+    "exercise_ids": [
+      87
+    ],
+    "n_reading_blocks": 1,
+    "already_microquest": false,
+    "single_exercise": true,
+    "suggested_blueprint": "match_pairs"
+  },
+  {
+    "lesson_id": 77,
+    "slug": "orm-basics",
+    "order": 1,
+    "title_en": "ORM Basics",
+    "module_id": 41,
+    "module_title": "Databases from the Backend",
+    "course_id": 9,
+    "course_title": "Backend Development",
+    "difficulty": "beginner",
+    "estimated_minutes": 25,
+    "n_exercises": 1,
+    "exercise_types": [
+      "multiple_choice"
+    ],
+    "exercise_ids": [
+      88
+    ],
+    "n_reading_blocks": 1,
+    "already_microquest": false,
+    "single_exercise": true,
+    "suggested_blueprint": "match_pairs"
+  },
+  {
+    "lesson_id": 78,
+    "slug": "building-an-endpoint",
+    "order": 1,
+    "title_en": "Building a JSON Endpoint",
+    "module_id": 42,
+    "module_title": "FastAPI in Practice",
+    "course_id": 9,
+    "course_title": "Backend Development",
+    "difficulty": "beginner",
+    "estimated_minutes": 25,
+    "n_exercises": 1,
+    "exercise_types": [
+      "code_writing"
+    ],
+    "exercise_ids": [
+      89
+    ],
+    "n_reading_blocks": 2,
+    "already_microquest": false,
+    "single_exercise": true,
+    "suggested_blueprint": "match_pairs"
+  },
+  {
+    "lesson_id": 79,
+    "slug": "the-three-tiers",
+    "order": 1,
+    "title_en": "The Three Tiers",
+    "module_id": 43,
+    "module_title": "Full-Stack Architecture",
+    "course_id": 10,
+    "course_title": "Full Stack Development",
+    "difficulty": "beginner",
+    "estimated_minutes": 25,
+    "n_exercises": 1,
+    "exercise_types": [
+      "multiple_choice"
+    ],
+    "exercise_ids": [
+      90
+    ],
+    "n_reading_blocks": 1,
+    "already_microquest": false,
+    "single_exercise": true,
+    "suggested_blueprint": "match_pairs"
+  },
+  {
+    "lesson_id": 80,
+    "slug": "the-full-round-trip",
+    "order": 1,
+    "title_en": "The Full Round Trip",
+    "module_id": 44,
+    "module_title": "Frontend/Backend Communication",
+    "course_id": 10,
+    "course_title": "Full Stack Development",
+    "difficulty": "beginner",
+    "estimated_minutes": 25,
+    "n_exercises": 1,
+    "exercise_types": [
+      "multiple_choice"
+    ],
+    "exercise_ids": [
+      91
+    ],
+    "n_reading_blocks": 1,
+    "already_microquest": false,
+    "single_exercise": true,
+    "suggested_blueprint": "match_pairs"
+  },
+  {
+    "lesson_id": 81,
+    "slug": "consuming-an-api",
+    "order": 1,
+    "title_en": "Consuming an API",
+    "module_id": 45,
+    "module_title": "REST API Integration",
+    "course_id": 10,
+    "course_title": "Full Stack Development",
+    "difficulty": "beginner",
+    "estimated_minutes": 25,
+    "n_exercises": 1,
+    "exercise_types": [
+      "multiple_choice"
+    ],
+    "exercise_ids": [
+      92
+    ],
+    "n_reading_blocks": 1,
+    "already_microquest": false,
+    "single_exercise": true,
+    "suggested_blueprint": "match_pairs"
+  },
+  {
+    "lesson_id": 82,
+    "slug": "models-and-persistence",
+    "order": 1,
+    "title_en": "Models and Persistence",
+    "module_id": 46,
+    "module_title": "Database Integration",
+    "course_id": 10,
+    "course_title": "Full Stack Development",
+    "difficulty": "beginner",
+    "estimated_minutes": 25,
+    "n_exercises": 1,
+    "exercise_types": [
+      "multiple_choice"
+    ],
+    "exercise_ids": [
+      93
+    ],
+    "n_reading_blocks": 1,
+    "already_microquest": false,
+    "single_exercise": true,
+    "suggested_blueprint": "match_pairs"
+  },
+  {
+    "lesson_id": 83,
+    "slug": "protecting-routes-both-sides",
+    "order": 1,
+    "title_en": "Protecting Routes on Both Sides",
+    "module_id": 47,
+    "module_title": "Authentication in Full-Stack Apps",
+    "course_id": 10,
+    "course_title": "Full Stack Development",
+    "difficulty": "beginner",
+    "estimated_minutes": 25,
+    "n_exercises": 1,
+    "exercise_types": [
+      "multiple_choice"
+    ],
+    "exercise_ids": [
+      94
+    ],
+    "n_reading_blocks": 1,
+    "already_microquest": false,
+    "single_exercise": true,
+    "suggested_blueprint": "match_pairs"
+  },
+  {
+    "lesson_id": 84,
+    "slug": "crud-end-to-end",
+    "order": 1,
+    "title_en": "CRUD End to End",
+    "module_id": 48,
+    "module_title": "CRUD Applications",
+    "course_id": 10,
+    "course_title": "Full Stack Development",
+    "difficulty": "beginner",
+    "estimated_minutes": 25,
+    "n_exercises": 1,
+    "exercise_types": [
+      "multiple_choice"
+    ],
+    "exercise_ids": [
+      95
+    ],
+    "n_reading_blocks": 1,
+    "already_microquest": false,
+    "single_exercise": true,
+    "suggested_blueprint": "match_pairs"
+  },
+  {
+    "lesson_id": 85,
+    "slug": "server-state-vs-ui-state",
+    "order": 1,
+    "title_en": "Server State vs. UI State",
+    "module_id": 49,
+    "module_title": "State Management Concepts",
+    "course_id": 10,
+    "course_title": "Full Stack Development",
+    "difficulty": "beginner",
+    "estimated_minutes": 25,
+    "n_exercises": 1,
+    "exercise_types": [
+      "multiple_choice"
+    ],
+    "exercise_ids": [
+      96
+    ],
+    "n_reading_blocks": 1,
+    "already_microquest": false,
+    "single_exercise": true,
+    "suggested_blueprint": "match_pairs"
+  },
+  {
+    "lesson_id": 86,
+    "slug": "environments-and-config",
+    "order": 1,
+    "title_en": "Environments and Configuration",
+    "module_id": 50,
+    "module_title": "Deployment Concepts",
+    "course_id": 10,
+    "course_title": "Full Stack Development",
+    "difficulty": "beginner",
+    "estimated_minutes": 25,
+    "n_exercises": 1,
+    "exercise_types": [
+      "multiple_choice"
+    ],
+    "exercise_ids": [
+      97
+    ],
+    "n_reading_blocks": 1,
+    "already_microquest": false,
+    "single_exercise": true,
+    "suggested_blueprint": "match_pairs"
+  },
+  {
+    "lesson_id": 87,
+    "slug": "hello-world-in-c",
+    "order": 1,
+    "title_en": "Hello, World in C",
+    "module_id": 51,
+    "module_title": "C Fundamentals",
+    "course_id": 11,
+    "course_title": "C",
+    "difficulty": "beginner",
+    "estimated_minutes": 25,
+    "n_exercises": 1,
+    "exercise_types": [
+      "multiple_choice"
+    ],
+    "exercise_ids": [
+      98
+    ],
+    "n_reading_blocks": 2,
+    "already_microquest": false,
+    "single_exercise": true,
+    "suggested_blueprint": "match_pairs"
+  },
+  {
+    "lesson_id": 88,
+    "slug": "c-data-types",
+    "order": 1,
+    "title_en": "C Data Types",
+    "module_id": 52,
+    "module_title": "Variables and Types",
+    "course_id": 11,
+    "course_title": "C",
+    "difficulty": "beginner",
+    "estimated_minutes": 25,
+    "n_exercises": 1,
+    "exercise_types": [
+      "multiple_choice"
+    ],
+    "exercise_ids": [
+      99
+    ],
+    "n_reading_blocks": 2,
+    "already_microquest": false,
+    "single_exercise": true,
+    "suggested_blueprint": "match_pairs"
+  },
+  {
+    "lesson_id": 89,
+    "slug": "if-else-in-c",
+    "order": 1,
+    "title_en": "if/else in C",
+    "module_id": 53,
+    "module_title": "Operators and Conditions",
+    "course_id": 11,
+    "course_title": "C",
+    "difficulty": "beginner",
+    "estimated_minutes": 25,
+    "n_exercises": 1,
+    "exercise_types": [
+      "multiple_choice"
+    ],
+    "exercise_ids": [
+      100
+    ],
+    "n_reading_blocks": 2,
+    "already_microquest": false,
+    "single_exercise": true,
+    "suggested_blueprint": "match_pairs"
+  },
+  {
+    "lesson_id": 90,
+    "slug": "for-and-while-loops",
+    "order": 1,
+    "title_en": "for and while Loops",
+    "module_id": 54,
+    "module_title": "Loops",
+    "course_id": 11,
+    "course_title": "C",
+    "difficulty": "beginner",
+    "estimated_minutes": 25,
+    "n_exercises": 1,
+    "exercise_types": [
+      "multiple_choice"
+    ],
+    "exercise_ids": [
+      101
+    ],
+    "n_reading_blocks": 2,
+    "already_microquest": false,
+    "single_exercise": true,
+    "suggested_blueprint": "match_pairs"
+  },
+  {
+    "lesson_id": 91,
+    "slug": "c-functions-lesson",
+    "order": 1,
+    "title_en": "Writing C Functions",
+    "module_id": 55,
+    "module_title": "Functions",
+    "course_id": 11,
+    "course_title": "C",
+    "difficulty": "beginner",
+    "estimated_minutes": 25,
+    "n_exercises": 1,
+    "exercise_types": [
+      "multiple_choice"
+    ],
+    "exercise_ids": [
+      102
+    ],
+    "n_reading_blocks": 2,
+    "already_microquest": false,
+    "single_exercise": true,
+    "suggested_blueprint": "match_pairs"
+  },
+  {
+    "lesson_id": 92,
+    "slug": "arrays-and-c-strings",
+    "order": 1,
+    "title_en": "Arrays and C Strings",
+    "module_id": 56,
+    "module_title": "Arrays and Strings",
+    "course_id": 11,
+    "course_title": "C",
+    "difficulty": "beginner",
+    "estimated_minutes": 25,
+    "n_exercises": 1,
+    "exercise_types": [
+      "multiple_choice"
+    ],
+    "exercise_ids": [
+      103
+    ],
+    "n_reading_blocks": 2,
+    "already_microquest": false,
+    "single_exercise": true,
+    "suggested_blueprint": "match_pairs"
+  },
+  {
+    "lesson_id": 93,
+    "slug": "intro-to-pointers",
+    "order": 1,
+    "title_en": "Introduction to Pointers",
+    "module_id": 57,
+    "module_title": "Pointers",
+    "course_id": 11,
+    "course_title": "C",
+    "difficulty": "beginner",
+    "estimated_minutes": 25,
+    "n_exercises": 1,
+    "exercise_types": [
+      "multiple_choice"
+    ],
+    "exercise_ids": [
+      104
+    ],
+    "n_reading_blocks": 2,
+    "already_microquest": false,
+    "single_exercise": true,
+    "suggested_blueprint": "match_pairs"
+  },
+  {
+    "lesson_id": 94,
+    "slug": "defining-structs",
+    "order": 1,
+    "title_en": "Defining Structs",
+    "module_id": 58,
+    "module_title": "Structs",
+    "course_id": 11,
+    "course_title": "C",
+    "difficulty": "beginner",
+    "estimated_minutes": 25,
+    "n_exercises": 1,
+    "exercise_types": [
+      "multiple_choice"
+    ],
+    "exercise_ids": [
+      105
+    ],
+    "n_reading_blocks": 2,
+    "already_microquest": false,
+    "single_exercise": true,
+    "suggested_blueprint": "match_pairs"
+  },
+  {
+    "lesson_id": 95,
+    "slug": "stack-vs-heap",
+    "order": 1,
+    "title_en": "Stack vs. Heap",
+    "module_id": 59,
+    "module_title": "Memory Concepts",
+    "course_id": 11,
+    "course_title": "C",
+    "difficulty": "beginner",
+    "estimated_minutes": 25,
+    "n_exercises": 1,
+    "exercise_types": [
+      "multiple_choice"
+    ],
+    "exercise_ids": [
+      106
+    ],
+    "n_reading_blocks": 2,
+    "already_microquest": false,
+    "single_exercise": true,
+    "suggested_blueprint": "match_pairs"
+  },
+  {
+    "lesson_id": 96,
+    "slug": "reading-and-writing-files",
+    "order": 1,
+    "title_en": "Reading and Writing Files",
+    "module_id": 60,
+    "module_title": "File Handling",
+    "course_id": 11,
+    "course_title": "C",
+    "difficulty": "beginner",
+    "estimated_minutes": 25,
+    "n_exercises": 1,
+    "exercise_types": [
+      "multiple_choice"
+    ],
+    "exercise_ids": [
+      107
+    ],
+    "n_reading_blocks": 2,
+    "already_microquest": false,
+    "single_exercise": true,
+    "suggested_blueprint": "match_pairs"
+  },
+  {
+    "lesson_id": 97,
+    "slug": "hello-world-in-cpp",
+    "order": 1,
+    "title_en": "Hello, World in C++",
+    "module_id": 61,
+    "module_title": "C++ Fundamentals",
+    "course_id": 12,
+    "course_title": "C++",
+    "difficulty": "beginner",
+    "estimated_minutes": 25,
+    "n_exercises": 1,
+    "exercise_types": [
+      "multiple_choice"
+    ],
+    "exercise_ids": [
+      108
+    ],
+    "n_reading_blocks": 2,
+    "already_microquest": false,
+    "single_exercise": true,
+    "suggested_blueprint": "match_pairs"
+  },
+  {
+    "lesson_id": 98,
+    "slug": "cpp-types-and-loops",
+    "order": 1,
+    "title_en": "Types and Loops in C++",
+    "module_id": 62,
+    "module_title": "Variables, Types and Control Flow",
+    "course_id": 12,
+    "course_title": "C++",
+    "difficulty": "beginner",
+    "estimated_minutes": 25,
+    "n_exercises": 1,
+    "exercise_types": [
+      "multiple_choice"
+    ],
+    "exercise_ids": [
+      109
+    ],
+    "n_reading_blocks": 2,
+    "already_microquest": false,
+    "single_exercise": true,
+    "suggested_blueprint": "match_pairs"
+  },
+  {
+    "lesson_id": 99,
+    "slug": "function-overloading",
+    "order": 1,
+    "title_en": "Function Overloading",
+    "module_id": 63,
+    "module_title": "Functions",
+    "course_id": 12,
+    "course_title": "C++",
+    "difficulty": "beginner",
+    "estimated_minutes": 25,
+    "n_exercises": 1,
+    "exercise_types": [
+      "multiple_choice"
+    ],
+    "exercise_ids": [
+      110
+    ],
+    "n_reading_blocks": 2,
+    "already_microquest": false,
+    "single_exercise": true,
+    "suggested_blueprint": "match_pairs"
+  },
+  {
+    "lesson_id": 100,
+    "slug": "defining-a-class",
+    "order": 1,
+    "title_en": "Defining a Class",
+    "module_id": 64,
+    "module_title": "Classes and Objects",
+    "course_id": 12,
+    "course_title": "C++",
+    "difficulty": "beginner",
+    "estimated_minutes": 25,
+    "n_exercises": 1,
+    "exercise_types": [
+      "multiple_choice"
+    ],
+    "exercise_ids": [
+      111
+    ],
+    "n_reading_blocks": 2,
+    "already_microquest": false,
+    "single_exercise": true,
+    "suggested_blueprint": "match_pairs"
+  },
+  {
+    "lesson_id": 101,
+    "slug": "writing-constructors",
+    "order": 1,
+    "title_en": "Writing Constructors",
+    "module_id": 65,
+    "module_title": "Constructors",
+    "course_id": 12,
+    "course_title": "C++",
+    "difficulty": "beginner",
+    "estimated_minutes": 25,
+    "n_exercises": 1,
+    "exercise_types": [
+      "multiple_choice"
+    ],
+    "exercise_ids": [
+      112
+    ],
+    "n_reading_blocks": 2,
+    "already_microquest": false,
+    "single_exercise": true,
+    "suggested_blueprint": "match_pairs"
+  },
+  {
+    "lesson_id": 102,
+    "slug": "inheritance-basics",
+    "order": 1,
+    "title_en": "Inheritance Basics",
+    "module_id": 66,
+    "module_title": "Inheritance and Polymorphism",
+    "course_id": 12,
+    "course_title": "C++",
+    "difficulty": "beginner",
+    "estimated_minutes": 25,
+    "n_exercises": 1,
+    "exercise_types": [
+      "multiple_choice"
+    ],
+    "exercise_ids": [
+      113
+    ],
+    "n_reading_blocks": 2,
+    "already_microquest": false,
+    "single_exercise": true,
+    "suggested_blueprint": "match_pairs"
+  },
+  {
+    "lesson_id": 103,
+    "slug": "intro-to-stl",
+    "order": 1,
+    "title_en": "Introduction to the STL",
+    "module_id": 67,
+    "module_title": "STL Basics",
+    "course_id": 12,
+    "course_title": "C++",
+    "difficulty": "beginner",
+    "estimated_minutes": 25,
+    "n_exercises": 1,
+    "exercise_types": [
+      "multiple_choice"
+    ],
+    "exercise_ids": [
+      114
+    ],
+    "n_reading_blocks": 1,
+    "already_microquest": false,
+    "single_exercise": true,
+    "suggested_blueprint": "match_pairs"
+  },
+  {
+    "lesson_id": 104,
+    "slug": "using-vector-and-map",
+    "order": 1,
+    "title_en": "Using vector and map",
+    "module_id": 68,
+    "module_title": "Vectors, Maps and Algorithms",
+    "course_id": 12,
+    "course_title": "C++",
+    "difficulty": "beginner",
+    "estimated_minutes": 25,
+    "n_exercises": 1,
+    "exercise_types": [
+      "multiple_choice"
+    ],
+    "exercise_ids": [
+      115
+    ],
+    "n_reading_blocks": 2,
+    "already_microquest": false,
+    "single_exercise": true,
+    "suggested_blueprint": "match_pairs"
+  },
+  {
+    "lesson_id": 105,
+    "slug": "what-is-an-algorithm",
+    "order": 1,
+    "title_en": "What Is an Algorithm?",
+    "module_id": 69,
+    "module_title": "Algorithmic Thinking",
+    "course_id": 13,
+    "course_title": "Data Structures & Algorithms",
+    "difficulty": "beginner",
+    "estimated_minutes": 25,
+    "n_exercises": 1,
+    "exercise_types": [
+      "code_writing"
+    ],
+    "exercise_ids": [
+      116
+    ],
+    "n_reading_blocks": 1,
+    "already_microquest": false,
+    "single_exercise": true,
+    "suggested_blueprint": "match_pairs"
+  },
+  {
+    "lesson_id": 106,
+    "slug": "big-o-notation",
+    "order": 1,
+    "title_en": "Big-O Notation",
+    "module_id": 70,
+    "module_title": "Big-O Complexity",
+    "course_id": 13,
+    "course_title": "Data Structures & Algorithms",
+    "difficulty": "beginner",
+    "estimated_minutes": 25,
+    "n_exercises": 1,
+    "exercise_types": [
+      "code_writing"
+    ],
+    "exercise_ids": [
+      117
+    ],
+    "n_reading_blocks": 2,
+    "already_microquest": false,
+    "single_exercise": true,
+    "suggested_blueprint": "match_pairs"
+  },
+  {
+    "lesson_id": 107,
+    "slug": "two-pointer-technique",
+    "order": 1,
+    "title_en": "The Two-Pointer Technique",
+    "module_id": 71,
+    "module_title": "Arrays and Strings",
+    "course_id": 13,
+    "course_title": "Data Structures & Algorithms",
+    "difficulty": "beginner",
+    "estimated_minutes": 25,
+    "n_exercises": 1,
+    "exercise_types": [
+      "code_writing"
+    ],
+    "exercise_ids": [
+      118
+    ],
+    "n_reading_blocks": 1,
+    "already_microquest": false,
+    "single_exercise": true,
+    "suggested_blueprint": "match_pairs"
+  },
+  {
+    "lesson_id": 108,
+    "slug": "building-a-linked-list",
+    "order": 1,
+    "title_en": "Building a Linked List",
+    "module_id": 72,
+    "module_title": "Linked Lists",
+    "course_id": 13,
+    "course_title": "Data Structures & Algorithms",
+    "difficulty": "beginner",
+    "estimated_minutes": 25,
+    "n_exercises": 1,
+    "exercise_types": [
+      "code_writing"
+    ],
+    "exercise_ids": [
+      119
+    ],
+    "n_reading_blocks": 2,
+    "already_microquest": false,
+    "single_exercise": true,
+    "suggested_blueprint": "match_pairs"
+  },
+  {
+    "lesson_id": 109,
+    "slug": "implementing-a-stack",
+    "order": 1,
+    "title_en": "Implementing a Stack",
+    "module_id": 73,
+    "module_title": "Stacks and Queues",
+    "course_id": 13,
+    "course_title": "Data Structures & Algorithms",
+    "difficulty": "beginner",
+    "estimated_minutes": 25,
+    "n_exercises": 1,
+    "exercise_types": [
+      "code_writing"
+    ],
+    "exercise_ids": [
+      120
+    ],
+    "n_reading_blocks": 1,
+    "already_microquest": false,
+    "single_exercise": true,
+    "suggested_blueprint": "match_pairs"
+  },
+  {
+    "lesson_id": 110,
+    "slug": "hash-tables-lesson",
+    "order": 1,
+    "title_en": "How Hash Tables Work",
+    "module_id": 74,
+    "module_title": "Hash Tables",
+    "course_id": 13,
+    "course_title": "Data Structures & Algorithms",
+    "difficulty": "beginner",
+    "estimated_minutes": 25,
+    "n_exercises": 1,
+    "exercise_types": [
+      "code_writing"
+    ],
+    "exercise_ids": [
+      121
+    ],
+    "n_reading_blocks": 1,
+    "already_microquest": false,
+    "single_exercise": true,
+    "suggested_blueprint": "match_pairs"
+  },
+  {
+    "lesson_id": 111,
+    "slug": "recursive-functions",
+    "order": 1,
+    "title_en": "Writing Recursive Functions",
+    "module_id": 75,
+    "module_title": "Recursion",
+    "course_id": 13,
+    "course_title": "Data Structures & Algorithms",
+    "difficulty": "beginner",
+    "estimated_minutes": 25,
+    "n_exercises": 1,
+    "exercise_types": [
+      "code_writing"
+    ],
+    "exercise_ids": [
+      122
+    ],
+    "n_reading_blocks": 2,
+    "already_microquest": false,
+    "single_exercise": true,
+    "suggested_blueprint": "match_pairs"
+  },
+  {
+    "lesson_id": 112,
+    "slug": "bst-search",
+    "order": 1,
+    "title_en": "Searching a Binary Search Tree",
+    "module_id": 76,
+    "module_title": "Trees and Binary Search Trees",
+    "course_id": 13,
+    "course_title": "Data Structures & Algorithms",
+    "difficulty": "beginner",
+    "estimated_minutes": 25,
+    "n_exercises": 1,
+    "exercise_types": [
+      "code_writing"
+    ],
+    "exercise_ids": [
+      123
+    ],
+    "n_reading_blocks": 2,
+    "already_microquest": false,
+    "single_exercise": true,
+    "suggested_blueprint": "match_pairs"
+  },
+  {
+    "lesson_id": 113,
+    "slug": "heap-basics",
+    "order": 1,
+    "title_en": "Heap Basics",
+    "module_id": 77,
+    "module_title": "Heaps",
+    "course_id": 13,
+    "course_title": "Data Structures & Algorithms",
+    "difficulty": "beginner",
+    "estimated_minutes": 25,
+    "n_exercises": 1,
+    "exercise_types": [
+      "multiple_choice"
+    ],
+    "exercise_ids": [
+      124
+    ],
+    "n_reading_blocks": 2,
+    "already_microquest": false,
+    "single_exercise": true,
+    "suggested_blueprint": "match_pairs"
+  },
+  {
+    "lesson_id": 114,
+    "slug": "representing-a-graph",
+    "order": 1,
+    "title_en": "Representing a Graph",
+    "module_id": 78,
+    "module_title": "Graphs",
+    "course_id": 13,
+    "course_title": "Data Structures & Algorithms",
+    "difficulty": "beginner",
+    "estimated_minutes": 25,
+    "n_exercises": 1,
+    "exercise_types": [
+      "code_writing"
+    ],
+    "exercise_ids": [
+      125
+    ],
+    "n_reading_blocks": 1,
+    "already_microquest": false,
+    "single_exercise": true,
+    "suggested_blueprint": "match_pairs"
+  },
+  {
+    "lesson_id": 115,
+    "slug": "binary-search",
+    "order": 1,
+    "title_en": "Binary Search",
+    "module_id": 79,
+    "module_title": "Searching and Sorting",
+    "course_id": 13,
+    "course_title": "Data Structures & Algorithms",
+    "difficulty": "beginner",
+    "estimated_minutes": 25,
+    "n_exercises": 1,
+    "exercise_types": [
+      "code_writing"
+    ],
+    "exercise_ids": [
+      126
+    ],
+    "n_reading_blocks": 1,
+    "already_microquest": false,
+    "single_exercise": true,
+    "suggested_blueprint": "match_pairs"
+  },
+  {
+    "lesson_id": 116,
+    "slug": "breadth-first-search",
+    "order": 1,
+    "title_en": "Breadth-First Search (BFS)",
+    "module_id": 80,
+    "module_title": "Graph Traversal: BFS, DFS and Shortest Paths",
+    "course_id": 13,
+    "course_title": "Data Structures & Algorithms",
+    "difficulty": "beginner",
+    "estimated_minutes": 25,
+    "n_exercises": 1,
+    "exercise_types": [
+      "code_writing"
+    ],
+    "exercise_ids": [
+      127
+    ],
+    "n_reading_blocks": 2,
+    "already_microquest": false,
+    "single_exercise": true,
+    "suggested_blueprint": "match_pairs"
+  },
+  {
+    "lesson_id": 117,
+    "slug": "how-a-cpu-executes-instructions",
+    "order": 1,
+    "title_en": "How a CPU Executes Instructions",
+    "module_id": 81,
+    "module_title": "CPU Architecture",
+    "course_id": 14,
+    "course_title": "Computer Systems",
+    "difficulty": "beginner",
+    "estimated_minutes": 25,
+    "n_exercises": 1,
+    "exercise_types": [
+      "multiple_choice"
+    ],
+    "exercise_ids": [
+      128
+    ],
+    "n_reading_blocks": 1,
+    "already_microquest": false,
+    "single_exercise": true,
+    "suggested_blueprint": "match_pairs"
+  },
+  {
+    "lesson_id": 118,
+    "slug": "the-memory-hierarchy",
+    "order": 1,
+    "title_en": "The Memory Hierarchy",
+    "module_id": 82,
+    "module_title": "Memory and Storage",
+    "course_id": 14,
+    "course_title": "Computer Systems",
+    "difficulty": "beginner",
+    "estimated_minutes": 25,
+    "n_exercises": 1,
+    "exercise_types": [
+      "multiple_choice"
+    ],
+    "exercise_ids": [
+      129
+    ],
+    "n_reading_blocks": 1,
+    "already_microquest": false,
+    "single_exercise": true,
+    "suggested_blueprint": "match_pairs"
+  },
+  {
+    "lesson_id": 119,
+    "slug": "processes-and-threads",
+    "order": 1,
+    "title_en": "Processes and Threads",
+    "module_id": 83,
+    "module_title": "Operating Systems",
+    "course_id": 14,
+    "course_title": "Computer Systems",
+    "difficulty": "beginner",
+    "estimated_minutes": 25,
+    "n_exercises": 1,
+    "exercise_types": [
+      "multiple_choice"
+    ],
+    "exercise_ids": [
+      130
+    ],
+    "n_reading_blocks": 1,
+    "already_microquest": false,
+    "single_exercise": true,
+    "suggested_blueprint": "order_steps"
+  },
+  {
+    "lesson_id": 120,
+    "slug": "how-components-communicate",
+    "order": 1,
+    "title_en": "How Components Communicate",
+    "module_id": 84,
+    "module_title": "Computer Architecture",
+    "course_id": 14,
+    "course_title": "Computer Systems",
+    "difficulty": "beginner",
+    "estimated_minutes": 25,
+    "n_exercises": 1,
+    "exercise_types": [
+      "multiple_choice"
+    ],
+    "exercise_ids": [
+      131
+    ],
+    "n_reading_blocks": 1,
+    "already_microquest": false,
+    "single_exercise": true,
+    "suggested_blueprint": "match_pairs"
+  },
+  {
+    "lesson_id": 121,
+    "slug": "the-linux-filesystem-and-terminal",
+    "order": 1,
+    "title_en": "The Linux Filesystem and Terminal",
+    "module_id": 85,
+    "module_title": "Linux Fundamentals",
+    "course_id": 14,
+    "course_title": "Computer Systems",
+    "difficulty": "beginner",
+    "estimated_minutes": 25,
+    "n_exercises": 1,
+    "exercise_types": [
+      "multiple_choice"
+    ],
+    "exercise_ids": [
+      132
+    ],
+    "n_reading_blocks": 2,
+    "already_microquest": false,
+    "single_exercise": true,
+    "suggested_blueprint": "match_pairs"
+  },
+  {
+    "lesson_id": 122,
+    "slug": "client-server-networking",
+    "order": 1,
+    "title_en": "Client/Server Architecture",
+    "module_id": 86,
+    "module_title": "How Networks Work",
+    "course_id": 15,
+    "course_title": "Networking",
+    "difficulty": "beginner",
+    "estimated_minutes": 25,
+    "n_exercises": 1,
+    "exercise_types": [
+      "multiple_choice"
+    ],
+    "exercise_ids": [
+      133
+    ],
+    "n_reading_blocks": 1,
+    "already_microquest": false,
+    "single_exercise": true,
+    "suggested_blueprint": "match_pairs"
+  },
+  {
+    "lesson_id": 123,
+    "slug": "ip-addresses-and-the-tcp-ip-stack",
+    "order": 1,
+    "title_en": "IP Addresses and the TCP/IP Stack",
+    "module_id": 87,
+    "module_title": "IP Addressing and TCP/IP",
+    "course_id": 15,
+    "course_title": "Networking",
+    "difficulty": "beginner",
+    "estimated_minutes": 25,
+    "n_exercises": 1,
+    "exercise_types": [
+      "multiple_choice"
+    ],
+    "exercise_ids": [
+      134
+    ],
+    "n_reading_blocks": 1,
+    "already_microquest": false,
+    "single_exercise": true,
+    "suggested_blueprint": "match_pairs"
+  },
+  {
+    "lesson_id": 124,
+    "slug": "tcp-vs-udp",
+    "order": 1,
+    "title_en": "TCP vs. UDP",
+    "module_id": 88,
+    "module_title": "TCP vs UDP, Ports and Packets",
+    "course_id": 15,
+    "course_title": "Networking",
+    "difficulty": "beginner",
+    "estimated_minutes": 25,
+    "n_exercises": 1,
+    "exercise_types": [
+      "multiple_choice"
+    ],
+    "exercise_ids": [
+      135
+    ],
+    "n_reading_blocks": 1,
+    "already_microquest": false,
+    "single_exercise": true,
+    "suggested_blueprint": "match_pairs"
+  },
+  {
+    "lesson_id": 125,
+    "slug": "how-dns-resolution-works",
+    "order": 1,
+    "title_en": "How DNS Resolution Works",
+    "module_id": 89,
+    "module_title": "DNS",
+    "course_id": 15,
+    "course_title": "Networking",
+    "difficulty": "beginner",
+    "estimated_minutes": 25,
+    "n_exercises": 1,
+    "exercise_types": [
+      "multiple_choice"
+    ],
+    "exercise_ids": [
+      136
+    ],
+    "n_reading_blocks": 1,
+    "already_microquest": false,
+    "single_exercise": true,
+    "suggested_blueprint": "match_pairs"
+  },
+  {
+    "lesson_id": 126,
+    "slug": "http-vs-https",
+    "order": 1,
+    "title_en": "HTTP vs. HTTPS",
+    "module_id": 90,
+    "module_title": "HTTP and HTTPS",
+    "course_id": 15,
+    "course_title": "Networking",
+    "difficulty": "beginner",
+    "estimated_minutes": 25,
+    "n_exercises": 1,
+    "exercise_types": [
+      "multiple_choice"
+    ],
+    "exercise_ids": [
+      137
+    ],
+    "n_reading_blocks": 1,
+    "already_microquest": false,
+    "single_exercise": true,
+    "suggested_blueprint": "match_pairs"
+  },
+  {
+    "lesson_id": 127,
+    "slug": "routers-switches-and-firewalls",
+    "order": 1,
+    "title_en": "Routers, Switches and Firewalls",
+    "module_id": 91,
+    "module_title": "Routers, Switches and Network Security",
+    "course_id": 15,
+    "course_title": "Networking",
+    "difficulty": "beginner",
+    "estimated_minutes": 25,
+    "n_exercises": 1,
+    "exercise_types": [
+      "multiple_choice"
+    ],
+    "exercise_ids": [
+      138
+    ],
+    "n_reading_blocks": 1,
+    "already_microquest": false,
+    "single_exercise": true,
+    "suggested_blueprint": "match_pairs"
+  }
+]
