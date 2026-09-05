@@ -68,7 +68,7 @@ class CourseResponse(BaseModel):
     slug: str
     order: int
     translations: List[CourseTranslationResponse]
-    modules: List[ModuleResponse] = []
+    modules: List["ModuleResponse"] = []
 
     class Config:
         from_attributes = True
