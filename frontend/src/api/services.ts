@@ -36,6 +36,9 @@ export const authApi = {
 
   uploadAvatar: (dataUrl: string) => apiClient.post<User>('/auth/me/avatar', { data_url: dataUrl }),
 
+  changePassword: (data: { current_password: string; new_password: string }) =>
+    apiClient.post<void>('/auth/change-password', data),
+
   getProfile: () => apiClient.get<StudentProfile>('/auth/profile'),
 
   getConfig: () =>

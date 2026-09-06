@@ -596,6 +596,16 @@
     "upload_error_size": "Cette image est trop volumineuse. Essayez une photo plus petite.",
     "upload_error_generic": "Impossible d'importer cette photo. Veuillez réessayer."
   },
+  "settings": {
+    "change_password": "Changer le mot de passe",
+    "current_password": "Mot de passe actuel",
+    "new_password": "Nouveau mot de passe",
+    "password_changed": "Votre mot de passe a été changé.",
+    "current_password_incorrect": "Le mot de passe actuel est incorrect.",
+    "password_change_failed": "Impossible de changer le mot de passe. Veuillez réessayer.",
+    "no_password_title": "Aucun mot de passe à changer",
+    "no_password_description": "Ce compte se connecte via Google/GitHub et n'a pas de mot de passe AtlasCode à changer."
+  },
   "footer": {
     "copyright": "© {{year}} AtlasCode. Tous droits réservés.",
     "privacy_policy": "Politique de Confidentialité",

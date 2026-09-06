@@ -601,6 +601,16 @@
     "upload_error_size": "هذه الصورة كبيرة جدًا. جرّب صورة أصغر.",
     "upload_error_generic": "تعذّر رفع هذه الصورة. يرجى المحاولة مرة أخرى."
   },
+  "settings": {
+    "change_password": "تغيير كلمة المرور",
+    "current_password": "كلمة المرور الحالية",
+    "new_password": "كلمة المرور الجديدة",
+    "password_changed": "تم تغيير كلمة المرور الخاصة بك.",
+    "current_password_incorrect": "كلمة المرور الحالية غير صحيحة.",
+    "password_change_failed": "تعذّر تغيير كلمة المرور. يرجى المحاولة مرة أخرى.",
+    "no_password_title": "لا توجد كلمة مرور لتغييرها",
+    "no_password_description": "يسجّل هذا الحساب الدخول عبر Google أو GitHub، ولا توجد كلمة مرور AtlasCode لتغييرها."
+  },
   "footer": {
     "copyright": "© {{year}} AtlasCode. جميع الحقوق محفوظة.",
     "privacy_policy": "سياسة الخصوصية",

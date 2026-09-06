@@ -1,6 +1,6 @@
-"""Avatar upload and generated-avatar config.
+"""Password change, avatar upload, and generated-avatar config.
 
-None of these should let a user act on someone else's account or accept
+None of these should let a user act on someone else's account, or accept
 unvalidated image input.
 """
 
@@ -16,6 +16,72 @@ _TINY_PNG_BYTES = base64.b64decode(
     "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII="
 )
 _TINY_PNG_DATA_URL = f"data:image/png;base64,{base64.b64encode(_TINY_PNG_BYTES).decode()}"
+
+
+class TestChangePassword:
+    async def test_correct_current_password_changes_it(self, client: AsyncClient, test_user):
+        response = await client.post(
+            "/auth/change-password",
+            headers=test_user["headers"],
+            json={"current_password": "password123", "new_password": "newpassword456"},
+        )
+        assert response.status_code == 204
+
+        # Old password no longer works, new one does.
+        old = await client.post(
+            "/auth/login",
+            json={"email": test_user["data"]["email"], "password": "password123"},
+        )
+        assert old.status_code == 401
+
+        new = await client.post(
+            "/auth/login",
+            json={"email": test_user["data"]["email"], "password": "newpassword456"},
+        )
+        assert new.status_code == 200
+
+    async def test_wrong_current_password_is_rejected(self, client: AsyncClient, second_user):
+        response = await client.post(
+            "/auth/change-password",
+            headers=second_user["headers"],
+            json={"current_password": "not-the-password", "new_password": "newpassword456"},
+        )
+        assert response.status_code == 401
+
+    async def test_unauthenticated_request_is_rejected(self, client: AsyncClient):
+        response = await client.post(
+            "/auth/change-password",
+            json={"current_password": "password123", "new_password": "newpassword456"},
+        )
+        assert response.status_code == 401
+
+    async def test_oauth_only_account_cannot_change_a_password_it_does_not_have(
+        self, client: AsyncClient, db_session
+    ):
+        from sqlalchemy import select
+        from app.core.security import create_access_token
+        from app.models import User
+
+        # An account with no hashed_password, as a Firebase-only sign-in would have.
+        user = User(
+            email="oauthonly@example.com",
+            username="oauthonly",
+            hashed_password=None,
+            firebase_uid="firebase-uid-1",
+            auth_provider="google",
+            email_verified=True,
+        )
+        db_session.add(user)
+        await db_session.commit()
+        await db_session.refresh(user)
+
+        token = create_access_token(data={"sub": user.id})
+        response = await client.post(
+            "/auth/change-password",
+            headers={"Authorization": f"Bearer {token}"},
+            json={"current_password": "anything", "new_password": "newpassword456"},
+        )
+        assert response.status_code == 400
 
 
 class TestAvatarUpload:

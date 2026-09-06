@@ -596,6 +596,16 @@
     "upload_error_size": "That image is too large. Try a smaller photo.",
     "upload_error_generic": "Couldn't upload that photo. Please try again."
   },
+  "settings": {
+    "change_password": "Change password",
+    "current_password": "Current password",
+    "new_password": "New password",
+    "password_changed": "Your password has been changed.",
+    "current_password_incorrect": "Current password is incorrect.",
+    "password_change_failed": "Couldn't change your password. Please try again.",
+    "no_password_title": "No password to change",
+    "no_password_description": "This account signs in with Google/GitHub and has no AtlasCode password to change."
+  },
   "footer": {
     "copyright": "© {{year}} AtlasCode. All rights reserved.",
     "privacy_policy": "Privacy Policy",

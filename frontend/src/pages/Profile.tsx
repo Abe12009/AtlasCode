@@ -8,6 +8,7 @@ import { useTranslation } from '../hooks/useTranslation';
 import { ProfileAvatar } from '../components/ProfileAvatar';
 import { AvatarBuilder } from '../components/AvatarBuilder';
 import { AvatarUpload } from '../components/AvatarUpload';
+import { ChangePasswordForm } from '../components/ChangePasswordForm';
 import { DEFAULT_AVATAR_CONFIG, parseAvatarConfig, serializeAvatarConfig, type AvatarConfig } from '../lib/avatar';
 
 export function Profile() {
@@ -360,6 +361,25 @@ export function Profile() {
                   )}
                 </div>
               </Card>
+
+              {user?.has_password ? (
+                <Card variant="default" padding="lg" className="relative overflow-hidden">
+                  <div className="relative z-10">
+                    <h2 className="text-lg font-semibold text-text-primary mb-6 flex items-center gap-2">
+                      <Settings className="h-5 w-5 text-accent-400" />
+                      <span>{t('settings.change_password')}</span>
+                    </h2>
+                    <ChangePasswordForm />
+                  </div>
+                </Card>
+              ) : (
+                <Card variant="default" padding="lg" className="relative overflow-hidden">
+                  <div className="relative z-10">
+                    <h2 className="text-lg font-semibold text-text-primary mb-2">{t('settings.no_password_title')}</h2>
+                    <p className="text-text-secondary text-sm">{t('settings.no_password_description')}</p>
+                  </div>
+                </Card>
+              )}
 
               <Card variant="default" padding="lg" className="relative overflow-hidden">
                 <div className="relative z-10">
