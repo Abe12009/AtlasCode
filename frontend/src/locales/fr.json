@@ -159,7 +159,12 @@
     "language": "Langue",
     "level": "Niveau",
     "mission": "Mission",
-    "start_learning": "Commencer l'apprentissage"
+    "start_learning": "Commencer l'apprentissage",
+    "unsectioned": "Fondamentaux",
+    "unsectioned_description": "Les concepts de base sur lesquels s'appuie chaque section ci-dessous.",
+    "locked": "Verrouillé",
+    "prerequisite_required": "Terminez d'abord {{course}}",
+    "est_hours_short": "{{hours}} h"
   },
   "lessons": {
     "lesson": "Leçon",

@@ -45,13 +45,12 @@ describe('Courses Page', () => {
     });
   });
 
-  it('shows course difficulty and estimated time', async () => {
+  it('shows course difficulty', async () => {
     coursesApi.getAll.mockResolvedValue(mockCourses);
-    
+
     renderWithProviders(<Courses />);
-    
+
     await waitFor(() => {
-      expect(screen.getByText(/~30 min\/lesson/i)).toBeInTheDocument();
       expect(screen.getByText(/Beginner/i)).toBeInTheDocument();
     });
   });
@@ -88,13 +87,16 @@ describe('Courses Page', () => {
     });
   });
 
-  it('displays course order badge', async () => {
+  it('groups courses under a section heading', async () => {
     coursesApi.getAll.mockResolvedValue(mockCourses);
-    
+
     renderWithProviders(<Courses />);
-    
+
     await waitFor(() => {
-      expect(screen.getByText(/Course #1/i)).toBeInTheDocument();
+      // No section_id on the mock course, so it renders under the
+      // unsectioned "Foundations" group heading (distinct from the course's
+      // own "Python Foundations" title).
+      expect(screen.getByRole('heading', { level: 2, name: 'Foundations' })).toBeInTheDocument();
     });
   });
 });

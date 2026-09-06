@@ -49,9 +49,27 @@ export interface Course {
   id: number;
   slug: string;
   order: number;
+  section_id?: number | null;
   difficulty: Difficulty;
+  estimated_hours?: number;
+  icon?: string | null;
+  prerequisite_course_id?: number | null;
   translations: CourseTranslation[];
   modules?: Module[];
+}
+
+export interface SectionTranslation {
+  language: Language;
+  title: string;
+  description: string | null;
+}
+
+export interface Section {
+  id: number;
+  slug: string;
+  order: number;
+  icon?: string | null;
+  translations: SectionTranslation[];
 }
 
 export interface ModuleTranslation {

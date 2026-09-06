@@ -42,6 +42,9 @@ vi.mock('../api/services', () => ({
     getById: vi.fn(),
     getProgress: vi.fn(),
   },
+  sectionsApi: {
+    getAll: vi.fn().mockResolvedValue([]),
+  },
   lessonsApi: {
     getById: vi.fn(),
     // A real default: the Micro-Quest reads lesson progress to decide whether
@@ -71,7 +74,11 @@ vi.mock('../api/services', () => ({
     submitTask: vi.fn(),
   },
   dashboardApi: {
-    get: vi.fn(),
+    // React Query rejects an `undefined` resolution outright, so tests that
+    // don't care about dashboard data (e.g. Courses, which only reads
+    // course_progress off it) still get a well-formed empty response instead
+    // of a query error. Tests that DO care override this per-test as before.
+    get: vi.fn().mockResolvedValue({ course_progress: [] }),
   },
   visualApi: {
     compile: vi.fn(),

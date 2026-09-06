@@ -15,6 +15,7 @@ import type {
   VisualProgramRequest,
   VisualProgramResponse,
   Notification,
+  Section,
 } from '../types';
 
 export const authApi = {
@@ -47,6 +48,11 @@ export const coursesApi = {
 
   getProgress: (courseId: number) =>
     apiClient.get<CourseProgress>(`/courses/${courseId}/progress`),
+};
+
+export const sectionsApi = {
+  getAll: (language: string = 'en') =>
+    apiClient.get<Section[]>('/sections', { language }),
 };
 
 export const lessonsApi = {

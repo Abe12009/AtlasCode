@@ -164,7 +164,12 @@
     "language": "اللغة",
     "level": "المستوى",
     "mission": "المهمة",
-    "start_learning": "ابدأ التعلم"
+    "start_learning": "ابدأ التعلم",
+    "unsectioned": "الأساسيات",
+    "unsectioned_description": "المفاهيم الجوهرية التي تُبنى عليها كل الأقسام أدناه.",
+    "locked": "مُقفل",
+    "prerequisite_required": "أكمل {{course}} أولًا",
+    "est_hours_short": "{{hours}} س"
   },
   "lessons": {
     "lesson": "الدرس",

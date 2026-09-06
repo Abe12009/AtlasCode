@@ -159,7 +159,12 @@
     "language": "Language",
     "level": "Level",
     "mission": "Mission",
-    "start_learning": "Start Learning"
+    "start_learning": "Start Learning",
+    "unsectioned": "Foundations",
+    "unsectioned_description": "Core concepts every section below builds on.",
+    "locked": "Locked",
+    "prerequisite_required": "Complete {{course}} first",
+    "est_hours_short": "{{hours}}h"
   },
   "lessons": {
     "lesson": "Lesson",
