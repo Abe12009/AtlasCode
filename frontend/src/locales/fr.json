@@ -574,6 +574,28 @@
     "dark": "Sombre",
     "system": "Système"
   },
+  "avatar": {
+    "title": "Photo de profil",
+    "built": "Avatar créé",
+    "uploaded": "Photo importée",
+    "build_one": "Créer un avatar",
+    "edit": "Modifier l'avatar",
+    "upload_photo": "Importer une photo",
+    "change_photo": "Changer la photo",
+    "use_this": "Utiliser celle-ci",
+    "save": "Enregistrer l'avatar",
+    "saved": "Avatar enregistré",
+    "skin_tone": "Teint",
+    "hair_style": "Coiffure",
+    "hair_color": "Couleur des cheveux",
+    "face": "Expression",
+    "outfit": "Tenue",
+    "accessory": "Accessoire",
+    "upload_hint": "PNG, JPEG ou WebP, jusqu'à 500 Ko après compression.",
+    "upload_error_type": "Veuillez choisir une image PNG, JPEG ou WebP.",
+    "upload_error_size": "Cette image est trop volumineuse. Essayez une photo plus petite.",
+    "upload_error_generic": "Impossible d'importer cette photo. Veuillez réessayer."
+  },
   "footer": {
     "copyright": "© {{year}} AtlasCode. Tous droits réservés.",
     "privacy_policy": "Politique de Confidentialité",

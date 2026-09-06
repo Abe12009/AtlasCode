@@ -69,7 +69,22 @@ class User(Base):
     firebase_uid = Column(String(128), unique=True, index=True, nullable=True)
     auth_provider = Column(String(32), default=AuthProviderEnum.password.value, nullable=False)
     email_verified = Column(Boolean, default=False, nullable=False)
+    #: A federated provider's picture URL (Google/GitHub). Only meaningful
+    #: when avatar_type == "upload" and avatar_image_data is empty.
     avatar_url = Column(String(512), nullable=True)
+    #: A device-uploaded photo, stored as a data: URL (base64). There is no
+    #: object storage in this deployment, so small images live directly in
+    #: the row; the API enforces a size cap (see app.api.auth) rather than
+    #: relying on a column limit. Takes priority over avatar_url when both
+    #: are set and avatar_type == "upload".
+    avatar_image_data = Column(Text, nullable=True)
+    #: The built cartoon avatar's layer choices (skin tone, hair, face shape,
+    #: outfit, accessories, ...), serialized as JSON. Structured data, not a
+    #: rendered image — the frontend composes it from a fixed set of original
+    #: SVG layer assets. Only meaningful when avatar_type == "generated".
+    avatar_config = Column(Text, nullable=True)
+    #: Which of avatar_url / avatar_config is the active profile picture.
+    avatar_type = Column(String(20), default="upload", nullable=False)
     #: Minutes east of UTC as reported by the client, so day and week
     #: boundaries for streaks and weekly stats match what the student sees.
     timezone_offset_minutes = Column(Integer, default=0, nullable=False)

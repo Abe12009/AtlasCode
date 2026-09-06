@@ -99,6 +99,15 @@ MIGRATIONS: tuple[AddColumn, ...] = (
     ),
     AddColumn("courses", "icon", "VARCHAR(50)"),
     AddColumn("courses", "prerequisite_course_id", "INTEGER"),
+    # --- Account settings ----------------------------------------------------
+    AddColumn("users", "avatar_config", "TEXT"),
+    AddColumn("users", "avatar_image_data", "TEXT"),
+    AddColumn(
+        "users",
+        "avatar_type",
+        "VARCHAR(20) DEFAULT 'upload'",
+        backfill="UPDATE users SET avatar_type = 'upload' WHERE avatar_type IS NULL",
+    ),
 )
 
 #: Indexes for the columns above. ``IF NOT EXISTS`` is supported by both

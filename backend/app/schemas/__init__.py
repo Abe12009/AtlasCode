@@ -35,6 +35,25 @@ class UserUpdate(BaseModel):
     username: Optional[str] = Field(default=None, min_length=3, max_length=100)
     preferred_language: Optional[LanguageEnum] = None
     timezone_offset_minutes: Optional[int] = None
+    #: "upload" (avatar_url) or "generated" (avatar_config). Switching this
+    #: does not clear the other field, so a user can flip back and forth
+    #: without losing either the built avatar or the uploaded photo.
+    avatar_type: Optional[str] = Field(default=None, pattern="^(upload|generated)$")
+    #: The built avatar's layer choices, as a JSON string. Validated shape-only
+    #: here (parseable JSON, reasonable size) — the frontend owns which layer
+    #: values are meaningful, since that catalog only ever grows.
+    avatar_config: Optional[str] = Field(default=None, max_length=4096)
+
+
+class AvatarUploadRequest(BaseModel):
+    """A device photo, already resized/compressed client-side.
+
+    ``data_url`` must be a base64 data: URL (``data:image/png;base64,...``)
+    for one of the allowed image types — validated server-side in
+    app.api.auth, since a client-side check alone is not trustworthy.
+    """
+
+    data_url: str = Field(min_length=32, max_length=2_000_000)
 
 
 class FirebaseLoginRequest(BaseModel):
@@ -66,6 +85,9 @@ class UserResponse(UserBase):
     auth_provider: str = "password"
     email_verified: bool = False
     avatar_url: Optional[str] = None
+    avatar_image_data: Optional[str] = None
+    avatar_config: Optional[str] = None
+    avatar_type: str = "upload"
     #: True when the account can sign in with an AtlasCode password. False for
     #: accounts that exist only through a federated provider.
     has_password: bool = False

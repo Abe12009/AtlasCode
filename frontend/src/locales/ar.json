@@ -579,6 +579,28 @@
     "dark": "داكن",
     "system": "النظام"
   },
+  "avatar": {
+    "title": "صورة الملف الشخصي",
+    "built": "أفاتار مُنشأ",
+    "uploaded": "صورة مرفوعة",
+    "build_one": "إنشاء أفاتار",
+    "edit": "تعديل الأفاتار",
+    "upload_photo": "رفع صورة",
+    "change_photo": "تغيير الصورة",
+    "use_this": "استخدام هذا",
+    "save": "حفظ الأفاتار",
+    "saved": "تم حفظ الأفاتار",
+    "skin_tone": "لون البشرة",
+    "hair_style": "تسريحة الشعر",
+    "hair_color": "لون الشعر",
+    "face": "التعبير",
+    "outfit": "الزي",
+    "accessory": "الإكسسوار",
+    "upload_hint": "PNG أو JPEG أو WebP، حتى 500 كيلوبايت بعد الضغط.",
+    "upload_error_type": "يرجى اختيار صورة بصيغة PNG أو JPEG أو WebP.",
+    "upload_error_size": "هذه الصورة كبيرة جدًا. جرّب صورة أصغر.",
+    "upload_error_generic": "تعذّر رفع هذه الصورة. يرجى المحاولة مرة أخرى."
+  },
   "footer": {
     "copyright": "© {{year}} AtlasCode. جميع الحقوق محفوظة.",
     "privacy_policy": "سياسة الخصوصية",

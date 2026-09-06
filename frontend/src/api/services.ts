@@ -27,8 +27,14 @@ export const authApi = {
 
   getMe: () => apiClient.get<User>('/auth/me'),
 
-  updateMe: (data: { username?: string; preferred_language?: string }) =>
-    apiClient.patch<User>('/auth/me', data),
+  updateMe: (data: {
+    username?: string;
+    preferred_language?: string;
+    avatar_type?: 'upload' | 'generated';
+    avatar_config?: string;
+  }) => apiClient.patch<User>('/auth/me', data),
+
+  uploadAvatar: (dataUrl: string) => apiClient.post<User>('/auth/me/avatar', { data_url: dataUrl }),
 
   getProfile: () => apiClient.get<StudentProfile>('/auth/profile'),
 

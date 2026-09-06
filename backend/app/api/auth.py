@@ -1,3 +1,6 @@
+import base64
+import json
+import re
 from datetime import datetime
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -21,6 +24,7 @@ from app.models import (
 )
 from app.schemas import (
     AuthConfigResponse,
+    AvatarUploadRequest,
     FirebaseLoginRequest,
     PasswordChangeRequest,
     StudentProfileResponse,
@@ -189,8 +193,76 @@ async def update_current_user(
         current_user.username = user_update.username
     if user_update.preferred_language is not None:
         current_user.preferred_language = user_update.preferred_language
+    if user_update.avatar_config is not None:
+        try:
+            json.loads(user_update.avatar_config)
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail="avatar_config must be valid JSON") from exc
+        current_user.avatar_config = user_update.avatar_config
+    if user_update.avatar_type is not None:
+        if user_update.avatar_type == "generated" and not (
+            user_update.avatar_config or current_user.avatar_config
+        ):
+            raise HTTPException(
+                status_code=400,
+                detail="Cannot switch to a generated avatar before one has been built",
+            )
+        current_user.avatar_type = user_update.avatar_type
     _apply_timezone(current_user, user_update.timezone_offset_minutes)
 
+    await db.commit()
+    await db.refresh(current_user)
+    return current_user
+
+
+#: Formats accepted for an uploaded avatar. SVG is excluded deliberately —
+#: it can embed script content and this is rendered back to other users.
+_ALLOWED_AVATAR_MIME_TYPES = {"image/png", "image/jpeg", "image/webp"}
+#: Decoded byte size cap. The frontend resizes/compresses before sending;
+#: this is the server-side backstop, since a client-side check alone proves
+#: nothing.
+_MAX_AVATAR_BYTES = 500_000
+
+
+@router.post("/me/avatar", response_model=UserResponse)
+async def upload_avatar(
+    payload: AvatarUploadRequest,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Set a device-uploaded photo as the active avatar.
+
+    Expects a base64 data: URL for an allowed image type, already resized and
+    cropped client-side. Re-validates type and size here rather than trusting
+    the client: the mime type in the data URL prefix, and the true decoded
+    byte length (a client could lie about either).
+    """
+    match = re.match(r"^data:([\w/+.-]+);base64,(.+)$", payload.data_url, re.DOTALL)
+    if not match:
+        raise HTTPException(status_code=400, detail="avatar must be a base64 data URL")
+
+    mime_type, encoded = match.group(1).lower(), match.group(2)
+    if mime_type not in _ALLOWED_AVATAR_MIME_TYPES:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Unsupported image type. Allowed: {', '.join(sorted(_ALLOWED_AVATAR_MIME_TYPES))}",
+        )
+
+    try:
+        decoded = base64.b64decode(encoded, validate=True)
+    except (ValueError, base64.binascii.Error) as exc:
+        raise HTTPException(status_code=400, detail="Invalid image data") from exc
+
+    if len(decoded) > _MAX_AVATAR_BYTES:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Image too large (max {_MAX_AVATAR_BYTES // 1000}KB after compression)",
+        )
+    if len(decoded) == 0:
+        raise HTTPException(status_code=400, detail="Image is empty")
+
+    current_user.avatar_image_data = payload.data_url
+    current_user.avatar_type = "upload"
     await db.commit()
     await db.refresh(current_user)
     return current_user

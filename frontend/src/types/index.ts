@@ -25,6 +25,10 @@ export interface User {
   preferred_language: Language;
   is_active: boolean;
   created_at: string;
+  avatar_url?: string | null;
+  avatar_image_data?: string | null;
+  avatar_config?: string | null;
+  avatar_type?: string;
 }
 
 export interface StudentProfile {

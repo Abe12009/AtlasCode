@@ -3,11 +3,12 @@ import { Outlet, NavLink, Link, useNavigate, useLocation } from 'react-router-do
 import { useAuth } from '../contexts/AuthContext';
 import { useTranslation } from '../hooks/useTranslation';
 import { LayoutDashboard, BookOpen, FolderKanban, User, LogOut, Menu, X, ChevronDown, Trophy, Code, Zap, Star } from 'lucide-react';
-import { Button, Avatar, Dropdown, DropdownItem, DropdownSeparator, Badge, cn } from './ui';
+import { Button, Dropdown, DropdownItem, DropdownSeparator, Badge, cn } from './ui';
 import { StatusBadge, XPBadge, StreakBadge } from './ui/StatusBadge';
 import { NotificationBell } from './NotificationBell';
 import { LanguageSwitcher } from './LanguageSwitcher';
 import { ThemeToggle } from './ui/ThemeToggle';
+import { ProfileAvatar } from './ProfileAvatar';
 
 export function Layout() {
   const { user, profile, logout, loading: authLoading } = useAuth();
@@ -144,7 +145,7 @@ export function Layout() {
                   <Button
                     variant="ghost"
                     size="sm"
-                    leftIcon={<Avatar name={user?.username || ''} size="xs" />}
+                    leftIcon={<ProfileAvatar user={user} size="xs" />}
                     onClick={() => setUserMenuOpen(!userMenuOpen)}
                     aria-label={t('common.profile')}
                     className="gap-2"

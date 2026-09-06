@@ -1,20 +1,60 @@
-import { useQuery } from '@tanstack/react-query';
-import { dashboardApi } from '../api/services';
-import { Trophy, Target, Flame, FolderKanban, CheckCircle, Award, Settings, User, TrendingUp, Sparkles, Code, BookOpen, Terminal } from 'lucide-react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { dashboardApi, authApi } from '../api/services';
+import { Trophy, Target, Flame, FolderKanban, CheckCircle, Award, Settings, User, TrendingUp, Sparkles, Code, BookOpen, Terminal, Palette } from 'lucide-react';
 import { useState } from 'react';
 import { formatDistanceToNow } from 'date-fns';
-import { Card, Badge, Progress, Button, Avatar, cn, Skeleton, XPBadge, StreakBadge, AchievementBadge } from '../components/ui';
+import { Card, Badge, Progress, Button, cn, Skeleton, XPBadge, StreakBadge, AchievementBadge, Alert } from '../components/ui';
 import { useTranslation } from '../hooks/useTranslation';
-import { StatusBadge } from '../components/ui/StatusBadge';
+import { ProfileAvatar } from '../components/ProfileAvatar';
+import { AvatarBuilder } from '../components/AvatarBuilder';
+import { AvatarUpload } from '../components/AvatarUpload';
+import { DEFAULT_AVATAR_CONFIG, parseAvatarConfig, serializeAvatarConfig, type AvatarConfig } from '../lib/avatar';
 
 export function Profile() {
   const { t, isRTL } = useTranslation();
+  const queryClient = useQueryClient();
   const { data: dashboard, isLoading, error } = useQuery({
     queryKey: ['dashboard'],
     queryFn: dashboardApi.get,
   });
 
   const [activeTab, setActiveTab] = useState<'overview' | 'achievements' | 'settings'>('overview');
+  const [editingAvatar, setEditingAvatar] = useState(false);
+  const [avatarSaving, setAvatarSaving] = useState(false);
+  const [avatarUploading, setAvatarUploading] = useState(false);
+  const [avatarSaved, setAvatarSaved] = useState(false);
+
+  const refreshDashboard = () => queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+
+  const saveAvatarConfig = async (config: AvatarConfig) => {
+    setAvatarSaving(true);
+    setAvatarSaved(false);
+    try {
+      await authApi.updateMe({ avatar_config: serializeAvatarConfig(config), avatar_type: 'generated' });
+      await refreshDashboard();
+      setAvatarSaved(true);
+      setEditingAvatar(false);
+    } finally {
+      setAvatarSaving(false);
+    }
+  };
+
+  const uploadAvatarPhoto = async (dataUrl: string) => {
+    setAvatarUploading(true);
+    setAvatarSaved(false);
+    try {
+      await authApi.uploadAvatar(dataUrl);
+      await refreshDashboard();
+      setAvatarSaved(true);
+    } finally {
+      setAvatarUploading(false);
+    }
+  };
+
+  const setActiveAvatarType = async (type: 'upload' | 'generated') => {
+    await authApi.updateMe({ avatar_type: type });
+    await refreshDashboard();
+  };
 
   if (isLoading) {
     return (
@@ -80,8 +120,8 @@ export function Profile() {
             <div className="absolute inset-0 bg-gradient-to-br from-primary-500/5 via-transparent to-accent-500/5" aria-hidden="true" />
             <div className="relative z-10">
               <div className="text-center">
-                <Avatar
-                  name={user?.username || ''}
+                <ProfileAvatar
+                  user={user}
                   size="xl"
                   className="mx-auto mb-4 ring-4 ring-primary-500/20"
                 />
@@ -267,35 +307,89 @@ export function Profile() {
           )}
 
           {activeTab === 'settings' && (
-            <Card variant="default" padding="lg" className="max-w-md relative overflow-hidden">
-              <div className="absolute inset-0 bg-grid-pattern-opacity" aria-hidden="true" />
-              <div className="relative z-10">
-                <h2 className="text-lg font-semibold text-text-primary mb-6 flex items-center gap-2">
-                  <Settings className="h-5 w-5 text-accent-400" />
-                  <span>{t('profile_page.settings')}</span>
-                </h2>
-                <div className="space-y-6">
-                  <div>
-                    <label className="block text-sm font-medium text-text-secondary mb-1">
-                      {t('common.preferred_language')}
-                    </label>
-                    <select
-                      defaultValue={user?.preferred_language}
-                      className="w-full px-4 py-3 border border-border-primary/50 rounded-lg bg-bg-secondary/50 text-text-primary focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-transparent"
-                    >
-                      <option value="en">{t('common.english')}</option>
-                      <option value="fr">{t('common.french')}</option>
-                      <option value="ar">{t('common.arabic')}</option>
-                    </select>
-                  </div>
-                  <div className="pt-6 border-t border-border-primary/50">
-                    <Button variant="destructive" className="w-full">
-                      {t('profile_page.delete_account')}
-                    </Button>
+            <div className="space-y-6 max-w-2xl">
+              <Card variant="default" padding="lg" className="relative overflow-hidden">
+                <div className="relative z-10">
+                  <h2 className="text-lg font-semibold text-text-primary mb-6 flex items-center gap-2">
+                    <Palette className="h-5 w-5 text-accent-400" />
+                    <span>{t('avatar.title')}</span>
+                  </h2>
+
+                  {avatarSaved && <Alert variant="success" className="mb-4">{t('avatar.saved')}</Alert>}
+
+                  {editingAvatar ? (
+                    <AvatarBuilder
+                      initialConfig={parseAvatarConfig(user?.avatar_config) ?? DEFAULT_AVATAR_CONFIG}
+                      onSave={saveAvatarConfig}
+                      saving={avatarSaving}
+                    />
+                  ) : (
+                    <div className="flex flex-col sm:flex-row items-start gap-6">
+                      <ProfileAvatar user={user} size="2xl" />
+                      <div className="flex-1 space-y-4">
+                        <div className="flex items-center gap-3">
+                          <label className="flex items-center gap-2 text-sm text-text-secondary">
+                            <input
+                              type="radio"
+                              name="avatar_type"
+                              checked={user?.avatar_type !== 'generated'}
+                              onChange={() => setActiveAvatarType('upload')}
+                              disabled={!user?.avatar_url && !user?.avatar_image_data}
+                            />
+                            {t('avatar.uploaded')}
+                          </label>
+                          <label className="flex items-center gap-2 text-sm text-text-secondary">
+                            <input
+                              type="radio"
+                              name="avatar_type"
+                              checked={user?.avatar_type === 'generated'}
+                              onChange={() => setActiveAvatarType('generated')}
+                              disabled={!user?.avatar_config}
+                            />
+                            {t('avatar.built')}
+                          </label>
+                        </div>
+                        <div className="flex flex-wrap gap-3">
+                          <Button variant="outline" onClick={() => setEditingAvatar(true)}>
+                            {user?.avatar_config ? t('avatar.edit') : t('avatar.build_one')}
+                          </Button>
+                          <AvatarUpload onUpload={uploadAvatarPhoto} uploading={avatarUploading} />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </Card>
+
+              <Card variant="default" padding="lg" className="relative overflow-hidden">
+                <div className="relative z-10">
+                  <h2 className="text-lg font-semibold text-text-primary mb-6 flex items-center gap-2">
+                    <Settings className="h-5 w-5 text-accent-400" />
+                    <span>{t('profile_page.settings')}</span>
+                  </h2>
+                  <div className="space-y-6">
+                    <div>
+                      <label className="block text-sm font-medium text-text-secondary mb-1">
+                        {t('common.preferred_language')}
+                      </label>
+                      <select
+                        defaultValue={user?.preferred_language}
+                        className="w-full px-4 py-3 border border-border-primary/50 rounded-lg bg-bg-secondary/50 text-text-primary focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-transparent"
+                      >
+                        <option value="en">{t('common.english')}</option>
+                        <option value="fr">{t('common.french')}</option>
+                        <option value="ar">{t('common.arabic')}</option>
+                      </select>
+                    </div>
+                    <div className="pt-6 border-t border-border-primary/50">
+                      <Button variant="destructive" className="w-full">
+                        {t('profile_page.delete_account')}
+                      </Button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </Card>
+              </Card>
+            </div>
           )}
         </main>
       </div>
