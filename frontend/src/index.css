@@ -22,57 +22,59 @@
 
 @theme {
   /* Surfaces — light */
-  --color-bg-primary: #FFFFFF;
-  --color-bg-secondary: #F8FAFC;
-  --color-bg-tertiary: #F1F5F9;
-  --color-bg-quaternary: #E2E8F0;
+  --color-bg-primary: #FBFAF8;
+  --color-bg-secondary: #F4F1EC;
+  --color-bg-tertiary: #ECE7DD;
+  --color-bg-quaternary: #E3DCCC;
   --color-bg-elevated: #FFFFFF;
   --color-bg-code: #0F172A;
   --color-bg-code-light: #1E293B;
   --color-bg-overlay: rgb(15 23 42 / 0.45);
 
   /* Content — light */
-  --color-text-primary: #0F172A;
-  --color-text-secondary: #475569;
-  --color-text-tertiary: #64748B;
-  --color-text-quaternary: #94A3B8;
+  --color-text-primary: #1C1B18;
+  --color-text-secondary: #57534E;
+  --color-text-tertiary: #78716C;
+  --color-text-quaternary: #A8A29E;
   --color-text-inverse: #F8FAFC;
-  --color-text-link: #1D4ED8;
-  --color-text-link-hover: #1E40AF;
+  --color-text-link: #5B3FE0;
+  --color-text-link-hover: #4A2FC9;
   --color-text-on-accent: #FFFFFF;
 
   /* Lines — light */
-  --color-border-primary: #E2E8F0;
-  --color-border-secondary: #CBD5E1;
-  --color-border-tertiary: #94A3B8;
-  --color-border-focus: #2563EB;
+  --color-border-primary: #E4DFD3;
+  --color-border-secondary: #D6CFBF;
+  --color-border-tertiary: #A8A29E;
+  --color-border-focus: #5B3FE0;
   --color-border-error: #DC2626;
   --color-border-success: #059669;
 
-  /* Brand ramps are theme-independent; the tokens above decide how they read. */
-  --color-primary-50: #EFF6FF;
-  --color-primary-100: #DBEAFE;
-  --color-primary-200: #BFDBFE;
-  --color-primary-300: #93C5FD;
-  --color-primary-400: #60A5FA;
-  --color-primary-500: #3B82F6;
-  --color-primary-600: #2563EB;
-  --color-primary-700: #1D4ED8;
-  --color-primary-800: #1E40AF;
-  --color-primary-900: #1E3A8A;
-  --color-primary-950: #172554;
+  /* Brand ramps: these are the LIGHT values. [data-theme="dark"] below
+   * re-declares every step with the original blue/orange ramp so dark mode
+   * stays pixel-identical to before this redesign. */
+  --color-primary-50: #F1EEFC;
+  --color-primary-100: #E1DBF9;
+  --color-primary-200: #C7BEF3;
+  --color-primary-300: #B3A0F0;
+  --color-primary-400: #8F72E8;
+  --color-primary-500: #5B3FE0;
+  --color-primary-600: #4A2FC9;
+  --color-primary-700: #3B23A8;
+  --color-primary-800: #2E1B84;
+  --color-primary-900: #221465;
+  --color-primary-950: #150C40;
 
-  --color-accent-50: #FFF7ED;
-  --color-accent-100: #FFEDD5;
-  --color-accent-200: #FED7AA;
-  --color-accent-300: #FDBA74;
-  --color-accent-400: #FB923C;
-  --color-accent-500: #F97316;
-  --color-accent-600: #EA580C;
-  --color-accent-700: #C2410C;
-  --color-accent-800: #9A3412;
-  --color-accent-900: #7C2D12;
-  --color-accent-950: #431407;
+  --color-accent-50: #EAF7F3;
+  --color-accent-100: #CFEEE3;
+  --color-accent-200: #A3DFCB;
+  --color-accent-300: #7DD4BD;
+  --color-accent-400: #3FBBA0;
+  --color-accent-500: #1D9A82;
+  --color-accent-600: #167A68;
+  --color-accent-700: #116055;
+  --color-accent-800: #0D4B43;
+  --color-accent-900: #0A3A35;
+  --color-accent-950: #052120;
 
   --color-success-50: #F0FDF4;
   --color-success-100: #DCFCE7;
@@ -120,14 +122,14 @@
   --color-neutral-950: #020617;
 
   /* Semantic single-purpose colours — light */
-  --color-accent-primary: #EA580C;
-  --color-accent-primary-hover: #C2410C;
-  --color-accent-primary-light: #FFEDD5;
+  --color-accent-primary: #1D9A82;
+  --color-accent-primary-hover: #167A68;
+  --color-accent-primary-light: #CFEEE3;
   --color-accent-primary-foreground: #FFFFFF;
 
-  --color-primary-main: #2563EB;
-  --color-primary-hover: #1D4ED8;
-  --color-primary-light: #DBEAFE;
+  --color-primary-main: #5B3FE0;
+  --color-primary-hover: #4A2FC9;
+  --color-primary-light: #E1DBF9;
   --color-primary-foreground: #FFFFFF;
 
   --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
@@ -140,11 +142,11 @@
   --shadow-xl: 0 20px 25px -5px rgb(15 23 42 / 0.1), 0 8px 10px -6px rgb(15 23 42 / 0.06);
   --shadow-2xl: 0 25px 50px -12px rgb(15 23 42 / 0.18);
 
-  --shadow-card: 0 1px 2px 0 rgb(15 23 42 / 0.06), 0 1px 3px 0 rgb(15 23 42 / 0.08);
-  --shadow-card-hover: 0 12px 20px -8px rgb(15 23 42 / 0.16), 0 4px 8px -4px rgb(15 23 42 / 0.08);
-  --shadow-elevated: 0 4px 12px -2px rgb(15 23 42 / 0.1), 0 2px 6px -3px rgb(15 23 42 / 0.06);
-  --shadow-glow-primary: 0 6px 20px -6px rgb(37 99 235 / 0.45);
-  --shadow-glow-accent: 0 6px 20px -6px rgb(234 88 12 / 0.45);
+  --shadow-card: 0 1px 3px 0 rgb(28 27 24 / 0.07), 0 1px 2px -1px rgb(28 27 24 / 0.06);
+  --shadow-card-hover: 0 14px 24px -8px rgb(28 27 24 / 0.14), 0 4px 10px -4px rgb(28 27 24 / 0.08);
+  --shadow-elevated: 0 4px 14px -2px rgb(28 27 24 / 0.1), 0 2px 8px -3px rgb(28 27 24 / 0.07);
+  --shadow-glow-primary: 0 6px 20px -6px rgb(74 47 201 / 0.45);
+  --shadow-glow-accent: 0 6px 20px -6px rgb(22 122 104 / 0.45);
   --shadow-glow-success: 0 6px 20px -6px rgb(22 163 74 / 0.45);
 
   --radius-xs: 0.25rem;
@@ -257,6 +259,33 @@
   --color-primary-hover: #2563EB;
   --color-primary-light: #1E3A8A;
   --color-primary-foreground: #FFFFFF;
+
+  /* Brand ramps, unchanged from before the light-mode redesign — dark mode
+   * keeps the original blue/orange regardless of the light-mode values
+   * declared in @theme above. */
+  --color-primary-50: #EFF6FF;
+  --color-primary-100: #DBEAFE;
+  --color-primary-200: #BFDBFE;
+  --color-primary-300: #93C5FD;
+  --color-primary-400: #60A5FA;
+  --color-primary-500: #3B82F6;
+  --color-primary-600: #2563EB;
+  --color-primary-700: #1D4ED8;
+  --color-primary-800: #1E40AF;
+  --color-primary-900: #1E3A8A;
+  --color-primary-950: #172554;
+
+  --color-accent-50: #FFF7ED;
+  --color-accent-100: #FFEDD5;
+  --color-accent-200: #FED7AA;
+  --color-accent-300: #FDBA74;
+  --color-accent-400: #FB923C;
+  --color-accent-500: #F97316;
+  --color-accent-600: #EA580C;
+  --color-accent-700: #C2410C;
+  --color-accent-800: #9A3412;
+  --color-accent-900: #7C2D12;
+  --color-accent-950: #431407;
 
   --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.3);
   --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.4), 0 1px 2px -1px rgb(0 0 0 / 0.3);
@@ -936,6 +965,14 @@ html[dir="rtl"] .prose ol {
     var(--color-primary-400) 55%,
     var(--color-accent-400) 100%
   );
+}
+
+/* Per-section catalog chip colors (Courses.tsx) are light-mode only — dark
+ * mode keeps the original neutral primary-tinted chip regardless of the
+ * inline light-mode colors set on the element. */
+[data-theme="dark"] .section-chip {
+  background-color: color-mix(in oklab, var(--color-primary-500) 10%, transparent) !important;
+  border-color: color-mix(in oklab, var(--color-primary-500) 20%, transparent) !important;
 }
 
 .border-gradient {

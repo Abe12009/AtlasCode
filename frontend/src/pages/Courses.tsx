@@ -4,6 +4,7 @@ import { coursesApi, sectionsApi, dashboardApi } from '../api/services';
 import { BookOpen, Clock, Target, ChevronRight, Lock } from 'lucide-react';
 import { useTranslation } from '../hooks/useTranslation';
 import { Card, Badge, Skeleton, cn, StatusBadge, ProgressBar } from '../components/ui';
+import { getSectionColor } from '../lib/sectionColors';
 import type { Course, Section } from '../types';
 
 interface SectionGroup {
@@ -111,41 +112,47 @@ export function Courses() {
         <p className="text-text-secondary mt-1">{t('courses.browse')}</p>
       </div>
 
-      {visibleGroups.map((group) => (
-        <section key={group.id ?? 'unsectioned'} className="space-y-4">
-          <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary-500/10 border border-primary-500/20 text-2xl flex-shrink-0">
-              <span aria-hidden="true">{group.icon}</span>
+      {visibleGroups.map((group) => {
+        const sectionColor = getSectionColor(group.slug);
+        return (
+          <section key={group.id ?? 'unsectioned'} className="space-y-4">
+            <div className="flex items-center gap-3">
+              <div
+                className="section-chip flex h-11 w-11 items-center justify-center rounded-xl border text-2xl flex-shrink-0"
+                style={{ backgroundColor: sectionColor.bg, borderColor: sectionColor.border }}
+              >
+                <span aria-hidden="true">{group.icon}</span>
+              </div>
+              <div>
+                <h2 className="text-lg font-semibold text-text-primary">{group.title}</h2>
+                {group.description && (
+                  <p className="text-sm text-text-tertiary">{group.description}</p>
+                )}
+              </div>
             </div>
-            <div>
-              <h2 className="text-lg font-semibold text-text-primary">{group.title}</h2>
-              {group.description && (
-                <p className="text-sm text-text-tertiary">{group.description}</p>
-              )}
-            </div>
-          </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {group.courses.map((course) => (
-              <CourseCard
-                key={course.id}
-                course={course}
-                progress={progressByCourseId.get(course.id)}
-                prerequisite={
-                  course.prerequisite_course_id
-                    ? courses?.find((c) => c.id === course.prerequisite_course_id)
-                    : undefined
-                }
-                prerequisiteProgress={
-                  course.prerequisite_course_id
-                    ? progressByCourseId.get(course.prerequisite_course_id)
-                    : undefined
-                }
-              />
-            ))}
-          </div>
-        </section>
-      ))}
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {group.courses.map((course) => (
+                <CourseCard
+                  key={course.id}
+                  course={course}
+                  progress={progressByCourseId.get(course.id)}
+                  prerequisite={
+                    course.prerequisite_course_id
+                      ? courses?.find((c) => c.id === course.prerequisite_course_id)
+                      : undefined
+                  }
+                  prerequisiteProgress={
+                    course.prerequisite_course_id
+                      ? progressByCourseId.get(course.prerequisite_course_id)
+                      : undefined
+                  }
+                />
+              ))}
+            </div>
+          </section>
+        );
+      })}
 
       {visibleGroups.length === 0 && (
         <div className="text-center py-16 animate-fade-in">
