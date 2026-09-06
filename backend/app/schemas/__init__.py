@@ -35,6 +35,9 @@ class UserUpdate(BaseModel):
     username: Optional[str] = Field(default=None, min_length=3, max_length=100)
     preferred_language: Optional[LanguageEnum] = None
     timezone_offset_minutes: Optional[int] = None
+    #: "public" or "private". Whether other signed-in users can view this
+    #: account's profile/achievements. See GET /users/{username}.
+    profile_visibility: Optional[str] = Field(default=None, pattern="^(public|private)$")
     #: "upload" (avatar_url) or "generated" (avatar_config). Switching this
     #: does not clear the other field, so a user can flip back and forth
     #: without losing either the built avatar or the uploaded photo.
@@ -88,6 +91,7 @@ class UserResponse(UserBase):
     avatar_image_data: Optional[str] = None
     avatar_config: Optional[str] = None
     avatar_type: str = "upload"
+    profile_visibility: str = "private"
     #: True when the account can sign in with an AtlasCode password. False for
     #: accounts that exist only through a federated provider.
     has_password: bool = False
@@ -365,6 +369,26 @@ class DashboardResponse(BaseModel):
     course_progress: List[CourseProgressResponse] = []
     recent_achievements: List[UserAchievementResponse] = []
     current_project: Optional[ProjectProgressResponse] = None
+
+
+class PublicProfileResponse(BaseModel):
+    """What one user may see of another's profile.
+
+    Deliberately narrow: no email, no settings, no auth/provider details, no
+    per-lesson progress — only what a public profile is meant to show. See
+    GET /users/{username} for the visibility rule this backs.
+    """
+
+    username: str
+    avatar_url: Optional[str] = None
+    avatar_image_data: Optional[str] = None
+    avatar_config: Optional[str] = None
+    avatar_type: str = "upload"
+    level: int = 1
+    xp: int = 0
+    streak: int = 0
+    member_since: datetime
+    achievements: List[UserAchievementResponse] = []
 
 
 class CodeExecutionRequest(BaseModel):

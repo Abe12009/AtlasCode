@@ -19,6 +19,7 @@ const LessonDetail = lazy(() => import('./pages/LessonDetail').then(m => ({ defa
 const Projects = lazy(() => import('./pages/Projects').then(m => ({ default: m.Projects })));
 const ProjectDetail = lazy(() => import('./pages/ProjectDetail').then(m => ({ default: m.ProjectDetail })));
 const Profile = lazy(() => import('./pages/Profile').then(m => ({ default: m.Profile })));
+const PublicProfile = lazy(() => import('./pages/PublicProfile').then(m => ({ default: m.PublicProfile })));
 const VisualProgrammingPage = lazy(() => import('./pages/VisualProgramming').then(m => ({ default: m.VisualProgrammingPage })));
 
 const Layout = lazy(() => import('./components/Layout').then(m => ({ default: m.Layout })));
@@ -96,6 +97,7 @@ function AppRoutes() {
         <Route path="projects" element={<Suspense fallback={<LoadingFallback />}><Projects /></Suspense>} />
         <Route path="projects/:projectId" element={<Suspense fallback={<LoadingFallback />}><ProjectDetail /></Suspense>} />
         <Route path="profile" element={<Suspense fallback={<LoadingFallback />}><Profile /></Suspense>} />
+        <Route path="u/:username" element={<Suspense fallback={<LoadingFallback />}><PublicProfile /></Suspense>} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

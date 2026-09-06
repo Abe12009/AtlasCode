@@ -609,7 +609,18 @@
     "current_password_incorrect": "كلمة المرور الحالية غير صحيحة.",
     "password_change_failed": "تعذّر تغيير كلمة المرور. يرجى المحاولة مرة أخرى.",
     "no_password_title": "لا توجد كلمة مرور لتغييرها",
-    "no_password_description": "يسجّل هذا الحساب الدخول عبر Google أو GitHub، ولا توجد كلمة مرور AtlasCode لتغييرها."
+    "no_password_description": "يسجّل هذا الحساب الدخول عبر Google أو GitHub، ولا توجد كلمة مرور AtlasCode لتغييرها.",
+    "privacy_title": "خصوصية الملف الشخصي",
+    "privacy_description": "تحكّم في إمكانية رؤية المستخدمين الآخرين المسجّلين لملفك الشخصي وإنجازاتك.",
+    "profile_public": "عام — مرئي للمستخدمين الآخرين",
+    "profile_private": "خاص — مرئي لك فقط",
+    "privacy_updated": "تم تحديث إعداد الخصوصية."
+  },
+  "public_profile": {
+    "view_public": "عرض الملف الشخصي العام",
+    "member_since": "عضو منذ {{date}}",
+    "not_found_title": "الملف الشخصي غير موجود",
+    "not_found_description": "هذا الملف الشخصي غير موجود، أو أن صاحبه جعله خاصًا."
   },
   "footer": {
     "copyright": "© {{year}} AtlasCode. جميع الحقوق محفوظة.",

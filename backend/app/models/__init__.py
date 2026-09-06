@@ -85,6 +85,10 @@ class User(Base):
     avatar_config = Column(Text, nullable=True)
     #: Which of avatar_url / avatar_config is the active profile picture.
     avatar_type = Column(String(20), default="upload", nullable=False)
+    #: Whether this account's public profile (username, level, achievements)
+    #: is visible to other signed-in users. Defaults to private: an opt-in
+    #: model is the safer default for anything shown to other users.
+    profile_visibility = Column(String(20), default="private", nullable=False)
     #: Minutes east of UTC as reported by the client, so day and week
     #: boundaries for streaks and weekly stats match what the student sees.
     timezone_offset_minutes = Column(Integer, default=0, nullable=False)

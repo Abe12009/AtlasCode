@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { dashboardApi, authApi } from '../api/services';
 import { Trophy, Target, Flame, FolderKanban, CheckCircle, Award, Settings, User, TrendingUp, Sparkles, Code, BookOpen, Terminal, Palette } from 'lucide-react';
@@ -24,6 +25,8 @@ export function Profile() {
   const [avatarSaving, setAvatarSaving] = useState(false);
   const [avatarUploading, setAvatarUploading] = useState(false);
   const [avatarSaved, setAvatarSaved] = useState(false);
+  const [privacySaving, setPrivacySaving] = useState(false);
+  const [privacySaved, setPrivacySaved] = useState(false);
 
   const refreshDashboard = () => queryClient.invalidateQueries({ queryKey: ['dashboard'] });
 
@@ -55,6 +58,18 @@ export function Profile() {
   const setActiveAvatarType = async (type: 'upload' | 'generated') => {
     await authApi.updateMe({ avatar_type: type });
     await refreshDashboard();
+  };
+
+  const togglePrivacy = async (visibility: 'public' | 'private') => {
+    setPrivacySaving(true);
+    setPrivacySaved(false);
+    try {
+      await authApi.updateMe({ profile_visibility: visibility });
+      await refreshDashboard();
+      setPrivacySaved(true);
+    } finally {
+      setPrivacySaving(false);
+    }
   };
 
   if (isLoading) {
@@ -127,6 +142,14 @@ export function Profile() {
                   className="mx-auto mb-4 ring-4 ring-primary-500/20"
                 />
                 <h2 className="text-xl font-bold text-text-primary">{user?.username}</h2>
+                {user?.username && (
+                  <Link
+                    to={`/app/u/${encodeURIComponent(user.username)}`}
+                    className="text-xs text-primary-400 hover:text-primary-300 font-medium"
+                  >
+                    {t('public_profile.view_public')}
+                  </Link>
+                )}
                 <div className="flex items-center justify-center gap-2 mt-1">
                   <span className="px-3 py-1 bg-primary-500/10 text-primary-400 rounded-full text-sm font-medium">
                     {t('profile_page.level_label', { level: profile?.level || 1 })}
@@ -380,6 +403,36 @@ export function Profile() {
                   </div>
                 </Card>
               )}
+
+              <Card variant="default" padding="lg" className="relative overflow-hidden">
+                <div className="relative z-10">
+                  <h2 className="text-lg font-semibold text-text-primary mb-2">{t('settings.privacy_title')}</h2>
+                  <p className="text-text-secondary text-sm mb-4">{t('settings.privacy_description')}</p>
+                  {privacySaved && <Alert variant="success" className="mb-4">{t('settings.privacy_updated')}</Alert>}
+                  <div className="space-y-2">
+                    <label className="flex items-center gap-2 text-sm text-text-primary">
+                      <input
+                        type="radio"
+                        name="profile_visibility"
+                        checked={(user?.profile_visibility ?? 'private') === 'private'}
+                        disabled={privacySaving}
+                        onChange={() => togglePrivacy('private')}
+                      />
+                      {t('settings.profile_private')}
+                    </label>
+                    <label className="flex items-center gap-2 text-sm text-text-primary">
+                      <input
+                        type="radio"
+                        name="profile_visibility"
+                        checked={user?.profile_visibility === 'public'}
+                        disabled={privacySaving}
+                        onChange={() => togglePrivacy('public')}
+                      />
+                      {t('settings.profile_public')}
+                    </label>
+                  </div>
+                </div>
+              </Card>
 
               <Card variant="default" padding="lg" className="relative overflow-hidden">
                 <div className="relative z-10">

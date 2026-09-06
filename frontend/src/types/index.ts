@@ -31,8 +31,22 @@ export interface User {
   avatar_image_data?: string | null;
   avatar_config?: string | null;
   avatar_type?: string;
+  profile_visibility?: 'public' | 'private';
   has_password?: boolean;
   timezone_offset_minutes?: number;
+}
+
+export interface PublicProfile {
+  username: string;
+  avatar_url: string | null;
+  avatar_image_data: string | null;
+  avatar_config: string | null;
+  avatar_type: string;
+  level: number;
+  xp: number;
+  streak: number;
+  member_since: string;
+  achievements: UserAchievement[];
 }
 
 export interface StudentProfile {

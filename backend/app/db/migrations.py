@@ -100,6 +100,12 @@ MIGRATIONS: tuple[AddColumn, ...] = (
     AddColumn("courses", "icon", "VARCHAR(50)"),
     AddColumn("courses", "prerequisite_course_id", "INTEGER"),
     # --- Account settings ----------------------------------------------------
+    AddColumn(
+        "users",
+        "profile_visibility",
+        "VARCHAR(20) DEFAULT 'private'",
+        backfill="UPDATE users SET profile_visibility = 'private' WHERE profile_visibility IS NULL",
+    ),
     AddColumn("users", "avatar_config", "TEXT"),
     AddColumn("users", "avatar_image_data", "TEXT"),
     AddColumn(

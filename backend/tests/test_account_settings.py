@@ -1,7 +1,7 @@
-"""Password change, avatar upload, and generated-avatar config.
+"""Password change, avatar (upload + generated), and public profile privacy.
 
-None of these should let a user act on someone else's account, or accept
-unvalidated image input.
+None of these should let a user act on someone else's account, leak private
+data, or accept unvalidated image input.
 """
 
 import base64
@@ -162,3 +162,58 @@ class TestGeneratedAvatarConfig:
             "/auth/me", headers=second_user["headers"], json={"avatar_type": "generated"}
         )
         assert response.status_code == 400
+
+
+class TestPublicProfilePrivacy:
+    async def test_profile_defaults_to_private(self, client: AsyncClient, test_user):
+        me = await client.get("/auth/me", headers=test_user["headers"])
+        assert me.json()["profile_visibility"] == "private"
+
+    async def test_private_profile_is_not_visible_to_other_users(
+        self, client: AsyncClient, test_user, second_user
+    ):
+        response = await client.get(
+            f"/users/{test_user['data']['username']}", headers=second_user["headers"]
+        )
+        assert response.status_code == 404
+
+    async def test_private_profile_is_visible_to_its_owner(self, client: AsyncClient, test_user):
+        response = await client.get(
+            f"/users/{test_user['data']['username']}", headers=test_user["headers"]
+        )
+        assert response.status_code == 200
+
+    async def test_public_profile_is_visible_to_other_users(
+        self, client: AsyncClient, test_user, second_user
+    ):
+        toggle = await client.patch(
+            "/auth/me", headers=test_user["headers"], json={"profile_visibility": "public"}
+        )
+        assert toggle.status_code == 200
+
+        response = await client.get(
+            f"/users/{test_user['data']['username']}", headers=second_user["headers"]
+        )
+        assert response.status_code == 200
+        body = response.json()
+        assert body["username"] == test_user["data"]["username"]
+        assert set(body.keys()) == {
+            "username",
+            "avatar_url",
+            "avatar_image_data",
+            "avatar_config",
+            "avatar_type",
+            "level",
+            "xp",
+            "streak",
+            "member_since",
+            "achievements",
+        }
+
+    async def test_nonexistent_user_is_404(self, client: AsyncClient, test_user):
+        response = await client.get("/users/no-such-user-abc123", headers=test_user["headers"])
+        assert response.status_code == 404
+
+    async def test_unauthenticated_request_is_rejected(self, client: AsyncClient, test_user):
+        response = await client.get(f"/users/{test_user['data']['username']}")
+        assert response.status_code == 401

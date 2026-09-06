@@ -193,6 +193,8 @@ async def update_current_user(
         current_user.username = user_update.username
     if user_update.preferred_language is not None:
         current_user.preferred_language = user_update.preferred_language
+    if user_update.profile_visibility is not None:
+        current_user.profile_visibility = user_update.profile_visibility
     if user_update.avatar_config is not None:
         try:
             json.loads(user_update.avatar_config)

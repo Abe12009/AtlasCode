@@ -45,6 +45,9 @@ vi.mock('../api/services', () => ({
   sectionsApi: {
     getAll: vi.fn().mockResolvedValue([]),
   },
+  usersApi: {
+    getPublicProfile: vi.fn(),
+  },
   lessonsApi: {
     getById: vi.fn(),
     // A real default: the Micro-Quest reads lesson progress to decide whether

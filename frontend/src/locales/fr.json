@@ -604,7 +604,18 @@
     "current_password_incorrect": "Le mot de passe actuel est incorrect.",
     "password_change_failed": "Impossible de changer le mot de passe. Veuillez réessayer.",
     "no_password_title": "Aucun mot de passe à changer",
-    "no_password_description": "Ce compte se connecte via Google/GitHub et n'a pas de mot de passe AtlasCode à changer."
+    "no_password_description": "Ce compte se connecte via Google/GitHub et n'a pas de mot de passe AtlasCode à changer.",
+    "privacy_title": "Confidentialité du profil",
+    "privacy_description": "Contrôlez si les autres utilisateurs connectés peuvent voir votre profil et vos réussites.",
+    "profile_public": "Public — visible par les autres utilisateurs",
+    "profile_private": "Privé — visible uniquement par vous",
+    "privacy_updated": "Paramètre de confidentialité mis à jour."
+  },
+  "public_profile": {
+    "view_public": "Voir le profil public",
+    "member_since": "Membre {{date}}",
+    "not_found_title": "Profil introuvable",
+    "not_found_description": "Ce profil n'existe pas, ou son propriétaire l'a rendu privé."
   },
   "footer": {
     "copyright": "© {{year}} AtlasCode. Tous droits réservés.",

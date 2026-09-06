@@ -15,6 +15,7 @@ import type {
   VisualProgramRequest,
   VisualProgramResponse,
   Notification,
+  PublicProfile,
   Section,
 } from '../types';
 
@@ -30,6 +31,7 @@ export const authApi = {
   updateMe: (data: {
     username?: string;
     preferred_language?: string;
+    profile_visibility?: 'public' | 'private';
     avatar_type?: 'upload' | 'generated';
     avatar_config?: string;
   }) => apiClient.patch<User>('/auth/me', data),
@@ -46,6 +48,10 @@ export const authApi = {
 
   loginWithFirebase: (data: { id_token: string; preferred_language?: string; timezone_offset_minutes?: number }) =>
     apiClient.post<{ access_token: string; token_type: string }>('/auth/firebase', data),
+};
+
+export const usersApi = {
+  getPublicProfile: (username: string) => apiClient.get<PublicProfile>(`/users/${encodeURIComponent(username)}`),
 };
 
 export const coursesApi = {
