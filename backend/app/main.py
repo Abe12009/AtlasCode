@@ -21,6 +21,7 @@ app.add_middleware(
 
 app.include_router(auth.router)
 app.include_router(courses.router)
+app.include_router(courses.sections_router)
 app.include_router(lessons.router)
 app.include_router(exercises.router)
 app.include_router(projects.router)

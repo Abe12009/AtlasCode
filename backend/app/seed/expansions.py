@@ -1,19 +1,20 @@
-"""Additions to courses that already exist.
+"""The Networking and Data Structures & Algorithms courses.
 
-These fill genuine gaps in courses that are otherwise good, rather than
-replacing them. Everything is keyed on a new module slug, so existing modules,
-lessons and student progress are never touched.
+Both slugs were declared in app.curriculum's roadmap and referenced as
+prerequisites elsewhere, but had no seeder that actually created them — this
+module's Module/Lesson content sat unused. seed_networking and
+seed_data_structures_algorithms below are real NEW_COURSE_SEEDERS entries
+(see app.seed.__init__), each creating its course and content idempotently.
 """
 
-from app.models import DifficultyEnum as D
-from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models import Course
+from app.models import DifficultyEnum as D
 
 from .authoring import (
     Code,
     CodeWriting,
+    CourseSpec,
     ExamTip,
     Lesson,
     MCQ,
@@ -25,8 +26,10 @@ from .authoring import (
     T,
     Text,
     asserts,
+    seed_course,
 )
-from .base import get_or_create_lesson, get_or_create_module
+from .stage_dsa_core import CORE_DSA_MODULES
+from .stage_database_design import DATABASE_DESIGN_MODULES
 
 # ---------------------------------------------------------------------------
 # Networking — the layered model, address assignment, and diagnosis
@@ -504,47 +507,82 @@ DSA_MODULES = [
 ]
 
 
-async def _add_modules(db: AsyncSession, course_slug: str, modules, first_order: int) -> None:
-    """Append modules to an existing course, skipping any already present."""
-    result = await db.execute(select(Course).where(Course.slug == course_slug))
-    course = result.scalar_one_or_none()
-    if course is None:
-        return
-
-    from .authoring import _merge  # local import: shared translation-row merge
-
-    for offset, module in enumerate(modules):
-        module_id = await get_or_create_module(
-            db,
-            course.id,
-            module.slug,
-            first_order + offset,
-            _merge(module.title.rows("title"), module.description.rows("description")),
-        )
-        for lesson_index, lesson in enumerate(module.lessons, start=1):
-            await get_or_create_lesson(
-                db,
-                module_id,
-                lesson.slug,
-                lesson_index,
-                lesson.difficulty,
-                lesson.minutes,
-                lesson.xp,
-                _merge(
-                    lesson.title.rows("title"),
-                    lesson.story.rows("story"),
-                    lesson.objective.rows("objective"),
-                    lesson.skills.rows("skills"),
-                ),
-                [block.to_seed(i + 1) for i, block in enumerate(lesson.blocks)],
-                [exercise.to_seed(i + 1) for i, exercise in enumerate(lesson.exercises)],
-            )
+async def seed_networking(db: AsyncSession, order: int) -> int:
+    """The Networking course: OSI/TCP-IP, addressing, sockets and diagnosis."""
+    print("Seeding Networking...")
+    spec = CourseSpec(
+        slug="networking",
+        title=T("Networking", "Réseaux", "الشبكات"),
+        description=T(
+            "How devices actually talk to each other, from a single cable to the global internet.",
+            "Comment les appareils communiquent réellement entre eux, d'un simple câble à l'internet mondial.",
+            "كيف تتواصل الأجهزة فعليًا فيما بينها، من كابل واحد إلى الإنترنت العالمي.",
+        ),
+        skills=T(
+            "OSI/TCP-IP models, IP addressing, DHCP, DNS, sockets, network troubleshooting",
+            "Modèles OSI/TCP-IP, adressage IP, DHCP, DNS, sockets, dépannage réseau",
+            "نموذجا OSI وTCP/IP، عنونة IP، DHCP، DNS، المقابس، استكشاف أخطاء الشبكة",
+        ),
+        modules=NETWORKING_MODULES,
+        stage=4,
+        track="systems",
+        icon="🌐",
+        difficulty=D.intermediate,
+        estimated_hours=10,
+        prerequisite_slug="cs-foundations",
+    )
+    return await seed_course(db, spec, order)
 
 
-async def seed_expansions(db: AsyncSession) -> None:
-    """Fill the gaps in the courses that predate the roadmap."""
-    print("Seeding curriculum expansions...")
-    # Existing networking modules occupy orders 1-6; DSA occupies 1-12. New
-    # modules are appended after them so nothing is renumbered.
-    await _add_modules(db, "networking", NETWORKING_MODULES, first_order=7)
-    await _add_modules(db, "data-structures-algorithms", DSA_MODULES, first_order=13)
+async def seed_data_structures_algorithms(db: AsyncSession, order: int) -> int:
+    """The Data Structures & Algorithms course: arrays through graphs, sorting, searching, tries."""
+    print("Seeding Data Structures & Algorithms...")
+    spec = CourseSpec(
+        slug="data-structures-algorithms",
+        title=T("Data Structures & Algorithms", "Structures de Données & Algorithmes", "هياكل البيانات والخوارزميات"),
+        description=T(
+            "The building blocks and problem-solving patterns behind every technical interview and every fast program.",
+            "Les briques de base et les schémas de résolution derrière chaque entretien technique et chaque programme rapide.",
+            "اللبنات الأساسية وأنماط حل المسائل وراء كل مقابلة تقنية وكل برنامج سريع.",
+        ),
+        skills=T(
+            "Arrays, linked lists, stacks, queues, hash tables, trees, graphs, sorting, searching, tries",
+            "Tableaux, listes chaînées, piles, files, tables de hachage, arbres, graphes, tri, recherche, tries",
+            "المصفوفات، القوائم المترابطة، المكدّسات، الطوابير، جداول التجزئة، الأشجار، الرسوم البيانية، الفرز، البحث",
+        ),
+        modules=[*CORE_DSA_MODULES, *DSA_MODULES],
+        stage=3,
+        track="theory",
+        icon="🌳",
+        difficulty=D.intermediate,
+        estimated_hours=18,
+        prerequisite_slug="python-in-depth",
+    )
+    return await seed_course(db, spec, order)
+
+
+async def seed_database_design(db: AsyncSession, order: int) -> int:
+    """The Database Design & Normalization course: modeling, keys, constraints, normal forms."""
+    print("Seeding Database Design & Normalization...")
+    spec = CourseSpec(
+        slug="database-design",
+        title=T("Database Design & Normalization", "Conception de Bases de Données et Normalisation", "تصميم قواعد البيانات والتسوية"),
+        description=T(
+            "Model a real problem into tables that hold together — entities, keys, constraints, and normal forms.",
+            "Modélisez un problème réel en tables cohérentes — entités, clés, contraintes et formes normales.",
+            "نمذجة مشكلة واقعية إلى جداول متماسكة — الكيانات، المفاتيح، القيود، والصور الطبيعية.",
+        ),
+        skills=T(
+            "Data modeling, ER diagrams, primary/foreign/composite keys, constraints, normalization",
+            "Modélisation de données, diagrammes ER, clés primaires/étrangères/composites, contraintes, normalisation",
+            "نمذجة البيانات، مخططات الكيان-العلاقة، المفاتيح الأساسية والخارجية والمركّبة، القيود، التسوية",
+        ),
+        modules=DATABASE_DESIGN_MODULES,
+        stage=4,
+        track="systems",
+        icon="🏛️",
+        difficulty=D.beginner,
+        estimated_hours=8,
+        prerequisite_slug="sql-databases",
+    )
+    return await seed_course(db, spec, order)

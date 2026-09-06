@@ -16,6 +16,10 @@ __pycache__/
 .mypy_cache/
 .ruff_cache/
 *.egg-info/
+.venv/
+venv/
+env/
+ENV/
 
 # --- Node / frontend build ---
 node_modules/

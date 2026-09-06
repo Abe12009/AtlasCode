@@ -107,7 +107,7 @@ export function Landing() {
                 <Code className="h-5 w-5 text-white" aria-hidden="true" />
                 <span className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-accent-500" aria-hidden="true" />
               </div>
-              <span className="text-xl font-bold text-text-primary bg-gradient-to-r from-text-primary via-primary-400 to-accent-400 bg-clip-text text-transparent">
+              <span className="text-xl font-bold text-gradient-brand">
                 AtlasCode
               </span>
             </Link>
@@ -221,7 +221,7 @@ export function Landing() {
                 <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-text-primary leading-tight mb-6">
                   {t('landing.hero.title')}
                   <br />
-                  <span className="bg-gradient-to-r from-primary-400 via-accent-400 to-primary-400 bg-clip-text text-transparent animate-gradient-shift">
+                  <span className="text-gradient-brand animate-gradient-shift">
                     {t('landing.hero.highlight')}
                   </span>
                 </h1>
@@ -295,7 +295,7 @@ learn_programming()`}</code></pre>
                     </div>
                     <div>
                       <p className="text-sm text-text-tertiary">{t('landing.hero.card_label')}</p>
-                      <p className="text-2xl font-bold text-text-primary bg-gradient-to-r from-primary-400 to-accent-400 bg-clip-text text-transparent">+2,847 XP</p>
+                      <p className="text-2xl font-bold text-gradient-brand">+2,847 XP</p>
                     </div>
                   </div>
                 </div>
@@ -438,7 +438,7 @@ learn_programming()`}</code></pre>
                   <div className="p-3 bg-gradient-to-br from-primary-500/10 to-accent-500/10 rounded-2xl w-fit mx-auto mb-4 border border-primary-500/20">
                     <stat.icon className="h-8 w-8 text-primary-400 mx-auto" aria-hidden="true" />
                   </div>
-                  <div className="text-4xl sm:text-5xl font-bold bg-gradient-to-r from-primary-400 via-accent-400 to-primary-400 bg-clip-text text-transparent mb-2">
+                  <div className="text-4xl sm:text-5xl font-bold text-gradient-brand mb-2">
                     {stat.value}
                   </div>
                   <div className="text-text-secondary">{stat.label}</div>
@@ -493,7 +493,7 @@ learn_programming()`}</code></pre>
                 <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-primary-500 to-accent-500">
                   <Code className="h-5 w-5 text-white" aria-hidden="true" />
                 </div>
-                <span className="text-xl font-bold text-text-primary bg-gradient-to-r from-text-primary via-primary-400 to-accent-400 bg-clip-text text-transparent">
+                <span className="text-xl font-bold text-gradient-brand">
                   AtlasCode
                 </span>
               </Link>

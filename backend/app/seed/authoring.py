@@ -294,6 +294,34 @@ def CodeWriting(
     )
 
 
+def SQLWriting(
+    prompt: T,
+    hint: T,
+    explanation: T,
+    starter_code: str,
+    solution_code: str,
+    expected_keywords: Sequence,
+    xp: int = 15,
+) -> Exercise:
+    """Write a SQL statement, graded by required fragments rather than the
+    Python sandbox — there is no SQL execution engine to run it against, so
+    this is the same code_writing + expected_keywords shape the original
+    ``app.seed.sql_databases`` lessons already ship (frontend still renders
+    the real code editor: ``CODE_EXERCISE_TYPES`` includes ``code_writing``
+    regardless of grading strategy)."""
+    assert expected_keywords, f"SQLWriting needs expected_keywords: {prompt.en!r}"
+    return Exercise(
+        ExerciseTypeEnum.code_writing,
+        prompt,
+        hint,
+        explanation,
+        xp,
+        starter_code=starter_code,
+        solution_code=solution_code,
+        validation={"expected_keywords": list(expected_keywords)},
+    )
+
+
 def prints(*expected: str) -> str:
     """`test_code` asserting the submitted program printed each fragment.
 

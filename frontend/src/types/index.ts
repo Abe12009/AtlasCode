@@ -71,6 +71,8 @@ export interface Course {
   id: number;
   slug: string;
   order: number;
+  stage: number;
+  track?: string | null;
   section_id?: number | null;
   difficulty: Difficulty;
   estimated_hours?: number;

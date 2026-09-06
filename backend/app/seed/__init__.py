@@ -10,8 +10,6 @@ Order of operations matters: content first (so every course exists), then the
 roadmap (so prerequisites can resolve to real ids).
 """
 
-import asyncio
-
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
@@ -22,11 +20,12 @@ from app.models import Course
 from .achievements import seed_achievements
 from .block_translations import apply_block_translations
 from .cs_fundamentals import seed_cs_fundamentals
-from .expansions import seed_expansions
+from .expansions import seed_data_structures_algorithms, seed_networking, seed_database_design
 from .git_github import seed_git_github
 from .projects import seed_projects
 from .python_foundations import seed_python_foundations
 from .roadmap import apply_roadmap
+from .sections import seed_sections
 from .sql_databases import seed_sql_databases
 from .stage1_computational_thinking import seed_computational_thinking
 from .stage1_foundations import seed_cs_foundations
@@ -72,6 +71,9 @@ NEW_COURSE_SEEDERS = (
     (seed_discrete_mathematics, "discrete-mathematics"),
     (seed_math_for_cs, "math-for-cs"),
     (seed_algorithms_complexity, "algorithms-complexity"),
+    (seed_data_structures_algorithms, "data-structures-algorithms"),
+    (seed_networking, "networking"),
+    (seed_database_design, "database-design"),
     (seed_software_engineering, "software-engineering"),
     (seed_cybersecurity_foundations, "cybersecurity-foundations"),
     (seed_network_security, "network-security-fundamentals"),
@@ -95,13 +97,14 @@ async def seed_curriculum(db: AsyncSession, *, verbose: bool = True) -> None:
     for seeder, slug in NEW_COURSE_SEEDERS:
         await seeder(db, _order(slug))
 
-    await seed_expansions(db)
     await seed_achievements(db)
 
     changed = await apply_roadmap(db, verbose=verbose)
+    sections_changed = await seed_sections(db)
     await db.commit()
     if verbose:
         print(f"Roadmap applied ({changed} course rows aligned).")
+        print(f"Sections applied ({sections_changed} course rows assigned).")
 
 
 async def seed_all(session_maker=None):
@@ -140,8 +143,3 @@ async def seed_all(session_maker=None):
 
         await seed_curriculum(db, verbose=not already_seeded)
         print("Database seeded successfully!")
-
-
-if __name__ == "__main__":
-    asyncio.run(init_db())
-    asyncio.run(seed_all())

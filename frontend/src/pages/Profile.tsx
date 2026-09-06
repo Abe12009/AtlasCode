@@ -104,14 +104,18 @@ export function Profile() {
 
   const user = dashboard?.user;
   const profile = dashboard?.profile;
+  const weekly = dashboard?.weekly;
   const recentAchievements = dashboard?.recent_achievements || [];
 
+  /** A weekly delta only shows for values that actually happened — see backend/app/services/stats.py. */
+  const trendFor = (amount: number): string | null => (amount > 0 ? `+${amount}` : null);
+
   const stats = [
-    { label: t('profile.level'), value: profile?.level || 1, icon: Trophy, color: 'text-yellow-500 bg-yellow-900/30 border-yellow-500/30', trend: '+1' },
-    { label: t('profile.total_xp'), value: profile?.xp || 0, icon: Target, color: 'text-blue-500 bg-blue-900/30 border-blue-500/30', trend: '+150' },
-    { label: t('profile.streak'), value: `${profile?.streak || 0} ${t('profile.days')}`, icon: Flame, color: 'text-orange-500 bg-orange-900/30 border-orange-500/30', trend: '+1' },
-    { label: t('profile.completed_lessons'), value: profile?.completed_lessons || 0, icon: CheckCircle, color: 'text-green-500 bg-green-900/30 border-green-500/30', trend: '+3' },
-    { label: t('profile.completed_projects'), value: profile?.completed_projects || 0, icon: FolderKanban, color: 'text-purple-500 bg-purple-900/30 border-purple-500/30', trend: '+1' },
+    { label: t('profile.level'), value: profile?.level || 1, icon: Trophy, color: 'text-yellow-500 bg-yellow-900/30 border-yellow-500/30', trend: trendFor(weekly?.levels_gained ?? 0) },
+    { label: t('profile.total_xp'), value: profile?.xp || 0, icon: Target, color: 'text-blue-500 bg-blue-900/30 border-blue-500/30', trend: trendFor(weekly?.xp ?? 0) },
+    { label: t('profile.streak'), value: `${profile?.streak || 0} ${t('profile.days')}`, icon: Flame, color: 'text-orange-500 bg-orange-900/30 border-orange-500/30', trend: null },
+    { label: t('profile.completed_lessons'), value: profile?.completed_lessons || 0, icon: CheckCircle, color: 'text-green-500 bg-green-900/30 border-green-500/30', trend: trendFor(weekly?.lessons_completed ?? 0) },
+    { label: t('profile.completed_projects'), value: profile?.completed_projects || 0, icon: FolderKanban, color: 'text-purple-500 bg-purple-900/30 border-purple-500/30', trend: trendFor(weekly?.projects_completed ?? 0) },
   ];
 
   const tabs = [
@@ -123,7 +127,7 @@ export function Profile() {
   return (
     <div className="space-y-8 animate-fade-in" dir={isRTL ? 'rtl' : 'ltr'}>
       <div>
-        <h1 className="text-2xl font-bold text-text-primary bg-gradient-to-r from-text-primary via-primary-400 to-accent-400 bg-clip-text text-transparent">
+        <h1 className="text-2xl font-bold text-gradient-brand">
           {t('profile_page.title')}
         </h1>
         <p className="text-text-secondary mt-1">
@@ -223,8 +227,16 @@ export function Profile() {
                         <p className="text-2xl font-bold text-text-primary mt-2 tabular-nums">{stat.value}</p>
                         <p className="text-sm text-text-tertiary">{stat.label}</p>
                         <div className="mt-2 flex items-center gap-1">
-                          <TrendingUp className="h-4 w-4 text-success-500" />
-                          <span className="text-sm font-medium text-success-600 dark:text-success-400">{stat.trend} {t('profile_page.this_week')}</span>
+                          {stat.trend ? (
+                            <>
+                              <TrendingUp className="h-4 w-4 text-success-500" aria-hidden="true" />
+                              <span className="text-sm font-medium text-success-600 dark:text-success-400">
+                                {stat.trend} {t('profile_page.this_week')}
+                              </span>
+                            </>
+                          ) : (
+                            <span className="text-sm text-text-tertiary">{t('dashboard.no_activity_this_week')}</span>
+                          )}
                         </div>
                       </div>
                     ))}

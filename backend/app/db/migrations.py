@@ -99,6 +99,11 @@ MIGRATIONS: tuple[AddColumn, ...] = (
     ),
     AddColumn("courses", "icon", "VARCHAR(50)"),
     AddColumn("courses", "prerequisite_course_id", "INTEGER"),
+    # --- Course catalog sections --------------------------------------------
+    # The `sections`/`section_translations` tables themselves are new, so
+    # create_all handles them on any database. Only this column, added to the
+    # pre-existing `courses` table, needs an additive migration.
+    AddColumn("courses", "section_id", "INTEGER"),
     # --- Account settings ----------------------------------------------------
     AddColumn(
         "users",
@@ -121,6 +126,7 @@ MIGRATIONS: tuple[AddColumn, ...] = (
 INDEXES: tuple[tuple[str, str], ...] = (
     ("ix_users_firebase_uid", "CREATE UNIQUE INDEX IF NOT EXISTS ix_users_firebase_uid ON users (firebase_uid)"),
     ("ix_courses_stage", "CREATE INDEX IF NOT EXISTS ix_courses_stage ON courses (stage)"),
+    ("ix_courses_section_id", "CREATE INDEX IF NOT EXISTS ix_courses_section_id ON courses (section_id)"),
 )
 
 

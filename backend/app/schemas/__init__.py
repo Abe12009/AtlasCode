@@ -142,6 +142,23 @@ class CourseTranslationResponse(BaseModel):
     skills: Optional[str] = None
 
 
+class SectionTranslationResponse(BaseModel):
+    language: LanguageEnum
+    title: str
+    description: Optional[str] = None
+
+
+class SectionResponse(BaseModel):
+    id: int
+    slug: str
+    order: int
+    icon: Optional[str] = None
+    translations: List[SectionTranslationResponse]
+
+    class Config:
+        from_attributes = True
+
+
 class CourseResponse(BaseModel):
     id: int
     slug: str
@@ -149,6 +166,9 @@ class CourseResponse(BaseModel):
     #: Roadmap grouping (see app.curriculum.STAGES).
     stage: int = 1
     track: Optional[str] = None
+    #: Course catalog section (Programming, Networking, ...). Null for
+    #: unsectioned foundational/theory courses.
+    section_id: Optional[int] = None
     difficulty: DifficultyEnum = DifficultyEnum.beginner
     estimated_hours: int = 0
     icon: Optional[str] = None

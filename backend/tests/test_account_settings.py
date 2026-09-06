@@ -1,6 +1,7 @@
 """Password change, avatar (upload + generated), and public profile privacy.
 
-None of these should let a user act on someone else's account, leak private
+These are the account-settings features added alongside the Section model:
+none of them should let a user act on someone else's account, leak private
 data, or accept unvalidated image input.
 """
 
@@ -217,3 +218,46 @@ class TestPublicProfilePrivacy:
     async def test_unauthenticated_request_is_rejected(self, client: AsyncClient, test_user):
         response = await client.get(f"/users/{test_user['data']['username']}")
         assert response.status_code == 401
+
+
+class TestSectionModel:
+    async def test_sections_endpoint_returns_seeded_sections(self, client: AsyncClient, test_user):
+        response = await client.get("/sections", headers=test_user["headers"])
+        assert response.status_code == 200
+        slugs = {s["slug"] for s in response.json()}
+        assert slugs == {
+            "programming",
+            "data-structures-algorithms",
+            "computer-systems",
+            "networking",
+            "databases",
+            "software-engineering",
+            "ai-machine-learning",
+            "cybersecurity",
+        }
+
+    async def test_courses_carry_a_section_id_matching_a_real_section(
+        self, client: AsyncClient, test_user
+    ):
+        sections = (await client.get("/sections", headers=test_user["headers"])).json()
+        section_ids = {s["id"] for s in sections}
+
+        courses = (await client.get("/courses", headers=test_user["headers"])).json()
+        sectioned = [c for c in courses if c["section_id"] is not None]
+        assert sectioned, "at least one course should be assigned to a section"
+        for course in sectioned:
+            assert course["section_id"] in section_ids
+
+    async def test_reseeding_does_not_duplicate_sections_or_move_courses(
+        self, client: AsyncClient, test_user, db_session
+    ):
+        from sqlalchemy import func, select
+        from app.models import Section
+        from app.seed import seed_curriculum
+
+        before = (await db_session.execute(select(func.count(Section.id)))).scalar_one()
+        await seed_curriculum(db_session, verbose=False)
+        await seed_curriculum(db_session, verbose=False)
+        after = (await db_session.execute(select(func.count(Section.id)))).scalar_one()
+
+        assert before == after == 8

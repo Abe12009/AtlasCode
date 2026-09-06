@@ -65,7 +65,7 @@ ROADMAP: tuple[RoadmapEntry, ...] = (
     RoadmapEntry("cs-fundamentals", 3, "theory", "🎓", "intermediate", 8, "python-basics"),
     # --- Stage 4 · Data, Systems and Networks ------------------------------
     RoadmapEntry("sql-databases", 4, "systems", "🗄️", "beginner", 6, "python-basics"),
-    RoadmapEntry("database-systems", 4, "systems", "🏛️", "intermediate", 10, "sql-databases"),
+    RoadmapEntry("database-design", 4, "systems", "🏛️", "beginner", 8, "sql-databases"),
     RoadmapEntry("networking", 4, "systems", "🌐", "intermediate", 10, "cs-foundations"),
     RoadmapEntry("computer-systems", 4, "systems", "🖥️", "intermediate", 10, "cs-foundations"),
     RoadmapEntry("c-programming", 4, "systems", "🔧", "intermediate", 12, "python-basics"),
@@ -105,7 +105,6 @@ LEGACY_SLUGS: frozenset[str] = frozenset(
         "sql-databases",
         "git-github",
         "cs-fundamentals",
-        "database-systems",
         "javascript",
         "frontend-development",
         "backend-development",

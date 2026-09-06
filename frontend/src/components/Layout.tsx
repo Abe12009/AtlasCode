@@ -85,7 +85,7 @@ export function Layout() {
                   <Code className="h-5 w-5 text-white" aria-hidden="true" />
                   <span className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-accent-500" aria-hidden="true" />
                 </div>
-                <span className="text-xl font-bold text-text-primary bg-gradient-to-r from-text-primary via-primary-400 to-accent-400 bg-clip-text text-transparent">
+                <span className="text-xl font-bold text-gradient-brand">
                   AtlasCode
                 </span>
               </NavLink>

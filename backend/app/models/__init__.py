@@ -135,6 +135,42 @@ class StudentProfile(Base):
     current_mission = relationship("Lesson", foreign_keys=[current_mission_id])
 
 
+class Section(Base):
+    """A degree-style subject area grouping several courses (Programming,
+    Networking, Cybersecurity, ...). Coarser than ``Course.track``, which is
+    an existing finer-grained roadmap tag — Section is the top-level grouping
+    the course catalog UI organizes by. A course's section is optional: the
+    foundational/theory courses that underpin every section are deliberately
+    left unsectioned.
+    """
+
+    __tablename__ = "sections"
+
+    id = Column(Integer, primary_key=True, index=True)
+    slug = Column(String(100), unique=True, index=True, nullable=False)
+    #: Display position among sections.
+    order = Column(Integer, default=0)
+    icon = Column(String(50), nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    translations = relationship("SectionTranslation", back_populates="section", cascade="all, delete-orphan")
+    courses = relationship("Course", back_populates="section", order_by="Course.order")
+
+
+class SectionTranslation(Base):
+    __tablename__ = "section_translations"
+
+    id = Column(Integer, primary_key=True, index=True)
+    section_id = Column(Integer, ForeignKey("sections.id", ondelete="CASCADE"), nullable=False)
+    language = Column(Enum(LanguageEnum), nullable=False)
+    title = Column(String(200), nullable=False)
+    description = Column(Text)
+
+    section = relationship("Section", back_populates="translations")
+
+    __table_args__ = (UniqueConstraint("section_id", "language", name="uq_section_language"),)
+
+
 class Course(Base):
     __tablename__ = "courses"
 
@@ -148,6 +184,9 @@ class Course(Base):
     stage = Column(Integer, default=1, nullable=False, index=True)
     #: Subject area, e.g. "programming", "theory", "systems", "security".
     track = Column(String(50), nullable=True)
+    #: Top-level catalog grouping (see Section). Null for foundational/theory
+    #: courses that don't belong to one specific subject area.
+    section_id = Column(Integer, ForeignKey("sections.id", ondelete="SET NULL"), nullable=True, index=True)
     difficulty = Column(Enum(DifficultyEnum), default=DifficultyEnum.beginner)
     estimated_hours = Column(Integer, default=0)
     icon = Column(String(50), nullable=True)
@@ -158,6 +197,7 @@ class Course(Base):
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     prerequisite_course = relationship("Course", remote_side=[id], foreign_keys=[prerequisite_course_id])
+    section = relationship("Section", back_populates="courses")
     modules = relationship("Module", back_populates="course", cascade="all, delete-orphan", order_by="Module.order")
     translations = relationship("CourseTranslation", back_populates="course", cascade="all, delete-orphan")
     progress = relationship("CourseProgress", back_populates="course", cascade="all, delete-orphan")

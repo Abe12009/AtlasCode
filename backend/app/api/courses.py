@@ -9,18 +9,40 @@ from app.models import (
     Course, Module, Lesson, CourseTranslation, ModuleTranslation, LessonTranslation,
     LessonBlock, LessonBlockTranslation, Exercise, ExerciseTranslation, ExerciseOption,
     ExerciseOptionTranslation, CourseProgress, LessonProgress, StudentProfile,
-    MissionStatusEnum
+    MissionStatusEnum, Section
 )
 from app.schemas import (
     CourseResponse, ModuleResponse, LessonResponse, LessonProgressResponse,
-    CourseProgressResponse, LanguageEnum
+    CourseProgressResponse, LanguageEnum, SectionResponse
 )
 
 router = APIRouter(prefix="/courses", tags=["courses"])
+sections_router = APIRouter(prefix="/sections", tags=["sections"])
 
 
 def _get_language_filter(language: LanguageEnum):
     return language.value
+
+
+@sections_router.get("", response_model=List[SectionResponse])
+async def get_sections(
+    language: LanguageEnum = Query(LanguageEnum.en),
+    db: AsyncSession = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    """The course catalog's top-level groupings, in display order.
+
+    Course placement (which courses belong to a section) comes from each
+    course's own `section_id` on GET /courses — this endpoint only returns
+    section identity/translations, so the client pairs them by id.
+    """
+    result = await db.execute(
+        select(Section).options(selectinload(Section.translations)).order_by(Section.order)
+    )
+    sections = result.scalars().unique().all()
+    for section in sections:
+        section.translations = [t for t in section.translations if t.language == language]
+    return sections
 
 
 @router.get("", response_model=List[CourseResponse])
