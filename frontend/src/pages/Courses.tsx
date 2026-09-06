@@ -189,12 +189,12 @@ function CourseCard({
 
   const card = (
     <Card
-      variant={isLocked ? 'default' : isCompleted ? 'default' : 'interactive'}
+      variant={isCompleted ? 'default' : 'interactive'}
       padding="lg"
       className={cn(
         'relative overflow-hidden group h-full',
         isCompleted && 'border-success-500/30 bg-success-500/5',
-        isLocked && 'opacity-70',
+        isLocked && 'opacity-90',
         !isStarted && !isLocked && 'border-border-primary/50',
       )}
     >
@@ -202,8 +202,7 @@ function CourseCard({
         <div className="flex items-start justify-between mb-4">
           <div
             className={cn(
-              'p-3 rounded-xl transition-all duration-300 text-xl flex items-center justify-center',
-              !isLocked && 'group-hover:scale-110',
+              'p-3 rounded-xl transition-all duration-300 text-xl flex items-center justify-center group-hover:scale-110',
               isCompleted
                 ? 'bg-success-500/10 text-success-400 border border-success-500/20'
                 : isStarted
@@ -274,12 +273,10 @@ function CourseCard({
                 </Badge>
               </span>
             </div>
-            {!isLocked && (
-              <ChevronRight
-                className="h-5 w-5 text-text-tertiary transition-transform group-hover:translate-x-1 group-hover:text-primary-400"
-                aria-hidden="true"
-              />
-            )}
+            <ChevronRight
+              className="h-5 w-5 text-text-tertiary transition-transform group-hover:translate-x-1 group-hover:text-primary-400"
+              aria-hidden="true"
+            />
           </div>
 
           <div className="space-y-2">
@@ -302,22 +299,20 @@ function CourseCard({
           </div>
         </div>
 
-        {!isLocked && (
-          <div
-            className="absolute inset-0 bg-gradient-to-br from-primary-500/5 via-transparent to-accent-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-            aria-hidden="true"
-          />
-        )}
+        <div
+          className="absolute inset-0 bg-gradient-to-br from-primary-500/5 via-transparent to-accent-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+          aria-hidden="true"
+        />
       </div>
     </Card>
   );
 
-  if (isLocked) {
-    // Still reachable — this is advisory, not a hard lock (see app/curriculum.py) —
-    // but the card itself isn't the primary path in, so it renders as a plain div.
-    return <div className="block h-full">{card}</div>;
-  }
-
+  // The "Locked" badge above is advisory only (see app/curriculum.py — the
+  // backend never hard-blocks a course on its prerequisite). Every course
+  // stays a real link regardless: with a near-linear prerequisite chain,
+  // rendering locked courses as non-navigable made ~20 of 23 courses
+  // click-dead for any user without 100% progress on the prior course —
+  // i.e. almost everyone. The hint should nudge order, not block access.
   return (
     <Link to={`/app/courses/${course.id}`} className="block h-full">
       {card}
