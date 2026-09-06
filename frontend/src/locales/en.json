@@ -503,6 +503,8 @@
     "complete_lessons": "Complete lessons to earn achievements",
     "sections": "Sections",
     "delete_account": "Delete Account",
+    "delete_account_confirm": "This permanently deletes your account, progress, and achievements. This cannot be undone.",
+    "delete_account_not_implemented": "Account deletion isn't available yet. Check back soon.",
     "level_label": "Level {{level}}",
     "skills_overview": "Skills Overview",
     "this_week": "this week",

@@ -508,6 +508,8 @@
     "complete_lessons": "أكمل الدروس لكسب الإنجازات",
     "sections": "الأقسام",
     "delete_account": "حذف الحساب",
+    "delete_account_confirm": "سيؤدي هذا إلى حذف حسابك وتقدمك وإنجازاتك نهائيًا. لا يمكن التراجع عن هذا الإجراء.",
+    "delete_account_not_implemented": "حذف الحساب غير متاح حاليًا. يرجى المحاولة لاحقًا.",
     "level_label": "المستوى {{level}}",
     "skills_overview": "نظرة عامة على المهارات",
     "this_week": "هذا الأسبوع",

@@ -4,7 +4,7 @@ import { dashboardApi, authApi } from '../api/services';
 import { Trophy, Target, Flame, FolderKanban, CheckCircle, Award, Settings, User, TrendingUp, Sparkles, Code, BookOpen, Terminal, Palette } from 'lucide-react';
 import { useState } from 'react';
 import { formatDistanceToNow } from 'date-fns';
-import { Card, Badge, Progress, Button, cn, Skeleton, XPBadge, StreakBadge, AchievementBadge, Alert } from '../components/ui';
+import { Card, Badge, Progress, Button, cn, Skeleton, XPBadge, StreakBadge, AchievementBadge, Alert, Modal } from '../components/ui';
 import { useTranslation } from '../hooks/useTranslation';
 import { ProfileAvatar } from '../components/ProfileAvatar';
 import { AvatarBuilder } from '../components/AvatarBuilder';
@@ -27,6 +27,7 @@ export function Profile() {
   const [avatarSaved, setAvatarSaved] = useState(false);
   const [privacySaving, setPrivacySaving] = useState(false);
   const [privacySaved, setPrivacySaved] = useState(false);
+  const [deleteAccountModalOpen, setDeleteAccountModalOpen] = useState(false);
 
   const refreshDashboard = () => queryClient.invalidateQueries({ queryKey: ['dashboard'] });
 
@@ -455,7 +456,11 @@ export function Profile() {
                       </select>
                     </div>
                     <div className="pt-6 border-t border-border-primary/50">
-                      <Button variant="destructive" className="w-full">
+                      <Button
+                        variant="destructive"
+                        className="w-full"
+                        onClick={() => setDeleteAccountModalOpen(true)}
+                      >
                         {t('profile_page.delete_account')}
                       </Button>
                     </div>
@@ -465,6 +470,32 @@ export function Profile() {
             </div>
           )}
         </main>
+
+        <Modal
+          isOpen={deleteAccountModalOpen}
+          onClose={() => setDeleteAccountModalOpen(false)}
+          title={t('profile_page.delete_account')}
+          size="sm"
+        >
+          <p className="text-text-secondary text-sm">
+            {t('profile_page.delete_account_confirm')}
+          </p>
+          <p className="mt-3 text-sm text-text-tertiary">
+            {t('profile_page.delete_account_not_implemented')}
+          </p>
+          <div className="mt-6 flex justify-end gap-3">
+            <Button variant="outline" onClick={() => setDeleteAccountModalOpen(false)}>
+              {t('common.cancel')}
+            </Button>
+            <Button
+              variant="destructive"
+              disabled
+              title={t('profile_page.delete_account_not_implemented')}
+            >
+              {t('profile_page.delete_account')}
+            </Button>
+          </div>
+        </Modal>
       </div>
     </div>
   );

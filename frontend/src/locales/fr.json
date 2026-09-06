@@ -503,6 +503,8 @@
     "complete_lessons": "Terminez des leçons pour gagner des succès",
     "sections": "Sections",
     "delete_account": "Supprimer le Compte",
+    "delete_account_confirm": "Cela supprime définitivement votre compte, votre progression et vos réussites. Cette action est irréversible.",
+    "delete_account_not_implemented": "La suppression de compte n'est pas encore disponible. Revenez bientôt.",
     "level_label": "Niveau {{level}}",
     "skills_overview": "Aperçu des compétences",
     "this_week": "cette semaine",

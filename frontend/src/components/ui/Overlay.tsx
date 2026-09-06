@@ -228,7 +228,7 @@ export function Modal({
       />
       <div
         className={cn(
-          'relative w-full bg-bg-primary rounded-xl shadow-modal',
+          'glass-strong relative w-full rounded-xl shadow-modal',
           'animate-scale-in',
           'max-h-[90vh] flex flex-col',
           modalSizes[size],
