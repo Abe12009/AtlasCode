@@ -52,10 +52,6 @@ login*.json
 register*.json
 test-results/
 
-
-# Database backups
-backend/migrations/backup-*.sql
-
-backend/migrations/backup-*.sql
-backend/migrations/backup-*.sql
+# Database backups (apply_additive_migrations.py backs up SQLite as .db,
+# already covered by *.db above; .sql kept in case a manual dump is made)
 backend/migrations/backup-*.sql
