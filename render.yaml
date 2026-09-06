@@ -6,6 +6,7 @@ services:
     plan: free
     buildCommand: pip install -r requirements.txt
     startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
     envVars:
       - key: APP_NAME
         value: AtlasCode
@@ -22,6 +23,10 @@ services:
       - key: ACCESS_TOKEN_EXPIRE_MINUTES
         value: "43200"
       - key: CORS_ORIGINS
+        sync: false
+      # Optional: only needed to enable Google/GitHub sign-in and Firebase
+      # password reset. Leave unset to run with email/password auth only.
+      - key: FIREBASE_PROJECT_ID
         sync: false
 
 databases:
