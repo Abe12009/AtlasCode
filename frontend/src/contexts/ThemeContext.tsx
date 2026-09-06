@@ -104,6 +104,22 @@ export function ThemeProvider({
 
   useEffect(() => {
     applyTheme(theme);
+
+    // Some environments (browser extensions and similar page-external
+    // scripts) rewrite `data-theme`/`color-scheme` on <html> shortly after
+    // load, out from under whatever set it — including our own initial
+    // paint. React's state is the source of truth, so if the DOM drifts
+    // from the theme this render actually resolved to, put it back rather
+    // than silently leaving the page stuck showing the wrong theme.
+    if (typeof MutationObserver === 'undefined') return;
+    const root = document.documentElement;
+    const observer = new MutationObserver(() => {
+      if (root.getAttribute('data-theme') !== theme) {
+        applyTheme(theme);
+      }
+    });
+    observer.observe(root, { attributes: true, attributeFilter: ['data-theme'] });
+    return () => observer.disconnect();
   }, [theme]);
 
   const setPreference = useCallback((next: ThemePreference) => {
