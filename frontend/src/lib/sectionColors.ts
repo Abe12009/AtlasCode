@@ -19,9 +19,12 @@ const SECTION_COLORS: Record<string, SectionColor> = {
   'software-engineering': { bg: '#FCEEEE', border: '#D9483F', text: '#96261F' },
   'ai-machine-learning': { bg: '#F7EEFB', border: '#A83FC9', text: '#6E1F8A' },
   cybersecurity: { bg: '#E3E8F0', border: '#24344F', text: '#182338' },
+  //: The old primary-violet identity, freed up now that primary is blue
+  //: again — reused here rather than retired.
+  'mathematics-theory': { bg: '#F1EEFC', border: '#5B3FE0', text: '#3B23A8' },
 };
 
-const DEFAULT_COLOR: SectionColor = { bg: '#F1EEFC', border: '#5B3FE0', text: '#3B23A8' };
+const DEFAULT_COLOR: SectionColor = { bg: '#EFF6FF', border: '#3B82F6', text: '#1D4ED8' };
 
 export function getSectionColor(slug: string | null | undefined): SectionColor {
   if (!slug) return DEFAULT_COLOR;
