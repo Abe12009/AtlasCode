@@ -95,14 +95,12 @@ describe('Login Page', () => {
     await renderWithProviders(<Login />);
     
     const passwordInput = screen.getByLabelText(/^Password/i);
-    const toggleButton = screen.getByLabelText(/toggle password/i);
-    
     expect(passwordInput).toHaveAttribute('type', 'password');
-    
-    await userEvent.click(toggleButton);
+
+    await userEvent.click(screen.getByLabelText(/show password/i));
     expect(passwordInput).toHaveAttribute('type', 'text');
-    
-    await userEvent.click(toggleButton);
+
+    await userEvent.click(screen.getByLabelText(/hide password/i));
     expect(passwordInput).toHaveAttribute('type', 'password');
   });
 

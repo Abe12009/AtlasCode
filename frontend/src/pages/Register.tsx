@@ -1,9 +1,13 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '../contexts/AuthContext';
 import { useTranslation } from '../hooks/useTranslation';
-import { Code, Eye, EyeOff, Loader2, CheckCircle, AlertCircle, Mail, Lock, User, Globe, Sparkles } from 'lucide-react';
-import { Button, Input, Card, Alert, Select, cn } from '../components/ui';
+import { Code, Loader2, CheckCircle, Mail, Lock, User } from 'lucide-react';
+import { Button, Input, PasswordInput, Card, Alert, Select, cn } from '../components/ui';
+import { GoogleIcon, GithubIcon } from '../components/icons/BrandIcons';
+import { describeFirebaseAuthError } from '../lib/firebase';
+import { authApi } from '../api/services';
 
 export function Register() {
   const [formData, setFormData] = useState({
@@ -13,12 +17,32 @@ export function Register() {
     confirmPassword: '',
     preferred_language: 'en',
   });
-  const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
-  const { register } = useAuth();
+  const [oauthLoading, setOauthLoading] = useState<'google' | 'github' | null>(null);
+  const { register, loginWithGoogle, loginWithGithub } = useAuth();
   const { t, isRTL } = useTranslation();
   const navigate = useNavigate();
+  const { data: authConfig } = useQuery({
+    queryKey: ['auth-config'],
+    queryFn: authApi.getConfig,
+    staleTime: Infinity,
+    retry: false,
+  });
+  const oauthAvailable = authConfig?.firebase_enabled ?? true;
+
+  const handleOAuth = async (provider: 'google' | 'github') => {
+    setErrors({});
+    setOauthLoading(provider);
+    try {
+      await (provider === 'google' ? loginWithGoogle() : loginWithGithub());
+      navigate('/app/dashboard');
+    } catch (err: unknown) {
+      setErrors({ form: describeFirebaseAuthError(err) });
+    } finally {
+      setOauthLoading(null);
+    }
+  };
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
@@ -175,9 +199,8 @@ export function Register() {
                 leftIcon={<Mail className="h-4 w-4" />}
               />
 
-              <Input
+              <PasswordInput
                 label={t('common.password')}
-                type={showPassword ? 'text' : 'password'}
                 id="password"
                 name="password"
                 autoComplete="new-password"
@@ -188,20 +211,6 @@ export function Register() {
                 disabled={loading}
                 error={errors.password}
                 leftIcon={<Lock className="h-4 w-4" />}
-                rightIcon={
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="text-text-tertiary hover:text-text-primary transition-colors"
-                    aria-label={showPassword ? t('accessibility.toggle_password_visibility') : t('accessibility.toggle_password_visibility')}
-                  >
-                    {showPassword ? (
-                      <EyeOff className="h-4 w-4" aria-hidden="true" />
-                    ) : (
-                      <Eye className="h-4 w-4" aria-hidden="true" />
-                    )}
-                  </button>
-                }
               />
 
               {!errors.password && formData.password && (
@@ -224,9 +233,8 @@ export function Register() {
                 </div>
               )}
 
-              <Input
+              <PasswordInput
                 label={t('common.confirm_password')}
-                type={showPassword ? 'text' : 'password'}
                 id="confirmPassword"
                 name="confirmPassword"
                 autoComplete="new-password"
@@ -261,6 +269,46 @@ export function Register() {
                 {t('auth.create_account')}
               </Button>
             </form>
+
+            {oauthAvailable && (
+              <>
+                <div className="relative">
+                  <div className="absolute inset-0 flex items-center" aria-hidden="true">
+                    <div className="w-full border-t border-border-primary/50" />
+                  </div>
+                  <div className="relative flex justify-center text-sm">
+                    <span className="px-4 bg-bg-secondary/80 text-text-tertiary">{t('auth.or_continue_with')}</span>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    fullWidth
+                    loading={oauthLoading === 'google'}
+                    disabled={oauthLoading !== null}
+                    onClick={() => handleOAuth('google')}
+                    className="border-border-primary/50 hover:border-primary-500/50 hover:bg-primary-500/5"
+                  >
+                    {oauthLoading !== 'google' && <GoogleIcon className="h-5 w-5" />}
+                    <span>Google</span>
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    fullWidth
+                    loading={oauthLoading === 'github'}
+                    disabled={oauthLoading !== null}
+                    onClick={() => handleOAuth('github')}
+                    className="border-border-primary/50 hover:border-primary-500/50 hover:bg-primary-500/5"
+                  >
+                    {oauthLoading !== 'github' && <GithubIcon className="h-5 w-5" />}
+                    <span>GitHub</span>
+                  </Button>
+                </div>
+              </>
+            )}
 
             <div className="text-center">
               <p className="text-text-secondary">

@@ -1,10 +1,47 @@
 import { Link } from 'react-router-dom';
-import { Code, ArrowRight, BookOpen, FolderKanban, Trophy, Zap, Shield, Globe, ChevronRight, Check, Star, Sparkles, Terminal, Layers, Brain } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Code, ArrowRight, BookOpen, FolderKanban, Trophy, Zap, Shield, Globe, Check, Layers, Brain, Menu, X as CloseIcon } from 'lucide-react';
 import { Button, Card, Badge, cn } from '../components/ui';
+import { LanguageSwitcher } from '../components/LanguageSwitcher';
+import { GithubIcon, InstagramIcon, XIcon } from '../components/icons/BrandIcons';
 import { useTranslation } from '../hooks/useTranslation';
+import { SOCIAL_LINKS } from '../config/site';
+
+const SECTION_IDS = ['features', 'roadmap', 'stats'] as const;
 
 export function Landing() {
-  const { t, currentLanguage, changeLanguage, languages, isRTL } = useTranslation();
+  const { t, isRTL } = useTranslation();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [activeSection, setActiveSection] = useState<string>('');
+
+  useEffect(() => {
+    const sections = SECTION_IDS.map((id) => document.getElementById(id)).filter(
+      (el): el is HTMLElement => el !== null,
+    );
+    if (sections.length === 0) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries
+          .filter((entry) => entry.isIntersecting)
+          .sort((a, b) => b.intersectionRatio - a.intersectionRatio);
+        if (visible[0]) {
+          setActiveSection(visible[0].target.id);
+        }
+      },
+      { rootMargin: '-45% 0px -45% 0px', threshold: [0, 0.25, 0.5, 0.75, 1] },
+    );
+    sections.forEach((section) => observer.observe(section));
+    return () => observer.disconnect();
+  }, []);
+
+  const scrollToSection = (event: React.MouseEvent<HTMLAnchorElement>, id: string) => {
+    event.preventDefault();
+    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    setActiveSection(id);
+    setMobileMenuOpen(false);
+    window.history.replaceState(null, '', `#${id}`);
+  };
 
   const features = [
     {
@@ -76,45 +113,93 @@ export function Landing() {
             </Link>
 
             <nav className="hidden lg:flex items-center gap-6" aria-label={t('navigation.main')}>
-              <Link to="#features" className="text-sm font-medium text-text-secondary hover:text-text-primary transition-colors">
-                {t('landing.nav.features')}
-              </Link>
-              <Link to="#roadmap" className="text-sm font-medium text-text-secondary hover:text-text-primary transition-colors">
-                {t('landing.nav.roadmap')}
-              </Link>
-              <Link to="#stats" className="text-sm font-medium text-text-secondary hover:text-text-primary transition-colors">
-                {t('landing.nav.stats')}
-              </Link>
+              {SECTION_IDS.map((id) => (
+                <a
+                  key={id}
+                  href={`#${id}`}
+                  onClick={(e) => scrollToSection(e, id)}
+                  aria-current={activeSection === id ? 'page' : undefined}
+                  className={cn(
+                    'relative text-sm font-medium transition-colors py-1',
+                    'after:absolute after:left-0 after:-bottom-1 after:h-0.5 after:rounded-full after:transition-all after:duration-fast',
+                    activeSection === id
+                      ? 'text-text-primary after:w-full after:bg-accent-500'
+                      : 'text-text-secondary after:w-0 hover:text-text-primary hover:after:w-full hover:after:bg-border-secondary',
+                  )}
+                >
+                  {t(`landing.nav.${id}`)}
+                </a>
+              ))}
             </nav>
 
-            <div className="flex items-center gap-4">
-              <div className="relative hidden sm:block">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  leftIcon={<Globe className="h-4 w-4" />}
-                  onClick={() => { }}
-                  aria-label={t('common.language')}
-                  className="gap-1.5"
-                >
-                  <span className="hidden sm:inline text-sm font-medium text-text-secondary">
-                    {languages.find(l => l.code === currentLanguage)?.nativeName || currentLanguage}
-                  </span>
-                  <ChevronRight className="h-4 w-4 text-text-tertiary" />
-                </Button>
-              </div>
+            <div className="flex items-center gap-2 sm:gap-4">
+              <LanguageSwitcher className="hidden sm:inline-flex" />
 
-              <div className="flex items-center gap-2">
-                <Link to="/login" className="hidden sm:inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-text-secondary hover:text-text-primary transition-colors rounded-xl">
+              <div className="hidden sm:flex items-center gap-2">
+                <Link to="/login" className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-text-secondary hover:text-text-primary transition-colors rounded-xl">
                   {t('auth.sign_in')}
                 </Link>
-                <Link to="/register" className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-accent-500 to-accent-600 hover:from-accent-600 hover:to-accent-700 transition-all rounded-xl shadow-lg hover:shadow-glow-accent">
+                <Link to="/register" className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-accent-500 to-accent-600 hover:from-accent-600 hover:to-accent-700 active:scale-[0.97] transition-all rounded-xl shadow-lg hover:shadow-glow-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-500 focus-visible:ring-offset-2 focus-visible:ring-offset-bg-primary">
+                  {t('auth.sign_up')}
+                </Link>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setMobileMenuOpen((open) => !open)}
+                aria-expanded={mobileMenuOpen}
+                aria-controls="landing-mobile-menu"
+                aria-label={mobileMenuOpen ? t('common.close') : t('navigation.main')}
+                className="inline-flex h-10 w-10 items-center justify-center rounded-xl text-text-secondary transition-colors hover:bg-bg-tertiary hover:text-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-border-focus lg:hidden"
+              >
+                {mobileMenuOpen ? <CloseIcon className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {mobileMenuOpen && (
+          <div
+            id="landing-mobile-menu"
+            className="border-t border-border-primary/50 bg-bg-primary/95 backdrop-blur-xl lg:hidden animate-fade-in"
+          >
+            <nav className="flex flex-col gap-1 px-4 py-4" aria-label={t('navigation.main')}>
+              {SECTION_IDS.map((id) => (
+                <a
+                  key={id}
+                  href={`#${id}`}
+                  onClick={(e) => scrollToSection(e, id)}
+                  aria-current={activeSection === id ? 'page' : undefined}
+                  className={cn(
+                    'rounded-xl px-3 py-2.5 text-sm font-medium transition-colors',
+                    activeSection === id
+                      ? 'bg-primary-500/10 text-primary-400'
+                      : 'text-text-secondary hover:bg-bg-tertiary hover:text-text-primary',
+                  )}
+                >
+                  {t(`landing.nav.${id}`)}
+                </a>
+              ))}
+            </nav>
+            <div className="flex items-center justify-between gap-3 border-t border-border-primary/50 px-4 py-4">
+              <LanguageSwitcher align="start" />
+              <div className="flex items-center gap-2">
+                <Link
+                  to="/login"
+                  className="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-medium text-text-secondary transition-colors hover:text-text-primary"
+                >
+                  {t('auth.sign_in')}
+                </Link>
+                <Link
+                  to="/register"
+                  className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-accent-500 to-accent-600 px-4 py-2 text-sm font-semibold text-white shadow-lg transition-all hover:from-accent-600 hover:to-accent-700"
+                >
                   {t('auth.sign_up')}
                 </Link>
               </div>
             </div>
           </div>
-        </div>
+        )}
       </header>
 
       <main>
@@ -427,9 +512,9 @@ learn_programming()`}</code></pre>
             <div>
               <h4 className="font-semibold text-text-primary mb-4">{t('landing.footer.company')}</h4>
               <ul className="space-y-2 text-sm text-text-secondary">
-                <li><a href="#" className="hover:text-text-primary transition-colors">{t('footer.privacy_policy')}</a></li>
-                <li><a href="#" className="hover:text-text-primary transition-colors">{t('footer.terms_of_service')}</a></li>
-                <li><a href="#" className="hover:text-text-primary transition-colors">{t('footer.contact')}</a></li>
+                <li><Link to="/privacy" className="hover:text-text-primary transition-colors">{t('footer.privacy_policy')}</Link></li>
+                <li><Link to="/terms" className="hover:text-text-primary transition-colors">{t('footer.terms_of_service')}</Link></li>
+                <li><Link to="/contact" className="hover:text-text-primary transition-colors">{t('footer.contact')}</Link></li>
               </ul>
             </div>
           </div>
@@ -437,21 +522,33 @@ learn_programming()`}</code></pre>
             <p className="text-sm text-text-tertiary text-center md:text-left">
               {t('footer.copyright', { year: new Date().getFullYear() })}
             </p>
-            <div className="flex items-center gap-6">
-              <a href="#" className="text-text-tertiary hover:text-text-primary transition-colors" aria-label="GitHub">
-                <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                  <path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/>
-                </svg>
+            <div className="flex items-center gap-4">
+              <a
+                href={SOCIAL_LINKS.instagram}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={t('footer.instagram')}
+                className="inline-flex h-10 w-10 items-center justify-center rounded-xl text-text-tertiary transition-all hover:-translate-y-0.5 hover:bg-bg-tertiary hover:text-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-border-focus focus-visible:ring-offset-2 focus-visible:ring-offset-bg-secondary"
+              >
+                <InstagramIcon className="h-5 w-5" />
               </a>
-              <a href="#" className="text-text-tertiary hover:text-text-primary transition-colors" aria-label="Discord">
-                <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                  <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.618-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.682 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.083.083 0 0 0 .031.057 19.9 19.9 0 0 0 5.994 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 1 .077-.032c.818-.414 1.672-.748 2.553-.999a.077.077 0 0 1 .077.032c.126.252.29.542.48.886a14.36 14.36 0 0 0 1.19 1.967.077.077 0 0 0 .083.028 19.839 19.839 0 0 0 6.005-3.03.077.077 0 0 0 .032-.054c.428-4.534-.354-9.097-1.551-13.66a.061.061 0 0 0-.032-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333 1.007-2.419 2.157-2.419 1.177 0 2.133.97 2.133 2.3 0 1.373-.956 2.383-2.133 2.383zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333 1.007-2.419 2.157-2.419 1.177 0 2.133.97 2.133 2.3 0 1.373-.956 2.383-2.133 2.383z"/>
-                </svg>
+              <a
+                href={SOCIAL_LINKS.x}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={t('footer.x')}
+                className="inline-flex h-10 w-10 items-center justify-center rounded-xl text-text-tertiary transition-all hover:-translate-y-0.5 hover:bg-bg-tertiary hover:text-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-border-focus focus-visible:ring-offset-2 focus-visible:ring-offset-bg-secondary"
+              >
+                <XIcon className="h-4 w-4" />
               </a>
-              <a href="#" className="text-text-tertiary hover:text-text-primary transition-colors" aria-label="Twitter">
-                <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                  <path d="M23 3a10.9 10.9 0 01-3.14 1.53 4.48 4.48 0 00-7.86 3v1A10.66 10.66 0 013 4s-4 9 5 13a11.64 11.64 0 01-7 2c9 5 20 0 20-11.5a4.5 4.5 0 00-.08-.83A7.72 7.72 0 0023 3z"/>
-                </svg>
+              <a
+                href={SOCIAL_LINKS.github}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={t('footer.github')}
+                className="inline-flex h-10 w-10 items-center justify-center rounded-xl text-text-tertiary transition-all hover:-translate-y-0.5 hover:bg-bg-tertiary hover:text-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-border-focus focus-visible:ring-offset-2 focus-visible:ring-offset-bg-secondary"
+              >
+                <GithubIcon className="h-5 w-5" />
               </a>
             </div>
           </div>

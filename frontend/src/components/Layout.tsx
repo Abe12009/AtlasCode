@@ -1,20 +1,21 @@
 import { useState, useEffect, useRef } from 'react';
-import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom';
+import { Outlet, NavLink, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useTranslation } from '../hooks/useTranslation';
-import { LayoutDashboard, BookOpen, FolderKanban, User, LogOut, Menu, X, ChevronDown, Trophy, Code, Globe, Zap, Star } from 'lucide-react';
+import { LayoutDashboard, BookOpen, FolderKanban, User, LogOut, Menu, X, ChevronDown, Trophy, Code, Zap, Star } from 'lucide-react';
 import { Button, Avatar, Dropdown, DropdownItem, DropdownSeparator, Badge, cn } from './ui';
 import { StatusBadge, XPBadge, StreakBadge } from './ui/StatusBadge';
 import { NotificationBell } from './NotificationBell';
+import { LanguageSwitcher } from './LanguageSwitcher';
+import { ThemeToggle } from './ui/ThemeToggle';
 
 export function Layout() {
   const { user, profile, logout, loading: authLoading } = useAuth();
-  const { t, currentLanguage, changeLanguage, languages, isRTL } = useTranslation();
+  const { t, isRTL } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
-  const [langMenuOpen, setLangMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const headerRef = useRef<HTMLDivElement>(null);
 
@@ -132,40 +133,9 @@ export function Layout() {
                 <StreakBadge streak={profile?.streak || 0} size="sm" showIcon />
               </div>
 
-              <div className="relative hidden sm:block">
-                <Dropdown position="bottom" align="end">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    leftIcon={<Globe className="h-4 w-4" />}
-                    onClick={() => setLangMenuOpen(!langMenuOpen)}
-                    aria-label={t('common.language')}
-                    className="gap-1.5"
-                  >
-                    <span className="hidden sm:inline text-sm font-medium text-text-secondary">
-                      {languages.find(l => l.code === currentLanguage)?.nativeName || currentLanguage}
-                    </span>
-                    <ChevronDown className={cn('h-4 w-4 text-text-tertiary transition-transform', langMenuOpen && 'rotate-180')} />
-                  </Button>
-                  {languages.map((lang) => (
-                    <DropdownItem
-                      key={lang.code}
-                      onClick={() => {
-                        changeLanguage(lang.code);
-                        setLangMenuOpen(false);
-                      }}
-                    >
-                      <div className="flex items-center gap-2">
-                        <span className="text-lg">{lang.code === 'ar' ? '🇸🇦' : lang.code === 'fr' ? '🇫🇷' : '🇺🇸'}</span>
-                        <span>{lang.nativeName}</span>
-                        {currentLanguage === lang.code && (
-                          <span className="h-4 w-4 text-accent-500 flex-shrink-0" aria-hidden="true">✓</span>
-                        )}
-                      </div>
-                    </DropdownItem>
-                  ))}
-                </Dropdown>
-              </div>
+              <ThemeToggle className="hidden sm:inline-flex" />
+
+              <LanguageSwitcher className="hidden sm:inline-flex" />
 
               <NotificationBell />
 
@@ -249,6 +219,10 @@ export function Layout() {
                   <span>{item.label}</span>
                 </NavLink>
               ))}
+              <div className="flex items-center justify-between gap-3 pt-4 border-t border-border-primary">
+                <ThemeToggle />
+                <LanguageSwitcher align="end" />
+              </div>
               <div className="pt-4 border-t border-border-primary">
                 <Button
                   variant="ghost"
@@ -280,15 +254,15 @@ export function Layout() {
               {t('footer.copyright', { year: new Date().getFullYear() })}
             </p>
             <div className="flex items-center gap-6 text-sm">
-              <a href="#" className="text-text-tertiary hover:text-text-primary transition-colors">
+              <Link to="/privacy" className="text-text-tertiary hover:text-text-primary transition-colors">
                 {t('footer.privacy_policy')}
-              </a>
-              <a href="#" className="text-text-tertiary hover:text-text-primary transition-colors">
+              </Link>
+              <Link to="/terms" className="text-text-tertiary hover:text-text-primary transition-colors">
                 {t('footer.terms_of_service')}
-              </a>
-              <a href="#" className="text-text-tertiary hover:text-text-primary transition-colors">
+              </Link>
+              <Link to="/contact" className="text-text-tertiary hover:text-text-primary transition-colors">
                 {t('footer.contact')}
-              </a>
+              </Link>
             </div>
           </div>
         </div>

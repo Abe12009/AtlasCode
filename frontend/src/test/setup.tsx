@@ -34,6 +34,8 @@ vi.mock('../api/services', () => ({
     getMe: vi.fn(),
     getProfile: vi.fn(),
     updateMe: vi.fn(),
+    getConfig: vi.fn().mockResolvedValue({ firebase_enabled: true, password_login_enabled: true }),
+    loginWithFirebase: vi.fn(),
   },
   coursesApi: {
     getAll: vi.fn(),

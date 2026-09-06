@@ -44,16 +44,51 @@ export function Dashboard() {
 
   const user = dashboard?.user;
   const profile = dashboard?.profile;
+  const weekly = dashboard?.weekly;
   const currentMission = dashboard?.current_mission;
   const courseProgress = dashboard?.course_progress || [];
   const recentAchievements = dashboard?.recent_achievements || [];
   const currentProject = dashboard?.current_project;
 
+  /** A weekly delta only shows for values that actually happened — see backend/app/services/stats.py. */
+  const trendFor = (amount: number): string | null => (amount > 0 ? `+${amount}` : null);
+
   const stats = [
-    { label: t('dashboard.level'), value: profile?.level || 1, icon: Trophy, color: 'text-yellow-500 bg-yellow-900/30 border-yellow-500/30', trend: '+1' },
-    { label: t('dashboard.xp'), value: profile?.xp || 0, icon: Target, color: 'text-blue-500 bg-blue-900/30 border-blue-500/30', trend: '+150' },
-    { label: t('dashboard.lessons_completed'), value: profile?.completed_lessons || 0, icon: CheckCircle, color: 'text-green-500 bg-green-900/30 border-green-500/30', trend: '+3' },
-    { label: t('dashboard.streak'), value: `${profile?.streak || 0} ${t('dashboard.days')}`, icon: Flame, color: 'text-orange-500 bg-orange-900/30 border-orange-500/30', trend: '+1' },
+    {
+      label: t('dashboard.level'),
+      value: profile?.level || 1,
+      icon: Trophy,
+      color: 'text-yellow-500 bg-yellow-900/30 border-yellow-500/30',
+      trend: trendFor(weekly?.levels_gained ?? 0),
+      note: null as string | null,
+    },
+    {
+      label: t('dashboard.xp'),
+      value: profile?.xp || 0,
+      icon: Target,
+      color: 'text-blue-500 bg-blue-900/30 border-blue-500/30',
+      trend: trendFor(weekly?.xp ?? 0),
+      note: null as string | null,
+    },
+    {
+      label: t('dashboard.lessons_completed'),
+      value: profile?.completed_lessons || 0,
+      icon: CheckCircle,
+      color: 'text-green-500 bg-green-900/30 border-green-500/30',
+      trend: trendFor(weekly?.lessons_completed ?? 0),
+      note: null as string | null,
+    },
+    {
+      label: t('dashboard.streak'),
+      value: `${profile?.streak || 0} ${t('dashboard.days')}`,
+      icon: Flame,
+      color: 'text-orange-500 bg-orange-900/30 border-orange-500/30',
+      trend: null,
+      note:
+        (weekly?.active_days ?? 0) > 0
+          ? t('dashboard.active_days_this_week', { count: weekly!.active_days })
+          : null,
+    },
   ];
 
   const buildQuestNodes = (): QuestNodeData[] => {
@@ -145,8 +180,18 @@ export function Dashboard() {
               </div>
             </div>
             <div className="mt-3 flex items-center gap-2">
-              <TrendingUp className="h-4 w-4 text-success-500" />
-              <span className="text-sm font-medium text-success-600 dark:text-success-400">{stat.trend} {t('dashboard.this_week')}</span>
+              {stat.trend ? (
+                <>
+                  <TrendingUp className="h-4 w-4 text-success-500" aria-hidden="true" />
+                  <span className="text-sm font-medium text-success-600 dark:text-success-400">
+                    {stat.trend} {t('dashboard.this_week')}
+                  </span>
+                </>
+              ) : stat.note ? (
+                <span className="text-sm font-medium text-text-tertiary">{stat.note}</span>
+              ) : (
+                <span className="text-sm text-text-tertiary">{t('dashboard.no_activity_this_week')}</span>
+              )}
             </div>
           </Card>
         ))}

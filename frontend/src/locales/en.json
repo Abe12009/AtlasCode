@@ -101,6 +101,9 @@
     "of": "of",
     "lessons_completed_short": "lessons completed",
     "this_week": "this week",
+    "no_activity_this_week": "No activity this week",
+    "active_days_this_week_one": "{{count}} active day this week",
+    "active_days_this_week_other": "{{count}} active days this week",
     "days": "days",
     "quest_board": "Quest Board",
     "quest_board_desc": "Your personalized learning roadmap",
@@ -193,6 +196,8 @@
     "practice": "Practice",
     "read": "Read",
     "code": "Code",
+    "scenario": "Scenario",
+    "tip": "Tip",
     "previous": "Previous",
     "next": "Next",
     "finish_lesson": "Finish Lesson",
@@ -440,7 +445,14 @@
     "good": "Good",
     "strong": "Strong",
     "login_failed": "Login failed. Please try again.",
-    "registration_failed": "Registration failed. Please try again."
+    "registration_failed": "Registration failed. Please try again.",
+    "reset_password_title": "Reset your password",
+    "reset_password_description": "Enter the email on your account and we'll send you a link to reset your password.",
+    "reset_password_send": "Send reset link",
+    "reset_password_sent_title": "Check your email",
+    "reset_password_sent_description": "If an account exists for that email, a password reset link is on its way.",
+    "reset_password_not_configured": "Password reset by email is not available on this deployment yet.",
+    "back_to_login": "Back to sign in"
   },
   "projects_page": {
     "title": "Projects",
@@ -528,6 +540,8 @@
     "open_menu": "Open menu",
     "close_menu": "Close menu",
     "toggle_password_visibility": "Toggle password visibility",
+    "show_password": "Show password",
+    "hide_password": "Hide password",
     "copy_to_clipboard": "Copy to clipboard",
     "copied": "Copied to clipboard",
     "run_code": "Run code",
@@ -549,13 +563,93 @@
     "error": "Error",
     "success": "Success"
   },
+  "theme": {
+    "label": "Theme",
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System"
+  },
   "footer": {
     "copyright": "© {{year}} AtlasCode. All rights reserved.",
     "privacy_policy": "Privacy Policy",
     "terms_of_service": "Terms of Service",
     "contact": "Contact",
     "github": "GitHub",
-    "discord": "Discord"
+    "instagram": "Instagram",
+    "x": "X"
+  },
+  "legal": {
+    "last_updated": "Last updated: {{date}}",
+    "back_home": "Back to home",
+    "placeholder_notice": "This page is a professional placeholder. It will be reviewed and finalized by the AtlasCode legal team before launch.",
+    "privacy": {
+      "title": "Privacy Policy",
+      "intro": "This Privacy Policy describes, in plain terms, the categories of information AtlasCode collects and how it is used while you learn on the platform.",
+      "sections": [
+        {
+          "title": "Information we collect",
+          "body": "Account details you provide (such as your name and email address), authentication data from the sign-in method you choose, and activity data generated as you use the platform (lesson progress, exercise submissions, XP, and streaks)."
+        },
+        {
+          "title": "How we use information",
+          "body": "To operate your account, track your learning progress, personalize your dashboard and recommendations, secure the platform against abuse, and communicate important updates about your account."
+        },
+        {
+          "title": "Authentication providers",
+          "body": "If you sign in with Google or GitHub, we receive the basic profile information those providers share (such as your name, email, and avatar) to create or link your AtlasCode account. We never receive your password from these providers."
+        },
+        {
+          "title": "Data retention",
+          "body": "Account and progress data is retained for as long as your account is active. You may request deletion of your account and associated data at any time through the contact page."
+        },
+        {
+          "title": "Your choices",
+          "body": "You can review and update your account information from your profile, change your password, and control your language and theme preferences at any time."
+        }
+      ]
+    },
+    "terms": {
+      "title": "Terms of Service",
+      "intro": "These Terms of Service govern your use of AtlasCode. By creating an account, you agree to the terms summarized below.",
+      "sections": [
+        {
+          "title": "Using the platform",
+          "body": "AtlasCode is provided for personal, educational use. You are responsible for the activity on your account and for keeping your credentials secure."
+        },
+        {
+          "title": "Acceptable use",
+          "body": "You agree not to misuse the platform, attempt to disrupt its infrastructure, or use it to distribute harmful or unlawful content."
+        },
+        {
+          "title": "Account eligibility",
+          "body": "You must provide accurate account information. Accounts created via Google or GitHub are subject to those providers' own terms in addition to ours."
+        },
+        {
+          "title": "Content ownership",
+          "body": "Course content, exercises, and platform materials remain the property of AtlasCode. Code you write while completing exercises and projects remains yours."
+        },
+        {
+          "title": "Changes to these terms",
+          "body": "We may update these terms as the platform evolves. Material changes will be communicated through the application."
+        }
+      ]
+    },
+    "contact": {
+      "title": "Contact Us",
+      "intro": "Have a question, found a bug, or want to share feedback? Send us a message and we'll get back to you.",
+      "form": {
+        "name": "Name",
+        "email": "Email",
+        "subject": "Subject",
+        "message": "Message",
+        "submit": "Send message",
+        "sending": "Sending...",
+        "success": "Thanks — your message has been recorded. We'll follow up by email.",
+        "error": "Something went wrong sending your message. Please try again or email us directly."
+      },
+      "fallback": "You can also reach us directly at",
+      "response_time": "We aim to respond within a few business days."
+    }
   },
   "notifications": {
     "lesson_completed": "Lesson completed",

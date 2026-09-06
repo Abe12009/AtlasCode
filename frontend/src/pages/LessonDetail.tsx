@@ -1,7 +1,7 @@
 import { useParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { lessonsApi, exercisesApi } from '../api/services';
-import { ArrowLeft, CheckCircle, Clock, Target, Code, ChevronLeft, ChevronRight, Copy, Check, RotateCcw, Terminal, Sparkles } from 'lucide-react';
+import { ArrowLeft, CheckCircle, Clock, Target, Code, ChevronLeft, ChevronRight, Copy, Check, RotateCcw, Terminal, Sparkles, Compass, Lightbulb } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import type { Exercise, ExerciseSubmitRequest, ExerciseSubmitResponse, LessonBlock } from '../types';
@@ -209,7 +209,15 @@ export function LessonDetail() {
                   {index < currentBlockIndex ? <Check className="h-4 w-4" /> : index + 1}
                 </div>
                 <span className="truncate capitalize">
-                  {block.block_type === 'code' ? t('lessons.code') : block.block_type === 'text' ? t('lessons.read') : t('lessons.practice')}
+                  {block.block_type === 'code'
+                    ? t('lessons.code')
+                    : block.block_type === 'text'
+                    ? t('lessons.read')
+                    : block.block_type === 'hook'
+                    ? t('lessons.scenario')
+                    : block.block_type === 'exam_tip'
+                    ? t('lessons.tip')
+                    : t('lessons.practice')}
                 </span>
               </button>
             ))}
@@ -399,6 +407,26 @@ function LessonBlockView({ block, index, total, onNext, onPrev, hasPrev }: Lesso
             minHeight="200px"
             showToolbar
           />
+        </div>
+      )}
+
+      {block.block_type === 'hook' && (
+        <div className="rounded-xl border border-primary-500/30 bg-primary-500/5 p-6">
+          <div className="mb-3 flex items-center gap-2 text-primary-400">
+            <Compass className="h-5 w-5" aria-hidden="true" />
+            <span className="text-sm font-semibold uppercase tracking-wide">{t('lessons.scenario')}</span>
+          </div>
+          <p className="whitespace-pre-wrap text-text-secondary leading-relaxed text-lg">{content}</p>
+        </div>
+      )}
+
+      {block.block_type === 'exam_tip' && (
+        <div className="rounded-xl border border-warning-500/30 bg-warning-500/5 p-6">
+          <div className="mb-3 flex items-center gap-2 text-warning-400">
+            <Lightbulb className="h-5 w-5" aria-hidden="true" />
+            <span className="text-sm font-semibold uppercase tracking-wide">{t('lessons.tip')}</span>
+          </div>
+          <p className="whitespace-pre-wrap text-text-secondary leading-relaxed text-lg">{content}</p>
         </div>
       )}
 

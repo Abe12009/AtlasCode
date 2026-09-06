@@ -1,12 +1,104 @@
-import { forwardRef, type InputHTMLAttributes, type TextareaHTMLAttributes, type SelectHTMLAttributes, type ReactNode, useId } from 'react';
+import {
+  forwardRef,
+  useId,
+  useState,
+  type InputHTMLAttributes,
+  type ReactNode,
+  type SelectHTMLAttributes,
+  type TextareaHTMLAttributes,
+} from 'react';
+import { AlertCircle, Eye, EyeOff } from 'lucide-react';
 import { cn } from '../../lib/utils';
+import { useTranslation } from '../../hooks/useTranslation';
+
+/**
+ * Shared field chrome. Every control below renders the same label / hint /
+ * error scaffolding so forms stay consistent and every message is wired to its
+ * input through `aria-describedby`.
+ */
+function FieldLabel({
+  htmlFor,
+  children,
+  required,
+}: {
+  htmlFor: string;
+  children: ReactNode;
+  required?: boolean;
+}) {
+  return (
+    <label htmlFor={htmlFor} className="mb-1.5 block text-sm font-medium text-text-primary">
+      {children}
+      {required && (
+        <span className="ms-0.5 text-error-500" aria-hidden="true">
+          *
+        </span>
+      )}
+    </label>
+  );
+}
+
+function FieldMessages({
+  error,
+  hint,
+  errorId,
+  hintId,
+}: {
+  error?: string;
+  hint?: string;
+  errorId: string;
+  hintId: string;
+}) {
+  if (error) {
+    return (
+      <p
+        id={errorId}
+        className="mt-1.5 flex items-start gap-1.5 text-sm text-error-600 dark:text-error-400"
+        role="alert"
+      >
+        <AlertCircle className="mt-0.5 h-3.5 w-3.5 flex-shrink-0" aria-hidden="true" />
+        <span>{error}</span>
+      </p>
+    );
+  }
+  if (hint) {
+    return (
+      <p id={hintId} className="mt-1.5 text-sm text-text-tertiary">
+        {hint}
+      </p>
+    );
+  }
+  return null;
+}
+
+/** The control styling shared by input / textarea / select. */
+const controlBase = [
+  'w-full rounded-xl border bg-bg-primary text-text-primary placeholder:text-text-tertiary',
+  'transition-[border-color,box-shadow,background-color] duration-fast',
+  'focus:outline-none focus:ring-2 focus:ring-offset-0',
+  'disabled:bg-bg-tertiary disabled:text-text-tertiary disabled:cursor-not-allowed disabled:opacity-70',
+  'text-sm',
+].join(' ');
+
+function controlState(hasError: boolean) {
+  return hasError
+    ? 'border-error-500 focus:border-error-500 focus:ring-error-500/25'
+    : 'border-border-primary hover:border-border-secondary focus:border-border-focus focus:ring-border-focus/25';
+}
 
 export interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   label?: string;
   hint?: string;
   error?: string;
+  /** Decorative icon rendered at the start of the field. */
   leftIcon?: ReactNode;
+  /** Decorative icon rendered at the end of the field. */
   rightIcon?: ReactNode;
+  /**
+   * Interactive control rendered at the end of the field (a visibility toggle,
+   * a clear button…). Unlike `rightIcon` it receives pointer and keyboard
+   * events and is exposed to assistive technology.
+   */
+  rightAddon?: ReactNode;
   fullWidth?: boolean;
 }
 
@@ -19,6 +111,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
       error,
       leftIcon,
       rightIcon,
+      rightAddon,
       fullWidth = true,
       id: providedId,
       disabled,
@@ -32,24 +125,19 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
     const id = providedId || generatedId;
     const hintId = `${id}-hint`;
     const errorId = `${id}-error`;
+    const hasEndSlot = Boolean(rightIcon || rightAddon);
 
     return (
-      <div className={cn('w-full', fullWidth && 'w-full')}>
+      <div className={cn(fullWidth ? 'w-full' : 'w-auto')}>
         {label && (
-          <label
-            htmlFor={id}
-            className="block text-sm font-medium text-text-primary mb-1.5"
-          >
+          <FieldLabel htmlFor={id} required={required}>
             {label}
-            {required && (
-              <span className="text-error-500 ml-0.5" aria-hidden="true">*</span>
-            )}
-          </label>
+          </FieldLabel>
         )}
         <div className="relative">
           {leftIcon && (
             <div
-              className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-text-tertiary"
+              className="pointer-events-none absolute inset-y-0 start-0 flex items-center ps-3 text-text-tertiary"
               aria-hidden="true"
             >
               {leftIcon}
@@ -62,61 +150,86 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             disabled={disabled}
             required={required}
             className={cn(
-              'w-full rounded-xl border bg-bg-primary text-text-primary placeholder:text-text-tertiary',
-              'transition-all duration-fast',
-              'focus:outline-none focus:ring-2 focus:ring-offset-0',
-              'disabled:bg-bg-tertiary disabled:text-text-tertiary disabled:cursor-not-allowed',
-              'text-sm',
-              leftIcon ? 'pl-10' : 'pl-4',
-              rightIcon ? 'pr-10' : 'pr-4',
+              controlBase,
+              controlState(Boolean(error)),
               'py-3',
-              error
-                ? 'border-error-500 focus:border-error-500 focus:ring-2 focus:ring-error-500/20'
-                : 'border-border-primary focus:border-border-focus focus:ring-2 focus:ring-border-focus/20',
+              leftIcon ? 'ps-10' : 'ps-4',
+              hasEndSlot ? 'pe-11' : 'pe-4',
               className,
             )}
-            aria-invalid={error ? 'true' : 'false'}
-            aria-describedby={
-              error ? errorId : hint ? hintId : undefined
-            }
-            aria-disabled={disabled}
+            aria-invalid={error ? 'true' : undefined}
+            aria-describedby={error ? errorId : hint ? hintId : undefined}
             {...props}
           />
-          {rightIcon && (
+          {rightAddon && (
+            <div className="absolute inset-y-0 end-0 flex items-center pe-2">{rightAddon}</div>
+          )}
+          {!rightAddon && rightIcon && (
             <div
-              className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-text-tertiary"
+              className="pointer-events-none absolute inset-y-0 end-0 flex items-center pe-3 text-text-tertiary"
               aria-hidden="true"
             >
               {rightIcon}
             </div>
           )}
         </div>
-        {error && (
-          <p
-            id={errorId}
-            className="mt-1.5 text-sm text-error-600 dark:text-error-400 flex items-center gap-1"
-            role="alert"
-          >
-            <svg className="h-3.5 w-3.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
-              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM8.707 7.293a1 1 0 00-1.414 1.414L10.586 10l-2.879 2.879a1 1 0 101.414 1.414L12 11.414l2.879 2.879a1 1 0 001.414-1.414L13.414 10l2.879-2.879a1 1 0 001.414-1.414L12 8.586 9.121 5.707a1 1 0 00-1.414 0L8 9.586 5.121 6.707a1 1 0 000 1.414L10.586 12l-2.879 2.879a1 1 0 001.414 1.414z" clipRule="evenodd" />
-            </svg>
-            {error}
-          </p>
-        )}
-        {hint && !error && (
-          <p
-            id={hintId}
-            className="mt-1.5 text-sm text-text-tertiary"
-          >
-            {hint}
-          </p>
-        )}
+        <FieldMessages error={error} hint={hint} errorId={errorId} hintId={hintId} />
       </div>
     );
   },
 );
 
 Input.displayName = 'Input';
+
+export type PasswordInputProps = Omit<InputProps, 'type' | 'rightAddon' | 'rightIcon'>;
+
+/**
+ * Password field with a working reveal toggle.
+ *
+ * Every auth form uses this rather than hand-rolling a toggle, so the
+ * behaviour — hidden by default, real `<button>` that is reachable by keyboard,
+ * icon and `aria-pressed` both reflecting the state — is identical everywhere.
+ */
+export const PasswordInput = forwardRef<HTMLInputElement, PasswordInputProps>(
+  ({ disabled, ...props }, ref) => {
+    const [visible, setVisible] = useState(false);
+    const { t } = useTranslation();
+    const label = visible ? t('accessibility.hide_password') : t('accessibility.show_password');
+
+    return (
+      <Input
+        ref={ref}
+        type={visible ? 'text' : 'password'}
+        disabled={disabled}
+        rightAddon={
+          <button
+            type="button"
+            onClick={() => setVisible((current) => !current)}
+            disabled={disabled}
+            aria-label={label}
+            aria-pressed={visible}
+            title={label}
+            className={cn(
+              'inline-flex h-8 w-8 items-center justify-center rounded-lg text-text-tertiary',
+              'transition-colors duration-fast hover:bg-bg-tertiary hover:text-text-primary',
+              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-border-focus',
+              'disabled:cursor-not-allowed disabled:opacity-50',
+            )}
+          >
+            {visible ? (
+              <EyeOff className="h-4 w-4" aria-hidden="true" />
+            ) : (
+              <Eye className="h-4 w-4" aria-hidden="true" />
+            )}
+          </button>
+        }
+        {...props}
+      />
+    );
+  },
+);
+
+PasswordInput.displayName = 'PasswordInput';
 
 export interface TextareaProps extends Omit<TextareaHTMLAttributes<HTMLTextAreaElement>, 'type'> {
   label?: string;
@@ -147,17 +260,11 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
     const errorId = `${id}-error`;
 
     return (
-      <div className={cn('w-full', fullWidth && 'w-full')}>
+      <div className={cn(fullWidth ? 'w-full' : 'w-auto')}>
         {label && (
-          <label
-            htmlFor={id}
-            className="block text-sm font-medium text-text-primary mb-1.5"
-          >
+          <FieldLabel htmlFor={id} required={required}>
             {label}
-            {required && (
-              <span className="text-error-500 ml-0.5" aria-hidden="true">*</span>
-            )}
-          </label>
+          </FieldLabel>
         )}
         <textarea
           ref={ref}
@@ -165,44 +272,12 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
           disabled={disabled}
           required={required}
           rows={rows}
-          className={cn(
-            'w-full rounded-xl border bg-bg-primary text-text-primary placeholder:text-text-tertiary resize-y',
-            'transition-all duration-fast',
-            'focus:outline-none focus:ring-2 focus:ring-offset-0',
-            'disabled:bg-bg-tertiary disabled:text-text-tertiary disabled:cursor-not-allowed',
-            'text-sm p-4',
-            error
-              ? 'border-error-500 focus:border-error-500 focus:ring-2 focus:ring-error-500/20'
-              : 'border-border-primary focus:border-border-focus focus:ring-2 focus:ring-border-focus/20',
-            className,
-          )}
-          aria-invalid={error ? 'true' : 'false'}
-          aria-describedby={
-            error ? errorId : hint ? hintId : undefined
-          }
-          aria-disabled={disabled}
+          className={cn(controlBase, controlState(Boolean(error)), 'resize-y p-4', className)}
+          aria-invalid={error ? 'true' : undefined}
+          aria-describedby={error ? errorId : hint ? hintId : undefined}
           {...props}
         />
-        {error && (
-          <p
-            id={errorId}
-            className="mt-1.5 text-sm text-error-600 dark:text-error-400 flex items-center gap-1"
-            role="alert"
-          >
-            <svg className="h-3.5 w-3.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
-              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM8.707 7.293a1 1 0 00-1.414 1.414L10.586 10l-2.879 2.879a1 1 0 101.414 1.414L12 11.414l2.879 2.879a1 1 0 001.414-1.414L13.414 10l2.879-2.879a1 1 0 001.414-1.414L12 8.586 9.121 5.707a1 1 0 00-1.414 0L8 9.586 5.121 6.707a1 1 0 000 1.414L10.586 12l-2.879 2.879a1 1 0 001.414 1.414z" clipRule="evenodd" />
-            </svg>
-            {error}
-          </p>
-        )}
-        {hint && !error && (
-          <p
-            id={hintId}
-            className="mt-1.5 text-sm text-text-tertiary"
-          >
-            {hint}
-          </p>
-        )}
+        <FieldMessages error={error} hint={hint} errorId={errorId} hintId={hintId} />
       </div>
     );
   },
@@ -242,17 +317,11 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
     const errorId = `${id}-error`;
 
     return (
-      <div className={cn('w-full', fullWidth && 'w-full')}>
+      <div className={cn(fullWidth ? 'w-full' : 'w-auto')}>
         {label && (
-          <label
-            htmlFor={id}
-            className="block text-sm font-medium text-text-primary mb-1.5"
-          >
+          <FieldLabel htmlFor={id} required={required}>
             {label}
-            {required && (
-              <span className="text-error-500 ml-0.5" aria-hidden="true">*</span>
-            )}
-          </label>
+          </FieldLabel>
         )}
         <div className="relative">
           <select
@@ -261,21 +330,13 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
             disabled={disabled}
             required={required}
             className={cn(
-              'w-full rounded-xl border bg-bg-primary text-text-primary',
-              'transition-all duration-fast appearance-none',
-              'focus:outline-none focus:ring-2 focus:ring-offset-0',
-              'disabled:bg-bg-tertiary disabled:text-text-tertiary disabled:cursor-not-allowed',
-              'text-sm pl-4 pr-10 py-3',
-              error
-                ? 'border-error-500 focus:border-error-500 focus:ring-2 focus:ring-error-500/20'
-                : 'border-border-primary focus:border-border-focus focus:ring-2 focus:ring-border-focus/20',
+              controlBase,
+              controlState(Boolean(error)),
+              'appearance-none py-3 ps-4 pe-10',
               className,
             )}
-            aria-invalid={error ? 'true' : 'false'}
-            aria-describedby={
-              error ? errorId : hint ? hintId : undefined
-            }
-            aria-disabled={disabled}
+            aria-invalid={error ? 'true' : undefined}
+            aria-describedby={error ? errorId : hint ? hintId : undefined}
             {...props}
           >
             {placeholder && (
@@ -289,35 +350,70 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
               </option>
             ))}
           </select>
-          <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-text-tertiary" aria-hidden="true">
-            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+          <div
+            className="pointer-events-none absolute inset-y-0 end-0 flex items-center pe-3 text-text-tertiary"
+            aria-hidden="true"
+          >
+            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
             </svg>
           </div>
         </div>
-        {error && (
-          <p
-            id={errorId}
-            className="mt-1.5 text-sm text-error-600 dark:text-error-400 flex items-center gap-1"
-            role="alert"
-          >
-            <svg className="h-3.5 w-3.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
-              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM8.707 7.293a1 1 0 00-1.414 1.414L10.586 10l-2.879 2.879a1 1 0 101.414 1.414L12 11.414l2.879 2.879a1 1 0 001.414-1.414L13.414 10l2.879-2.879a1 1 0 001.414-1.414L12 8.586 9.121 5.707a1 1 0 00-1.414 0L8 9.586 5.121 6.707a1 1 0 000 1.414L10.586 12l-2.879 2.879a1 1 0 001.414 1.414z" clipRule="evenodd" />
-            </svg>
-            {error}
-          </p>
-        )}
-        {hint && !error && (
-          <p
-            id={hintId}
-            className="mt-1.5 text-sm text-text-tertiary"
-          >
-            {hint}
-          </p>
-        )}
+        <FieldMessages error={error} hint={hint} errorId={errorId} hintId={hintId} />
       </div>
     );
   },
 );
 
 Select.displayName = 'Select';
+
+export interface CheckboxProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'type'> {
+  label: ReactNode;
+  hint?: string;
+}
+
+export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
+  ({ className, label, hint, id: providedId, disabled, ...props }, ref) => {
+    const generatedId = useId();
+    const id = providedId || generatedId;
+    const hintId = `${id}-hint`;
+
+    return (
+      <div className="flex items-start gap-2.5">
+        <input
+          ref={ref}
+          id={id}
+          type="checkbox"
+          disabled={disabled}
+          aria-describedby={hint ? hintId : undefined}
+          className={cn(
+            'mt-0.5 h-4 w-4 flex-shrink-0 rounded border-border-secondary bg-bg-primary',
+            'accent-primary-600 cursor-pointer',
+            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-border-focus focus-visible:ring-offset-2 focus-visible:ring-offset-bg-primary',
+            'disabled:cursor-not-allowed disabled:opacity-60',
+            className,
+          )}
+          {...props}
+        />
+        <div className="min-w-0">
+          <label
+            htmlFor={id}
+            className={cn(
+              'text-sm text-text-secondary',
+              disabled ? 'cursor-not-allowed opacity-70' : 'cursor-pointer',
+            )}
+          >
+            {label}
+          </label>
+          {hint && (
+            <p id={hintId} className="mt-0.5 text-xs text-text-tertiary">
+              {hint}
+            </p>
+          )}
+        </div>
+      </div>
+    );
+  },
+);
+
+Checkbox.displayName = 'Checkbox';

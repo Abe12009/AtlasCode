@@ -223,9 +223,20 @@ export interface UserAchievement {
   achievement: Achievement;
 }
 
+export interface WeeklyStats {
+  week_start: string;
+  xp: number;
+  lessons_completed: number;
+  projects_completed: number;
+  levels_gained: number;
+  active_days: number;
+  has_activity: boolean;
+}
+
 export interface DashboardData {
   user: User;
   profile: StudentProfile;
+  weekly: WeeklyStats;
   current_mission: Lesson | null;
   course_progress: CourseProgress[];
   recent_achievements: UserAchievement[];

@@ -101,6 +101,9 @@
     "of": "sur",
     "lessons_completed_short": "leçons terminées",
     "this_week": "cette semaine",
+    "no_activity_this_week": "Aucune activité cette semaine",
+    "active_days_this_week_one": "{{count}} jour actif cette semaine",
+    "active_days_this_week_other": "{{count}} jours actifs cette semaine",
     "days": "jours",
     "quest_board": "Tableau des quêtes",
     "quest_board_desc": "Votre parcours d'apprentissage personnalisé",
@@ -193,6 +196,8 @@
     "practice": "Pratiquer",
     "read": "Lire",
     "code": "Code",
+    "scenario": "Scénario",
+    "tip": "Astuce",
     "previous": "Précédent",
     "next": "Suivant",
     "finish_lesson": "Terminer la leçon",
@@ -440,7 +445,14 @@
     "good": "Bon",
     "strong": "Fort",
     "login_failed": "La connexion a échoué. Veuillez réessayer.",
-    "registration_failed": "L'inscription a échoué. Veuillez réessayer."
+    "registration_failed": "L'inscription a échoué. Veuillez réessayer.",
+    "reset_password_title": "Réinitialiser votre mot de passe",
+    "reset_password_description": "Saisissez l'adresse e-mail de votre compte et nous vous enverrons un lien de réinitialisation.",
+    "reset_password_send": "Envoyer le lien",
+    "reset_password_sent_title": "Vérifiez vos e-mails",
+    "reset_password_sent_description": "Si un compte existe pour cette adresse, un lien de réinitialisation est en route.",
+    "reset_password_not_configured": "La réinitialisation du mot de passe par e-mail n'est pas encore disponible sur ce déploiement.",
+    "back_to_login": "Retour à la connexion"
   },
   "projects_page": {
     "title": "Projets",
@@ -528,6 +540,8 @@
     "open_menu": "Ouvrir le menu",
     "close_menu": "Fermer le menu",
     "toggle_password_visibility": "Basculer la visibilité du mot de passe",
+    "show_password": "Afficher le mot de passe",
+    "hide_password": "Masquer le mot de passe",
     "copy_to_clipboard": "Copier dans le presse-papiers",
     "copied": "Copié dans le presse-papiers",
     "run_code": "Exécuter le code",
@@ -549,13 +563,93 @@
     "error": "Erreur",
     "success": "Succès"
   },
+  "theme": {
+    "label": "Thème",
+    "light": "Clair",
+    "dark": "Sombre",
+    "system": "Système"
+  },
   "footer": {
     "copyright": "© {{year}} AtlasCode. Tous droits réservés.",
     "privacy_policy": "Politique de Confidentialité",
     "terms_of_service": "Conditions d'Utilisation",
     "contact": "Contact",
     "github": "GitHub",
-    "discord": "Discord"
+    "instagram": "Instagram",
+    "x": "X"
+  },
+  "legal": {
+    "last_updated": "Dernière mise à jour : {{date}}",
+    "back_home": "Retour à l'accueil",
+    "placeholder_notice": "Cette page est un texte provisoire professionnel. Elle sera revue et finalisée par l'équipe juridique d'AtlasCode avant le lancement.",
+    "privacy": {
+      "title": "Politique de Confidentialité",
+      "intro": "Cette politique de confidentialité décrit, en termes simples, les catégories d'informations qu'AtlasCode collecte et la façon dont elles sont utilisées pendant votre apprentissage sur la plateforme.",
+      "sections": [
+        {
+          "title": "Informations que nous collectons",
+          "body": "Les informations de compte que vous fournissez (nom, adresse e-mail), les données d'authentification liées à la méthode de connexion choisie, et les données d'activité générées par votre utilisation de la plateforme (progression des leçons, réponses aux exercices, XP et séries)."
+        },
+        {
+          "title": "Comment nous utilisons ces informations",
+          "body": "Pour gérer votre compte, suivre votre progression, personnaliser votre tableau de bord et vos recommandations, sécuriser la plateforme contre les abus, et vous communiquer les informations importantes concernant votre compte."
+        },
+        {
+          "title": "Fournisseurs d'authentification",
+          "body": "Si vous vous connectez avec Google ou GitHub, nous recevons les informations de profil de base que ces fournisseurs partagent (nom, e-mail, avatar) afin de créer ou relier votre compte AtlasCode. Nous ne recevons jamais votre mot de passe de la part de ces fournisseurs."
+        },
+        {
+          "title": "Conservation des données",
+          "body": "Les données de compte et de progression sont conservées tant que votre compte est actif. Vous pouvez demander la suppression de votre compte et des données associées à tout moment via la page de contact."
+        },
+        {
+          "title": "Vos choix",
+          "body": "Vous pouvez consulter et mettre à jour vos informations de compte depuis votre profil, changer votre mot de passe, et contrôler vos préférences de langue et de thème à tout moment."
+        }
+      ]
+    },
+    "terms": {
+      "title": "Conditions d'Utilisation",
+      "intro": "Ces conditions d'utilisation régissent votre usage d'AtlasCode. En créant un compte, vous acceptez les conditions résumées ci-dessous.",
+      "sections": [
+        {
+          "title": "Utilisation de la plateforme",
+          "body": "AtlasCode est proposé pour un usage personnel et éducatif. Vous êtes responsable de l'activité de votre compte et de la sécurité de vos identifiants."
+        },
+        {
+          "title": "Usage acceptable",
+          "body": "Vous acceptez de ne pas détourner la plateforme, de ne pas tenter de perturber son infrastructure, et de ne pas l'utiliser pour diffuser du contenu nuisible ou illégal."
+        },
+        {
+          "title": "Éligibilité du compte",
+          "body": "Vous devez fournir des informations de compte exactes. Les comptes créés via Google ou GitHub sont également soumis aux conditions propres à ces fournisseurs."
+        },
+        {
+          "title": "Propriété du contenu",
+          "body": "Le contenu des cours, les exercices et les supports de la plateforme restent la propriété d'AtlasCode. Le code que vous écrivez en réalisant les exercices et projets vous appartient."
+        },
+        {
+          "title": "Modifications de ces conditions",
+          "body": "Nous pouvons mettre à jour ces conditions à mesure que la plateforme évolue. Les changements importants seront communiqués dans l'application."
+        }
+      ]
+    },
+    "contact": {
+      "title": "Nous Contacter",
+      "intro": "Une question, un bug à signaler, ou des retours à partager ? Envoyez-nous un message, nous vous répondrons.",
+      "form": {
+        "name": "Nom",
+        "email": "E-mail",
+        "subject": "Sujet",
+        "message": "Message",
+        "submit": "Envoyer le message",
+        "sending": "Envoi en cours...",
+        "success": "Merci — votre message a bien été enregistré. Nous reviendrons vers vous par e-mail.",
+        "error": "Une erreur est survenue lors de l'envoi. Veuillez réessayer ou nous écrire directement."
+      },
+      "fallback": "Vous pouvez également nous contacter directement à",
+      "response_time": "Nous répondons généralement sous quelques jours ouvrés."
+    }
   },
   "notifications": {
     "lesson_completed": "Leçon terminée",

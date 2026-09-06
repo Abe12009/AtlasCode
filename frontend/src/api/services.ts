@@ -30,6 +30,12 @@ export const authApi = {
     apiClient.patch<User>('/auth/me', data),
 
   getProfile: () => apiClient.get<StudentProfile>('/auth/profile'),
+
+  getConfig: () =>
+    apiClient.get<{ firebase_enabled: boolean; password_login_enabled: boolean }>('/auth/config'),
+
+  loginWithFirebase: (data: { id_token: string; preferred_language?: string; timezone_offset_minutes?: number }) =>
+    apiClient.post<{ access_token: string; token_type: string }>('/auth/firebase', data),
 };
 
 export const coursesApi = {

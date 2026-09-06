@@ -1,4 +1,5 @@
 import React, { type HTMLAttributes, type ReactNode, useRef } from 'react';
+import { AlertCircle, AlertTriangle, CheckCircle2, Info } from 'lucide-react';
 import { cn } from '../../lib/utils';
 
 export interface BadgeProps extends HTMLAttributes<HTMLSpanElement> {
@@ -317,10 +318,10 @@ export function Tooltip({
   };
 
   const arrowStyles = {
-    top: 'top-full left-1/2 -translate-x-1/2 border-t-[5px] border-transparent border-t-bg-inverse',
-    bottom: 'bottom-full left-1/2 -translate-x-1/2 border-b-[5px] border-transparent border-b-bg-inverse',
-    left: 'left-full top-1/2 -translate-y-1/2 border-l-[5px] border-transparent border-l-bg-inverse',
-    right: 'right-full top-1/2 -translate-y-1/2 border-r-[5px] border-transparent border-r-bg-inverse',
+    top: 'top-full left-1/2 -translate-x-1/2 border-t-[5px] border-transparent border-t-neutral-900 dark:border-t-neutral-100',
+    bottom: 'bottom-full left-1/2 -translate-x-1/2 border-b-[5px] border-transparent border-b-neutral-900 dark:border-b-neutral-100',
+    left: 'left-full top-1/2 -translate-y-1/2 border-l-[5px] border-transparent border-l-neutral-900 dark:border-l-neutral-100',
+    right: 'right-full top-1/2 -translate-y-1/2 border-r-[5px] border-transparent border-r-neutral-900 dark:border-r-neutral-100',
   };
 
   return (
@@ -335,7 +336,8 @@ export function Tooltip({
       {isVisible && (
         <div
           className={cn(
-            'fixed z-50 px-3 py-2 text-xs font-medium text-bg-inverse bg-text-primary rounded-lg shadow-lg',
+            'absolute z-50 rounded-lg px-2.5 py-1.5 text-xs font-medium shadow-lg',
+            'bg-neutral-900 text-white dark:bg-neutral-100 dark:text-neutral-900',
             'animate-fade-in',
             'whitespace-nowrap',
             positionStyles[position],
@@ -403,10 +405,24 @@ export interface AlertProps extends HTMLAttributes<HTMLDivElement> {
 }
 
 const alertVariants = {
-  info: 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800 text-blue-800 dark:text-blue-200',
-  success: 'bg-success-50 dark:bg-success-900/20 border-success-200 dark:border-success-800 text-success-800 dark:text-success-200',
-  warning: 'bg-warning-50 dark:bg-warning-900/20 border-warning-200 dark:border-warning-800 text-warning-800 dark:text-warning-200',
-  error: 'bg-error-50 dark:bg-error-900/20 border-error-200 dark:border-error-800 text-error-800 dark:text-error-200',
+  info: 'bg-primary-50 dark:bg-primary-900/25 border-primary-200 dark:border-primary-800/60 text-primary-900 dark:text-primary-100',
+  success: 'bg-success-50 dark:bg-success-900/25 border-success-200 dark:border-success-800/60 text-success-900 dark:text-success-100',
+  warning: 'bg-warning-50 dark:bg-warning-900/25 border-warning-200 dark:border-warning-800/60 text-warning-900 dark:text-warning-100',
+  error: 'bg-error-50 dark:bg-error-900/25 border-error-200 dark:border-error-800/60 text-error-900 dark:text-error-100',
+};
+
+const alertIcons = {
+  info: Info,
+  success: CheckCircle2,
+  warning: AlertTriangle,
+  error: AlertCircle,
+};
+
+const alertIconColors = {
+  info: 'text-primary-600 dark:text-primary-400',
+  success: 'text-success-600 dark:text-success-400',
+  warning: 'text-warning-600 dark:text-warning-500',
+  error: 'text-error-600 dark:text-error-400',
 };
 
 export function Alert({
@@ -418,26 +434,26 @@ export function Alert({
   children,
   ...props
 }: AlertProps) {
+  const Icon = alertIcons[variant];
   return (
     <div
       className={cn(
-        'flex items-start gap-3 p-4 rounded-xl border',
+        'flex items-start gap-3 p-4 rounded-xl border animate-fade-in',
         alertVariants[variant],
         className,
       )}
       role="alert"
       {...props}
     >
+      <Icon className={cn('h-5 w-5 flex-shrink-0 mt-0.5', alertIconColors[variant])} aria-hidden="true" />
       <div className="flex-1 min-w-0">
-        {title && (
-          <h4 className="font-semibold text-text-primary mb-1">{title}</h4>
-        )}
-        <div className="text-sm text-text-secondary">{children}</div>
+        {title && <h4 className="font-semibold mb-1">{title}</h4>}
+        <div className="text-sm opacity-90">{children}</div>
       </div>
       {dismissible && onDismiss && (
         <button
           onClick={onDismiss}
-          className="flex-shrink-0 p-1 rounded hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
+          className="flex-shrink-0 rounded-lg p-1 transition-colors hover:bg-black/10 dark:hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-current"
           aria-label="Dismiss"
         >
           <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">

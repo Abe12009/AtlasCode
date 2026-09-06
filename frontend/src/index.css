@@ -1,29 +1,55 @@
 @import "tailwindcss";
 
+/* ---------------------------------------------------------------------------
+ * Theming model
+ *
+ * Every colour a component uses is a CSS custom property. `@theme` registers
+ * the token names with Tailwind (so `bg-bg-primary`, `text-text-secondary`,
+ * `border-border-primary`, … exist as utilities) and carries the LIGHT values,
+ * which are the document default. `[data-theme="dark"]` re-declares the same
+ * names with the dark values, so a single attribute on <html> repaints the
+ * whole product with no per-component branching.
+ *
+ * `data-theme` is always written explicitly by ThemeContext (system mode
+ * resolves to light or dark first), which is why there is no
+ * `prefers-color-scheme` block here: the OS preference is read in JS and
+ * turned into the same attribute, keeping one source of truth.
+ * ------------------------------------------------------------------------ */
+
+/* Make Tailwind's `dark:` variant follow our attribute rather than the raw OS
+ * media query, so the two never disagree. */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
 @theme {
-  --color-bg-primary: #0F172A;
-  --color-bg-secondary: #1E293B;
-  --color-bg-tertiary: #334155;
-  --color-bg-quaternary: #475569;
-  --color-bg-elevated: #1E293B;
-  --color-bg-code: #020617;
-  --color-bg-code-light: #0B1020;
+  /* Surfaces — light */
+  --color-bg-primary: #FFFFFF;
+  --color-bg-secondary: #F8FAFC;
+  --color-bg-tertiary: #F1F5F9;
+  --color-bg-quaternary: #E2E8F0;
+  --color-bg-elevated: #FFFFFF;
+  --color-bg-code: #0F172A;
+  --color-bg-code-light: #1E293B;
+  --color-bg-overlay: rgb(15 23 42 / 0.45);
 
-  --color-text-primary: #F8FAFC;
-  --color-text-secondary: #94A3B8;
+  /* Content — light */
+  --color-text-primary: #0F172A;
+  --color-text-secondary: #475569;
   --color-text-tertiary: #64748B;
-  --color-text-quaternary: #475569;
-  --color-text-inverse: #0F172A;
-  --color-text-link: #60A5FA;
-  --color-text-link-hover: #93C5FD;
+  --color-text-quaternary: #94A3B8;
+  --color-text-inverse: #F8FAFC;
+  --color-text-link: #1D4ED8;
+  --color-text-link-hover: #1E40AF;
+  --color-text-on-accent: #FFFFFF;
 
-  --color-border-primary: #334155;
-  --color-border-secondary: #475569;
-  --color-border-tertiary: #64748B;
-  --color-border-focus: #3B82F6;
-  --color-border-error: #EF4444;
-  --color-border-success: #10B981;
+  /* Lines — light */
+  --color-border-primary: #E2E8F0;
+  --color-border-secondary: #CBD5E1;
+  --color-border-tertiary: #94A3B8;
+  --color-border-focus: #2563EB;
+  --color-border-error: #DC2626;
+  --color-border-success: #059669;
 
+  /* Brand ramps are theme-independent; the tokens above decide how they read. */
   --color-primary-50: #EFF6FF;
   --color-primary-100: #DBEAFE;
   --color-primary-200: #BFDBFE;
@@ -81,22 +107,45 @@
   --color-error-800: #991B1B;
   --color-error-900: #7F1D1D;
 
+  --color-neutral-50: #F8FAFC;
+  --color-neutral-100: #F1F5F9;
+  --color-neutral-200: #E2E8F0;
+  --color-neutral-300: #CBD5E1;
+  --color-neutral-400: #94A3B8;
+  --color-neutral-500: #64748B;
+  --color-neutral-600: #475569;
+  --color-neutral-700: #334155;
+  --color-neutral-800: #1E293B;
+  --color-neutral-900: #0F172A;
+  --color-neutral-950: #020617;
+
+  /* Semantic single-purpose colours — light */
+  --color-accent-primary: #EA580C;
+  --color-accent-primary-hover: #C2410C;
+  --color-accent-primary-light: #FFEDD5;
+  --color-accent-primary-foreground: #FFFFFF;
+
+  --color-primary-main: #2563EB;
+  --color-primary-hover: #1D4ED8;
+  --color-primary-light: #DBEAFE;
+  --color-primary-foreground: #FFFFFF;
+
   --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
 
-  --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-  --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
-  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
-  --shadow-2xl: 0 25px 50px -12px rgb(0 0 0 / 0.25);
+  --shadow-xs: 0 1px 2px 0 rgb(15 23 42 / 0.05);
+  --shadow-sm: 0 1px 3px 0 rgb(15 23 42 / 0.08), 0 1px 2px -1px rgb(15 23 42 / 0.06);
+  --shadow-md: 0 4px 6px -1px rgb(15 23 42 / 0.08), 0 2px 4px -2px rgb(15 23 42 / 0.06);
+  --shadow-lg: 0 10px 15px -3px rgb(15 23 42 / 0.08), 0 4px 6px -4px rgb(15 23 42 / 0.06);
+  --shadow-xl: 0 20px 25px -5px rgb(15 23 42 / 0.1), 0 8px 10px -6px rgb(15 23 42 / 0.06);
+  --shadow-2xl: 0 25px 50px -12px rgb(15 23 42 / 0.18);
 
-  --shadow-card: 0 1px 3px 0 rgb(0 0 0 / 0.3), 0 1px 2px -1px rgb(0 0 0 / 0.3);
-  --shadow-card-hover: 0 10px 15px -3px rgb(0 0 0 / 0.4), 0 4px 6px -4px rgb(0 0 0 / 0.4);
-  --shadow-elevated: 0 4px 6px -1px rgb(0 0 0 / 0.3), 0 2px 4px -2px rgb(0 0 0 / 0.3);
-  --shadow-glow-primary: 0 0 20px rgb(59 130 246 / 0.3);
-  --shadow-glow-accent: 0 0 20px rgb(249 115 22 / 0.3);
-  --shadow-glow-success: 0 0 20px rgb(16 185 129 / 0.3);
+  --shadow-card: 0 1px 2px 0 rgb(15 23 42 / 0.06), 0 1px 3px 0 rgb(15 23 42 / 0.08);
+  --shadow-card-hover: 0 12px 20px -8px rgb(15 23 42 / 0.16), 0 4px 8px -4px rgb(15 23 42 / 0.08);
+  --shadow-elevated: 0 4px 12px -2px rgb(15 23 42 / 0.1), 0 2px 6px -3px rgb(15 23 42 / 0.06);
+  --shadow-glow-primary: 0 6px 20px -6px rgb(37 99 235 / 0.45);
+  --shadow-glow-accent: 0 6px 20px -6px rgb(234 88 12 / 0.45);
+  --shadow-glow-success: 0 6px 20px -6px rgb(22 163 74 / 0.45);
 
   --radius-xs: 0.25rem;
   --radius-sm: 0.375rem;
@@ -123,48 +172,8 @@
   --animate-ease: cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+/* Non-colour design primitives shared by both themes. */
 :root {
-  --color-bg-primary: #0F172A;
-  --color-bg-secondary: #1E293B;
-  --color-bg-tertiary: #334155;
-  --color-bg-quaternary: #475569;
-  --color-bg-elevated: #1E293B;
-  --color-bg-code: #020617;
-  --color-bg-code-light: #0B1020;
-
-  --color-text-primary: #F8FAFC;
-  --color-text-secondary: #94A3B8;
-  --color-text-tertiary: #64748B;
-  --color-text-quaternary: #475569;
-  --color-text-inverse: #0F172A;
-  --color-text-link: #60A5FA;
-  --color-text-link-hover: #93C5FD;
-
-  --color-border-primary: #334155;
-  --color-border-secondary: #475569;
-  --color-border-tertiary: #64748B;
-  --color-border-focus: #3B82F6;
-  --color-border-error: #EF4444;
-  --color-border-success: #10B981;
-
-  --color-accent-primary: #F97316;
-  --color-accent-primary-hover: #EA580C;
-  --color-accent-primary-light: #FFEDD5;
-  --color-accent-primary-foreground: #0F172A;
-
-  --color-primary-main: #3B82F6;
-  --color-primary-hover: #2563EB;
-  --color-primary-light: #DBEAFE;
-  --color-primary-foreground: #FFFFFF;
-
-  --shadow-card: 0 1px 3px 0 rgb(0 0 0 / 0.3), 0 1px 2px -1px rgb(0 0 0 / 0.3);
-  --shadow-card-hover: 0 10px 15px -3px rgb(0 0 0 / 0.4), 0 4px 6px -4px rgb(0 0 0 / 0.4);
-  --shadow-card-pressed: 0 1px 2px 0 rgb(0 0 0 / 0.3);
-  --shadow-dropdown: 0 20px 25px -5px rgb(0 0 0 / 0.5), 0 8px 10px -6px rgb(0 0 0 / 0.5);
-  --shadow-modal: 0 25px 50px -12px rgb(0 0 0 / 0.6);
-  --shadow-elevated: 0 4px 6px -1px rgb(0 0 0 / 0.3), 0 2px 4px -2px rgb(0 0 0 / 0.3);
-  --shadow-floating: 0 20px 25px -5px rgb(0 0 0 / 0.4), 0 8px 10px -6px rgb(0 0 0 / 0.4);
-
   --space-1: 0.25rem;
   --space-2: 0.5rem;
   --space-3: 0.75rem;
@@ -199,13 +208,79 @@
   --font-weight-semibold: 600;
   --font-weight-bold: 700;
 
-  --radius-xs: 0.25rem;
-  --radius-sm: 0.375rem;
-  --radius-md: 0.5rem;
-  --radius-lg: 0.75rem;
-  --radius-xl: 1rem;
-  --radius-2xl: 1.5rem;
-  --radius-full: 9999px;
+  --shadow-card-pressed: 0 1px 2px 0 rgb(15 23 42 / 0.1);
+  --shadow-dropdown: 0 16px 32px -12px rgb(15 23 42 / 0.22), 0 4px 10px -4px rgb(15 23 42 / 0.1);
+  --shadow-modal: 0 32px 64px -16px rgb(15 23 42 / 0.32);
+  --shadow-floating: 0 20px 30px -12px rgb(15 23 42 / 0.22);
+
+  /* Decorative wash strengths — dialled down in light mode where tinted
+   * gradients read as muddy, and up in dark mode where they add depth. */
+  --wash-grid-opacity: 0.045;
+  --wash-mesh-primary: 0.10;
+  --wash-mesh-accent: 0.08;
+  --glass-bg: rgb(255 255 255 / 0.72);
+  --glass-strong-bg: rgb(255 255 255 / 0.88);
+}
+
+[data-theme="dark"] {
+  --color-bg-primary: #0B1120;
+  --color-bg-secondary: #111C31;
+  --color-bg-tertiary: #1B2739;
+  --color-bg-quaternary: #2C3A4F;
+  --color-bg-elevated: #131F35;
+  --color-bg-code: #020617;
+  --color-bg-code-light: #0B1020;
+  --color-bg-overlay: rgb(2 6 23 / 0.7);
+
+  --color-text-primary: #F8FAFC;
+  --color-text-secondary: #A6B4C8;
+  --color-text-tertiary: #7C8CA5;
+  --color-text-quaternary: #5B6A82;
+  --color-text-inverse: #0F172A;
+  --color-text-link: #7DAAFF;
+  --color-text-link-hover: #A9C7FF;
+  --color-text-on-accent: #FFFFFF;
+
+  --color-border-primary: #253349;
+  --color-border-secondary: #33455F;
+  --color-border-tertiary: #4A5D79;
+  --color-border-focus: #60A5FA;
+  --color-border-error: #F87171;
+  --color-border-success: #34D399;
+
+  --color-accent-primary: #F97316;
+  --color-accent-primary-hover: #EA580C;
+  --color-accent-primary-light: #7C2D12;
+  --color-accent-primary-foreground: #FFFFFF;
+
+  --color-primary-main: #3B82F6;
+  --color-primary-hover: #2563EB;
+  --color-primary-light: #1E3A8A;
+  --color-primary-foreground: #FFFFFF;
+
+  --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.3);
+  --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.4), 0 1px 2px -1px rgb(0 0 0 / 0.3);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.45), 0 2px 4px -2px rgb(0 0 0 / 0.3);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.5), 0 4px 6px -4px rgb(0 0 0 / 0.35);
+  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.55), 0 8px 10px -6px rgb(0 0 0 / 0.4);
+  --shadow-2xl: 0 25px 50px -12px rgb(0 0 0 / 0.7);
+
+  --shadow-card: 0 1px 2px 0 rgb(0 0 0 / 0.45), 0 1px 3px 0 rgb(0 0 0 / 0.35);
+  --shadow-card-hover: 0 14px 24px -10px rgb(0 0 0 / 0.6), 0 4px 10px -6px rgb(0 0 0 / 0.5);
+  --shadow-card-pressed: 0 1px 2px 0 rgb(0 0 0 / 0.5);
+  --shadow-elevated: 0 4px 12px -2px rgb(0 0 0 / 0.5), 0 2px 6px -3px rgb(0 0 0 / 0.4);
+  --shadow-dropdown: 0 20px 32px -12px rgb(0 0 0 / 0.65), 0 6px 12px -6px rgb(0 0 0 / 0.5);
+  --shadow-modal: 0 32px 64px -16px rgb(0 0 0 / 0.75);
+  --shadow-floating: 0 20px 30px -12px rgb(0 0 0 / 0.6);
+  --shadow-glow-primary: 0 0 24px -4px rgb(59 130 246 / 0.45);
+  --shadow-glow-accent: 0 0 24px -4px rgb(249 115 22 / 0.45);
+  --shadow-glow-success: 0 0 24px -4px rgb(16 185 129 / 0.45);
+
+  --wash-grid-opacity: 0.05;
+  --wash-mesh-primary: 0.16;
+  --wash-mesh-accent: 0.12;
+  --glass-bg: rgb(17 28 49 / 0.72);
+  --glass-strong-bg: rgb(11 17 32 / 0.9);
 }
 
 * {
@@ -220,6 +295,8 @@ html {
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
   scroll-behavior: smooth;
+  /* Anchor navigation must clear the fixed header. */
+  scroll-padding-top: 5.5rem;
 }
 
 body {
@@ -240,24 +317,59 @@ body {
 :focus-visible {
   outline: 2px solid var(--color-border-focus);
   outline-offset: 2px;
+  border-radius: var(--radius-sm);
 }
 
 ::selection {
-  background-color: var(--color-accent-primary-light);
-  color: var(--color-text-inverse);
+  background-color: color-mix(in oklab, var(--color-primary-500) 28%, transparent);
+  color: var(--color-text-primary);
 }
 
 input, textarea, select, button {
   font-family: inherit;
   font-size: inherit;
   line-height: inherit;
+  color: inherit;
+}
+
+/* Form controls must never inherit a colour that fights the surface they sit
+ * on. `color` alone is not enough: Chrome paints autofilled values with its own
+ * text colour unless `-webkit-text-fill-color` is set, which is what made the
+ * auth inputs unreadable in dark mode. */
+input, textarea, select {
+  color: var(--color-text-primary);
+  -webkit-text-fill-color: var(--color-text-primary);
+  caret-color: var(--color-primary-500);
 }
 
 input:-webkit-autofill,
 input:-webkit-autofill:hover,
-input:-webkit-autofill:focus {
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active,
+textarea:-webkit-autofill,
+select:-webkit-autofill {
+  -webkit-text-fill-color: var(--color-text-primary) !important;
+  caret-color: var(--color-text-primary);
+  /* The huge inset shadow is the only reliable way to override the yellow
+   * autofill background across Chromium versions. */
   -webkit-box-shadow: 0 0 0 1000px var(--color-bg-primary) inset !important;
   box-shadow: 0 0 0 1000px var(--color-bg-primary) inset !important;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
+input:disabled, textarea:disabled, select:disabled {
+  -webkit-text-fill-color: var(--color-text-tertiary);
+}
+
+input::placeholder, textarea::placeholder {
+  color: var(--color-text-tertiary);
+  opacity: 1;
+}
+
+/* Native select popups follow the OS palette; give them our surface too. */
+option {
+  background-color: var(--color-bg-elevated);
+  color: var(--color-text-primary);
 }
 
 html[dir="rtl"] {
@@ -270,7 +382,7 @@ html[dir="rtl"] .prose {
 
 .scrollbar-thin {
   scrollbar-width: thin;
-  scrollbar-color: var(--color-border-primary) transparent;
+  scrollbar-color: var(--color-border-secondary) transparent;
 }
 
 .scrollbar-thin::-webkit-scrollbar {
@@ -283,38 +395,38 @@ html[dir="rtl"] .prose {
 }
 
 .scrollbar-thin::-webkit-scrollbar-thumb {
-  background-color: var(--color-border-primary);
+  background-color: var(--color-border-secondary);
   border-radius: 4px;
   border: 2px solid transparent;
   background-clip: content-box;
 }
 
 .scrollbar-thin::-webkit-scrollbar-thumb:hover {
-  background-color: var(--color-border-secondary);
+  background-color: var(--color-border-tertiary);
 }
 
 .animate-fade-in {
-  animation: fadeIn var(--transition-normal) var(--animate-ease);
+  animation: fadeIn var(--transition-normal) var(--animate-ease) both;
 }
 
 .animate-slide-up {
-  animation: slideUp var(--transition-normal) var(--animate-ease);
+  animation: slideUp var(--transition-slow) var(--animate-ease) both;
 }
 
 .animate-slide-down {
-  animation: slideDown var(--transition-normal) var(--animate-ease);
+  animation: slideDown var(--transition-normal) var(--animate-ease) both;
 }
 
 .animate-scale-in {
-  animation: scaleIn var(--transition-fast) var(--animate-ease);
+  animation: scaleIn var(--transition-fast) var(--animate-ease) both;
 }
 
 .animate-slide-in-right {
-  animation: slideInRight var(--transition-normal) var(--animate-ease);
+  animation: slideInRight var(--transition-normal) var(--animate-ease) both;
 }
 
 .animate-slide-out-right {
-  animation: slideOutRight var(--transition-fast) var(--animate-ease);
+  animation: slideOutRight var(--transition-fast) var(--animate-ease) both;
 }
 
 @keyframes fadeIn {
@@ -325,7 +437,7 @@ html[dir="rtl"] .prose {
 @keyframes slideUp {
   from {
     opacity: 0;
-    transform: translateY(8px);
+    transform: translateY(10px);
   }
   to {
     opacity: 1;
@@ -347,7 +459,7 @@ html[dir="rtl"] .prose {
 @keyframes scaleIn {
   from {
     opacity: 0;
-    transform: scale(0.95);
+    transform: scale(0.96);
   }
   to {
     opacity: 1;
@@ -393,13 +505,13 @@ html[dir="rtl"] .prose {
 }
 
 @keyframes pulse-glow {
-  0%, 100% { box-shadow: 0 0 0 0 rgb(59 130 246 / 0.4); }
-  50% { box-shadow: 0 0 20px 4px rgb(59 130 246 / 0.3); }
+  0%, 100% { box-shadow: 0 0 0 0 color-mix(in oklab, var(--color-primary-500) 40%, transparent); }
+  50% { box-shadow: 0 0 20px 4px color-mix(in oklab, var(--color-primary-500) 30%, transparent); }
 }
 
 @keyframes pulse-accent {
-  0%, 100% { box-shadow: 0 0 0 0 rgb(249 115 22 / 0.4); }
-  50% { box-shadow: 0 0 20px 4px rgb(249 115 22 / 0.3); }
+  0%, 100% { box-shadow: 0 0 0 0 color-mix(in oklab, var(--color-accent-500) 40%, transparent); }
+  50% { box-shadow: 0 0 20px 4px color-mix(in oklab, var(--color-accent-500) 30%, transparent); }
 }
 
 @keyframes float {
@@ -421,7 +533,12 @@ html[dir="rtl"] .prose {
 }
 
 .animate-shimmer {
-  background: linear-gradient(90deg, var(--color-bg-tertiary) 25%, var(--color-bg-quaternary) 50%, var(--color-bg-tertiary) 75%);
+  background: linear-gradient(
+    90deg,
+    var(--color-bg-tertiary) 25%,
+    var(--color-bg-quaternary) 50%,
+    var(--color-bg-tertiary) 75%
+  );
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
 }
@@ -518,17 +635,24 @@ html[dir="rtl"] .prose {
   border: 1px solid var(--color-border-primary);
 }
 
+/* Code surfaces stay dark in both themes, so their text is fixed light. */
 .prose pre code {
   background-color: transparent;
   padding: 0;
   font-size: 0.875rem;
   line-height: 1.7;
-  color: var(--color-text-primary);
+  color: #E2E8F0;
 }
 
 .prose ul, .prose ol {
   margin: var(--space-4) 0;
   padding-left: var(--space-6);
+}
+
+html[dir="rtl"] .prose ul,
+html[dir="rtl"] .prose ol {
+  padding-left: 0;
+  padding-right: var(--space-6);
 }
 
 .prose li {
@@ -554,7 +678,6 @@ html[dir="rtl"] .prose {
 
 .prose blockquote {
   border-left: 3px solid var(--color-primary-main);
-  padding-left: var(--space-4);
   margin: var(--space-4) 0;
   color: var(--color-text-secondary);
   font-style: italic;
@@ -607,7 +730,7 @@ html[dir="rtl"] .prose {
 
 @media (max-width: 640px) {
   html {
-    font-size: 14px;
+    font-size: 15px;
   }
 
   .prose h1 { font-size: var(--text-2xl); }
@@ -623,6 +746,8 @@ html[dir="rtl"] .prose {
   text-wrap: pretty;
 }
 
+/* Shared page gutter. Content stops growing at a comfortable measure instead of
+ * stretching edge-to-edge on ultrawide displays. */
 .container {
   width: 100%;
   max-width: 80rem;
@@ -641,6 +766,29 @@ html[dir="rtl"] .prose {
 
 @media (min-width: 1024px) {
   .container {
+    padding-left: var(--space-8);
+    padding-right: var(--space-8);
+  }
+}
+
+.container-wide {
+  width: 100%;
+  max-width: 96rem;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: var(--space-4);
+  padding-right: var(--space-4);
+}
+
+@media (min-width: 640px) {
+  .container-wide {
+    padding-left: var(--space-6);
+    padding-right: var(--space-6);
+  }
+}
+
+@media (min-width: 1024px) {
+  .container-wide {
     padding-left: var(--space-8);
     padding-right: var(--space-8);
   }
@@ -674,15 +822,15 @@ html[dir="rtl"] .prose {
   overflow: hidden;
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
-  border-width: 0.
+  border-width: 0;
 }
 
 .skip-link {
   position: absolute;
   top: -100%;
   left: var(--space-4);
-  background: var(--color-accent-primary);
-  color: var(--color-accent-primary-foreground);
+  background: var(--color-primary-600);
+  color: #FFFFFF;
   padding: var(--space-2) var(--space-4);
   border-radius: var(--radius-md);
   z-index: 100;
@@ -696,37 +844,38 @@ html[dir="rtl"] .prose {
 }
 
 .bg-grid-pattern {
-  background-image: 
-    linear-gradient(rgb(59 130 246 / 0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgb(59 130 246 / 0.03) 1px, transparent 1px);
-  background-size: 40px 40px;
+  background-image:
+    linear-gradient(color-mix(in oklab, var(--color-primary-500) 100%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in oklab, var(--color-primary-500) 100%, transparent) 1px, transparent 1px);
+  background-size: 44px 44px;
+  opacity: var(--wash-grid-opacity);
 }
 
 .bg-grid-pattern-accent {
-  background-image: 
-    linear-gradient(rgb(249 115 22 / 0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgb(249 115 22 / 0.03) 1px, transparent 1px);
-  background-size: 40px 40px;
+  background-image:
+    linear-gradient(color-mix(in oklab, var(--color-accent-500) 100%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in oklab, var(--color-accent-500) 100%, transparent) 1px, transparent 1px);
+  background-size: 44px 44px;
+  opacity: var(--wash-grid-opacity);
 }
 
 .bg-mesh-gradient {
-  background: 
-    radial-gradient(ellipse 80% 50% at 20% 20%, rgb(59 130 246 / 0.15) 0%, transparent 50%),
-    radial-gradient(ellipse 60% 40% at 80% 80%, rgb(249 115 22 / 0.1) 0%, transparent 50%),
-    radial-gradient(ellipse 40% 30% at 50% 50%, rgb(16 185 129 / 0.08) 0%, transparent 50%),
-    var(--color-bg-primary);
+  background:
+    radial-gradient(ellipse 80% 50% at 15% 10%, color-mix(in oklab, var(--color-primary-500) calc(var(--wash-mesh-primary) * 100%), transparent) 0%, transparent 55%),
+    radial-gradient(ellipse 60% 45% at 85% 85%, color-mix(in oklab, var(--color-accent-500) calc(var(--wash-mesh-accent) * 100%), transparent) 0%, transparent 55%),
+    radial-gradient(ellipse 45% 35% at 55% 45%, color-mix(in oklab, var(--color-success-500) calc(var(--wash-mesh-accent) * 60%), transparent) 0%, transparent 55%);
 }
 
 .glass {
-  background: rgb(30 41 59 / 0.7);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgb(51 65 85 / 0.5);
+  background: var(--glass-bg);
+  backdrop-filter: blur(14px);
+  border: 1px solid var(--color-border-primary);
 }
 
 .glass-strong {
-  background: rgb(15 23 42 / 0.9);
+  background: var(--glass-strong-bg);
   backdrop-filter: blur(20px);
-  border: 1px solid rgb(51 65 85 / 0.3);
+  border: 1px solid var(--color-border-primary);
 }
 
 .surface {
@@ -737,7 +886,7 @@ html[dir="rtl"] .prose {
 .surface-hover {
   background: var(--color-bg-elevated);
   border: 1px solid var(--color-border-primary);
-  transition: border-color var(--transition-normal), box-shadow var(--transition-normal);
+  transition: border-color var(--transition-normal), box-shadow var(--transition-normal), transform var(--transition-normal);
 }
 
 .surface-hover:hover {
@@ -746,58 +895,69 @@ html[dir="rtl"] .prose {
 }
 
 .text-gradient-primary {
-  background: linear-gradient(135deg, var(--color-primary-400) 0%, var(--color-primary-600) 100%);
+  background: linear-gradient(135deg, var(--color-primary-600) 0%, var(--color-primary-400) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+[data-theme="dark"] .text-gradient-primary {
+  background: linear-gradient(135deg, var(--color-primary-300) 0%, var(--color-primary-500) 100%);
+  -webkit-background-clip: text;
   background-clip: text;
 }
 
 .text-gradient-accent {
-  background: linear-gradient(135deg, var(--color-accent-400) 0%, var(--color-accent-600) 100%);
+  background: linear-gradient(135deg, var(--color-accent-600) 0%, var(--color-accent-400) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
-.text-gradient-success {
-  background: linear-gradient(135deg, var(--color-success-400) 0%, var(--color-success-600) 100%);
+/* Brand wordmark / headline gradient. Defined once so every surface renders it
+ * identically and it never collapses to transparent text in light mode. */
+.text-gradient-brand {
+  background-image: linear-gradient(
+    100deg,
+    var(--color-text-primary) 0%,
+    var(--color-primary-600) 55%,
+    var(--color-accent-600) 100%
+  );
   -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
   background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+
+[data-theme="dark"] .text-gradient-brand {
+  background-image: linear-gradient(
+    100deg,
+    var(--color-text-primary) 0%,
+    var(--color-primary-400) 55%,
+    var(--color-accent-400) 100%
+  );
 }
 
 .border-gradient {
   border: 1px solid transparent;
-  background: 
+  background:
     linear-gradient(var(--color-bg-elevated), var(--color-bg-elevated)) padding-box,
     linear-gradient(135deg, var(--color-primary-500), var(--color-accent-500)) border-box;
 }
 
-.zellige-pattern {
-  background-image: 
-    radial-gradient(circle at 25% 25%, rgb(59 130 246 / 0.05) 0%, transparent 50%),
-    radial-gradient(circle at 75% 75%, rgb(249 115 22 / 0.05) 0%, transparent 50%),
-    radial-gradient(circle at 50% 50%, rgb(16 185 129 / 0.03) 0%, transparent 50%);
+/* Nudge that reads as "this is pressable" without a bouncy animation. */
+.interactive-lift {
+  transition: transform var(--transition-fast), box-shadow var(--transition-normal), border-color var(--transition-normal);
 }
 
-.star-8-point {
-  position: relative;
+.interactive-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-card-hover);
 }
 
-.star-8-point::before,
-.star-8-point::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: inherit;
-}
-
-.star-8-point::before {
-  transform: rotate(45deg);
-}
-
-.star-8-point::after {
-  transform: rotate(22.5deg);
+.interactive-lift:active {
+  transform: translateY(0);
+  box-shadow: var(--shadow-card-pressed);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -808,5 +968,9 @@ html[dir="rtl"] .prose {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+  }
+
+  .interactive-lift:hover {
+    transform: none;
   }
 }

@@ -4,7 +4,32 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>frontend</title>
+    <meta
+      name="description"
+      content="AtlasCode is a complete computer science learning platform: foundations, programming, algorithms, networks, security and AI, taught through interactive lessons and real projects."
+    />
+    <meta name="theme-color" content="#0F172A" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#FFFFFF" media="(prefers-color-scheme: light)" />
+    <title>AtlasCode — Learn Computer Science</title>
+    <script>
+      // Paint the correct theme before the first frame. Without this the page
+      // flashes the default palette while React boots. Kept in sync with
+      // ThemeContext: same storage key, same resolution rule.
+      (function () {
+        try {
+          var stored = localStorage.getItem('atlascode.theme');
+          var prefersDark =
+            typeof window.matchMedia === 'function' &&
+            window.matchMedia('(prefers-color-scheme: dark)').matches;
+          var theme =
+            stored === 'light' || stored === 'dark' ? stored : prefersDark ? 'dark' : 'light';
+          document.documentElement.dataset.theme = theme;
+          document.documentElement.style.colorScheme = theme;
+        } catch (e) {
+          document.documentElement.dataset.theme = 'dark';
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>
