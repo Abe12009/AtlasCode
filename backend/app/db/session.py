@@ -16,5 +16,14 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
 
 
 async def init_db():
+    """Create any missing tables, then apply additive column migrations.
+
+    `create_all` never alters an existing table, so a deployed database would
+    otherwise be left without columns added since it was created. The migration
+    pass is additive-only and idempotent — see app.db.migrations.
+    """
+    from app.db.migrations import run_additive_migrations
+
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+        await run_additive_migrations(conn)

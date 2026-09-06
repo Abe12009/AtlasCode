@@ -2,8 +2,8 @@ from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
-from sqlalchemy.dialects.sqlite import insert as sqlite_insert
 from sqlalchemy.orm import selectinload
+from app.db.compat import conflict_insert
 from app.db.session import get_db
 from app.core.dependencies import get_current_user
 from app.models import (
@@ -31,7 +31,7 @@ async def _get_or_create_lesson_progress(
     single row. An existing row is never modified here.
     """
     stmt = (
-        sqlite_insert(LessonProgress)
+        conflict_insert(LessonProgress)
         .values(user_id=user_id, lesson_id=lesson_id, status=initial_status)
         .on_conflict_do_nothing(index_elements=["user_id", "lesson_id"])
     )

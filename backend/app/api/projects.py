@@ -1,9 +1,10 @@
+from datetime import datetime
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
-from sqlalchemy.dialects.sqlite import insert as sqlite_insert
 from sqlalchemy.orm import selectinload
+from app.db.compat import conflict_insert
 from app.db.session import get_db
 from app.core.dependencies import get_current_user
 from app.models import (
@@ -16,6 +17,7 @@ from app.schemas import (
     ProjectTaskSubmitRequest
 )
 from app.services.notifications import create_notification
+from app.services.stats import record_activity
 
 router = APIRouter(prefix="/projects", tags=["projects"])
 
@@ -34,7 +36,7 @@ async def _get_or_create_project_progress(
     single row. An existing row is never modified here.
     """
     stmt = (
-        sqlite_insert(ProjectProgress)
+        conflict_insert(ProjectProgress)
         .values(user_id=user_id, project_id=project_id, status=initial_status)
         .on_conflict_do_nothing(index_elements=["user_id", "project_id"])
     )
@@ -182,17 +184,25 @@ async def submit_project_task(
         if not result.success:
             return {"success": False, "error": result.error, "output": result.output}
 
+    now = datetime.utcnow()
     progress.code_snapshot = code
     was_completed = progress.status == MissionStatusEnum.completed
     if task_id >= progress.current_task:
         progress.current_task = task_id + 1
+
+    activity_profile_result = await db.execute(
+        select(StudentProfile).where(StudentProfile.user_id == current_user.id)
+    )
+    await record_activity(
+        db, current_user, activity_profile_result.scalar_one_or_none(), now_utc=now
+    )
 
     all_tasks_result = await db.execute(select(func.count(ProjectTask.id)).where(ProjectTask.project_id == project_id))
     total_tasks = all_tasks_result.scalar() or 0
 
     if not was_completed and progress.current_task >= total_tasks:
         progress.status = MissionStatusEnum.completed
-        progress.completed_at = func.now()
+        progress.completed_at = now
 
         project_result = await db.execute(select(Project).where(Project.id == project_id))
         project = project_result.scalar_one_or_none()
