@@ -21,22 +21,55 @@ class UserBase(BaseModel):
 
 class UserCreate(UserBase):
     password: str = Field(min_length=8, max_length=100)
+    #: Minutes east of UTC, from the browser. Used for streak/week boundaries.
+    timezone_offset_minutes: Optional[int] = None
 
 
 class UserLogin(BaseModel):
     email: EmailStr
     password: str
+    timezone_offset_minutes: Optional[int] = None
 
 
 class UserUpdate(BaseModel):
     username: Optional[str] = Field(default=None, min_length=3, max_length=100)
     preferred_language: Optional[LanguageEnum] = None
+    timezone_offset_minutes: Optional[int] = None
+
+
+class FirebaseLoginRequest(BaseModel):
+    """Exchange a verified Firebase ID token for an AtlasCode session token."""
+
+    id_token: str = Field(min_length=16, max_length=8192)
+    preferred_language: Optional[LanguageEnum] = None
+    timezone_offset_minutes: Optional[int] = None
+
+
+class PasswordChangeRequest(BaseModel):
+    """Change an AtlasCode password while signed in."""
+
+    current_password: str = Field(min_length=1, max_length=100)
+    new_password: str = Field(min_length=8, max_length=100)
+
+
+class AuthConfigResponse(BaseModel):
+    """What sign-in methods this deployment actually supports."""
+
+    firebase_enabled: bool
+    password_login_enabled: bool = True
 
 
 class UserResponse(UserBase):
     id: int
     is_active: bool
     created_at: datetime
+    auth_provider: str = "password"
+    email_verified: bool = False
+    avatar_url: Optional[str] = None
+    #: True when the account can sign in with an AtlasCode password. False for
+    #: accounts that exist only through a federated provider.
+    has_password: bool = False
+    timezone_offset_minutes: int = 0
 
     class Config:
         from_attributes = True
@@ -48,12 +81,32 @@ class StudentProfileResponse(BaseModel):
     xp: int
     level: int
     streak: int
+    longest_streak: int = 0
     completed_lessons: int
     completed_projects: int
     current_mission_id: Optional[int] = None
 
     class Config:
         from_attributes = True
+
+
+class WeeklyStatsResponse(BaseModel):
+    """Real, server-computed change since the start of the student's week.
+
+    Every field is a count of things that actually happened. A new account
+    reports zeros, and the client renders a neutral state rather than a
+    fabricated increase.
+    """
+
+    #: UTC instant at which the student's local week began (Monday 00:00).
+    week_start: datetime
+    xp: int = 0
+    lessons_completed: int = 0
+    projects_completed: int = 0
+    levels_gained: int = 0
+    #: Distinct days this week on which the student did something.
+    active_days: int = 0
+    has_activity: bool = False
 
 
 class CourseTranslationResponse(BaseModel):
@@ -67,6 +120,13 @@ class CourseResponse(BaseModel):
     id: int
     slug: str
     order: int
+    #: Roadmap grouping (see app.curriculum.STAGES).
+    stage: int = 1
+    track: Optional[str] = None
+    difficulty: DifficultyEnum = DifficultyEnum.beginner
+    estimated_hours: int = 0
+    icon: Optional[str] = None
+    prerequisite_course_id: Optional[int] = None
     translations: List[CourseTranslationResponse]
     modules: List["ModuleResponse"] = []
 
@@ -278,6 +338,7 @@ class UserAchievementResponse(BaseModel):
 class DashboardResponse(BaseModel):
     user: UserResponse
     profile: StudentProfileResponse
+    weekly: WeeklyStatsResponse
     current_mission: Optional[LessonResponse] = None
     course_progress: List[CourseProgressResponse] = []
     recent_achievements: List[UserAchievementResponse] = []

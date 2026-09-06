@@ -16,6 +16,13 @@ class Settings(BaseSettings):
     access_token_expire_minutes: int = 30 * 24 * 60
     cors_origins: list[str] = ["http://localhost:5173", "http://127.0.0.1:5173", "http://[::1]:5173"]
 
+    #: Firebase project id used to validate the audience/issuer of incoming
+    #: Firebase ID tokens. This value is public (it ships in every web client);
+    #: the security of the flow comes from signature verification against
+    #: Google's public keys, not from keeping it secret. Leave it empty to run
+    #: with AtlasCode's own email/password authentication only.
+    firebase_project_id: str = ""
+
     class Config:
         env_file = ".env"
 

@@ -26,6 +26,16 @@ async def seed_achievements(db):
         Achievement(slug="three-projects", icon="🚀🚀", xp_reward=500, condition_type="projects_completed", condition_value=3),
         Achievement(slug="all-projects", icon="🚀🚀🚀", xp_reward=1000, condition_type="projects_completed", condition_value=5),
     ]
+    # Idempotent: seeding runs again whenever the curriculum is extended, and
+    # `slug` is unique, so anything already present is left exactly as it is.
+    existing = set(
+        (await db.execute(select(Achievement.slug))).scalars().all()
+    )
+    achievements = [a for a in achievements if a.slug not in existing]
+    if not achievements:
+        print("Achievements already present, skipping.")
+        return
+
     db.add_all(achievements)
     await db.flush()
     

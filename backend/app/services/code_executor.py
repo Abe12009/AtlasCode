@@ -55,6 +55,23 @@ FORBIDDEN_BUILTINS = {
     'copyright', 'credits', '__build_class__',
 }
 
+#: Dunder attributes a lesson legitimately needs and that cannot reach the
+#: interpreter. Everything else stays blocked, because the classic sandbox
+#: escape is attribute-walking from an ordinary object into the type system
+#: (``().__class__.__bases__[0].__subclasses__()``). None of the names below
+#: return a type, a frame, a code object, or a namespace, so none of them open
+#: that door — while `super().__init__(...)` and `__repr__`/`__len__` style
+#: methods are exactly what the object-oriented lessons teach.
+ALLOWED_DUNDER_ATTRS = {
+    '__init__', '__repr__', '__str__', '__len__', '__eq__', '__ne__',
+    '__lt__', '__le__', '__gt__', '__ge__', '__hash__', '__bool__',
+    '__iter__', '__next__', '__contains__', '__getitem__', '__setitem__',
+    '__delitem__', '__call__', '__enter__', '__exit__',
+    '__add__', '__sub__', '__mul__', '__truediv__', '__floordiv__',
+    '__mod__', '__pow__', '__neg__', '__abs__', '__round__',
+    '__name__', '__doc__',
+}
+
 ALLOWED_BUILTINS = {
     'print', 'len', 'range', 'str', 'int', 'float', 'bool', 'list',
     'dict', 'set', 'tuple', 'enumerate', 'zip', 'map', 'filter',
@@ -95,7 +112,11 @@ class CodeValidator(ast.NodeVisitor):
         self.generic_visit(node)
 
     def visit_Attribute(self, node: ast.Attribute):
-        if node.attr.startswith('__') and node.attr.endswith('__'):
+        if (
+            node.attr.startswith('__')
+            and node.attr.endswith('__')
+            and node.attr not in ALLOWED_DUNDER_ATTRS
+        ):
             self.errors.append(f"Access to dunder attribute '{node.attr}' is not allowed")
         forbidden_attrs = {
             'system', 'popen', 'spawn', 'fork', 'exec', 'kill',

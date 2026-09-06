@@ -154,14 +154,22 @@ class TestExistingLessonsAreUnaffected:
     async def test_ordinary_lessons_have_no_microquest_block_types(
         self, client: AsyncClient, test_user, lesson_id
     ):
+        """``blueprint`` is the one block type reserved exclusively for a Micro-Quest
+        (it is what flips the frontend into the quest renderer, see
+        ``LessonDetail.isMicroQuest``). ``hook`` and ``exam_tip`` are ordinary
+        authoring primitives reused across the wider curriculum -- see
+        ``authoring.Hook``/``authoring.ExamTip`` -- and render as plain prose/tip
+        cards when no sibling ``blueprint`` block is present.
+        """
         response = await client.get(f"/lessons/{lesson_id}", headers=test_user["headers"])
         if response.status_code == 404:
             pytest.skip(f"lesson {lesson_id} does not exist")
         lesson = response.json()
         types = {b["block_type"] for b in lesson["blocks"]}
-        assert not types & {"hook", "blueprint", "exam_tip"}
+        assert "blueprint" not in types
         for block in lesson["blocks"]:
-            assert block["config"] is None
+            if block["block_type"] not in ("hook", "exam_tip"):
+                assert block["config"] is None
 
     async def test_lesson_1_response_shape_is_unchanged_apart_from_the_new_field(
         self, client: AsyncClient, test_user

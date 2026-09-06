@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import List
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -17,6 +18,7 @@ from app.schemas import (
 from app.services.code_executor import execute_code, validate_python_code
 from app.services.exercise_grading import grade_exercise, resolve_strategy, STRATEGY_SANDBOX
 from app.services.notifications import create_notification
+from app.services.stats import record_activity
 
 router = APIRouter(prefix="/exercises", tags=["exercises"])
 
@@ -146,21 +148,28 @@ async def submit_exercise(
     if is_correct and not previous_success:
         xp_earned = exercise.xp_reward
 
+    now = datetime.utcnow()
     attempt = ExerciseAttempt(
         user_id=current_user.id,
         exercise_id=exercise_id,
         submitted_code=_submitted_answer_text(request),
         is_correct=is_correct,
         xp_earned=xp_earned,
-        feedback=grading.feedback
+        feedback=grading.feedback,
+        created_at=now,
     )
     db.add(attempt)
 
+    # Practising counts as showing up, whether or not the answer was right —
+    # that is what a learning streak is measuring.
+    profile_result = await db.execute(
+        select(StudentProfile).where(StudentProfile.user_id == current_user.id)
+    )
+    activity_profile = profile_result.scalar_one_or_none()
+    await record_activity(db, current_user, activity_profile, now_utc=now)
+
     if is_correct and not previous_success:
-        profile_result = await db.execute(
-            select(StudentProfile).where(StudentProfile.user_id == current_user.id)
-        )
-        profile = profile_result.scalar_one_or_none()
+        profile = activity_profile
         if profile:
             profile.xp += xp_earned
             new_level = (profile.xp // 100) + 1
@@ -200,7 +209,7 @@ async def submit_exercise(
             if correct_count >= total_exercises and total_exercises > 0:
                 lesson_completed = True
                 lesson_progress.status = MissionStatusEnum.completed
-                lesson_progress.completed_at = func.now()
+                lesson_progress.completed_at = now
                 profile.completed_lessons += 1
 
                 await create_notification(

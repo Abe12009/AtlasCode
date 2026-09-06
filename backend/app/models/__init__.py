@@ -41,17 +41,52 @@ class NotificationTypeEnum(str, enum.Enum):
     project_completed = "project_completed"
 
 
+class AuthProviderEnum(str, enum.Enum):
+    """How an account proves who it is.
+
+    `password` is AtlasCode's own email/password credential (the only kind that
+    has a `hashed_password`). The rest are federated identities verified by
+    Firebase; their credential lives with the provider, never here.
+    """
+
+    password = "password"
+    firebase_password = "firebase_password"
+    google = "google"
+    github = "github"
+
+
 class User(Base):
     __tablename__ = "users"
 
     id = Column(Integer, primary_key=True, index=True)
     email = Column(String(255), unique=True, index=True, nullable=False)
     username = Column(String(100), unique=True, index=True, nullable=False)
-    hashed_password = Column(String(255), nullable=False)
+    #: Null for accounts that authenticate through a federated provider only.
+    #: Never stores a password, only a PBKDF2 hash (see app.core.security).
+    hashed_password = Column(String(255), nullable=True)
+    #: Firebase's stable user id. Unique so one Firebase identity maps to at
+    #: most one AtlasCode account.
+    firebase_uid = Column(String(128), unique=True, index=True, nullable=True)
+    auth_provider = Column(String(32), default=AuthProviderEnum.password.value, nullable=False)
+    email_verified = Column(Boolean, default=False, nullable=False)
+    avatar_url = Column(String(512), nullable=True)
+    #: Minutes east of UTC as reported by the client, so day and week
+    #: boundaries for streaks and weekly stats match what the student sees.
+    timezone_offset_minutes = Column(Integer, default=0, nullable=False)
     preferred_language = Column(Enum(LanguageEnum), default=LanguageEnum.en, nullable=False)
     is_active = Column(Boolean, default=True)
+    last_login_at = Column(DateTime, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    @property
+    def has_password(self) -> bool:
+        """True when this account can sign in with an AtlasCode password.
+
+        Federated-only accounts have no local credential; the UI uses this to
+        decide whether to offer "change password" at all.
+        """
+        return bool(self.hashed_password)
 
     profile = relationship("StudentProfile", back_populates="user", uselist=False, cascade="all, delete-orphan")
     lesson_progress = relationship("LessonProgress", back_populates="user", cascade="all, delete-orphan")
@@ -71,6 +106,7 @@ class StudentProfile(Base):
     xp = Column(Integer, default=0)
     level = Column(Integer, default=1)
     streak = Column(Integer, default=0)
+    longest_streak = Column(Integer, default=0)
     last_activity_date = Column(DateTime)
     completed_lessons = Column(Integer, default=0)
     completed_projects = Column(Integer, default=0)
@@ -85,10 +121,24 @@ class Course(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     slug = Column(String(100), unique=True, index=True, nullable=False)
+    #: Global position in the curriculum. Unchanged meaning: courses are always
+    #: listed by it.
     order = Column(Integer, default=0)
+    #: Which stage of the roadmap the course belongs to (see app.curriculum).
+    #: Stages group courses the way a degree groups years.
+    stage = Column(Integer, default=1, nullable=False, index=True)
+    #: Subject area, e.g. "programming", "theory", "systems", "security".
+    track = Column(String(50), nullable=True)
+    difficulty = Column(Enum(DifficultyEnum), default=DifficultyEnum.beginner)
+    estimated_hours = Column(Integer, default=0)
+    icon = Column(String(50), nullable=True)
+    #: The course a student should finish first. Advisory, not a hard lock:
+    #: the UI surfaces it and orders around it.
+    prerequisite_course_id = Column(Integer, ForeignKey("courses.id", ondelete="SET NULL"), nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
+    prerequisite_course = relationship("Course", remote_side=[id], foreign_keys=[prerequisite_course_id])
     modules = relationship("Module", back_populates="course", cascade="all, delete-orphan", order_by="Module.order")
     translations = relationship("CourseTranslation", back_populates="course", cascade="all, delete-orphan")
     progress = relationship("CourseProgress", back_populates="course", cascade="all, delete-orphan")

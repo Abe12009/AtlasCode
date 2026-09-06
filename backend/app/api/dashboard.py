@@ -1,9 +1,17 @@
-from fastapi import APIRouter, Depends
+from datetime import datetime
+from typing import Optional
+
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
 from sqlalchemy.orm import selectinload
 from app.db.session import get_db
 from app.core.dependencies import get_current_user
+from app.services.stats import (
+    clamp_timezone_offset,
+    compute_weekly_stats,
+    effective_streak,
+)
 from app.models import (
     User, StudentProfile, LessonProgress, CourseProgress, ProjectProgress,
     Lesson, LessonBlock, Module, Course, Project, ProjectTask, Achievement, UserAchievement,
@@ -16,9 +24,21 @@ router = APIRouter(prefix="/dashboard", tags=["dashboard"])
 
 @router.get("", response_model=DashboardResponse)
 async def get_dashboard(
+    tz_offset: Optional[int] = Query(
+        None,
+        ge=-720,
+        le=840,
+        description=(
+            "Client UTC offset in minutes (e.g. 60 for UTC+1). Sent by the "
+            "browser so streaks and weekly totals use the student's own day "
+            "and week boundaries. Persisted for later server-side use."
+        ),
+    ),
     current_user = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
+    now = datetime.utcnow()
+
     profile_result = await db.execute(
         select(StudentProfile).where(StudentProfile.user_id == current_user.id)
     )
@@ -28,6 +48,32 @@ async def get_dashboard(
         db.add(profile)
         await db.commit()
         await db.refresh(profile)
+
+    # Keep the stored offset current: the browser is the authority on where the
+    # student is, and DST moves it twice a year.
+    dirty = False
+    if tz_offset is not None:
+        normalized = clamp_timezone_offset(tz_offset)
+        if current_user.timezone_offset_minutes != normalized:
+            current_user.timezone_offset_minutes = normalized
+            dirty = True
+
+    # A streak is only alive while the student keeps showing up. Nothing writes
+    # to the row while they are away, so the stored value is reconciled here on
+    # the first visit after a missed day.
+    live_streak = effective_streak(
+        stored_streak=profile.streak or 0,
+        last_activity=profile.last_activity_date,
+        now_utc=now,
+        offset_minutes=clamp_timezone_offset(current_user.timezone_offset_minutes),
+    )
+    if live_streak != (profile.streak or 0):
+        profile.streak = live_streak
+        dirty = True
+    if dirty:
+        await db.commit()
+
+    weekly = await compute_weekly_stats(db, current_user, profile, now_utc=now)
 
     current_mission = None
     if profile.current_mission_id:
@@ -94,6 +140,7 @@ async def get_dashboard(
     return {
         "user": current_user,
         "profile": profile,
+        "weekly": weekly.as_dict(),
         "current_mission": current_mission,
         "course_progress": course_progress,
         "recent_achievements": recent_achievements,
