@@ -1,0 +1,39 @@
+# systemd unit for the AtlasCode FastAPI backend on EC2.
+#
+# Install:
+#   sudo cp deploy/aws/atlascode-backend.service /etc/systemd/system/
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now atlascode-backend
+#
+# Assumes:
+#   - App checked out at /opt/atlascode (backend/ subdir), owned by user "atlascode"
+#   - A Python virtualenv at /opt/atlascode/backend/.venv with requirements.txt installed
+#   - Env vars supplied via /etc/atlascode/atlascode.env (see deploy/aws/README.md
+#     for the .env-file vs. SSM Parameter Store options; either way this file
+#     must exist with mode 0600, owned by the atlascode user, before starting)
+#
+# Logs: journalctl -u atlascode-backend -f
+
+[Unit]
+Description=AtlasCode backend (FastAPI/Uvicorn)
+After=network.target
+
+[Service]
+Type=simple
+User=atlascode
+Group=atlascode
+WorkingDirectory=/opt/atlascode/backend
+EnvironmentFile=/etc/atlascode/atlascode.env
+ExecStart=/opt/atlascode/backend/.venv/bin/uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 2
+Restart=on-failure
+RestartSec=5
+
+# Hardening — safe no-ops for this app, tighten the blast radius of a compromise
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ReadWritePaths=/opt/atlascode/backend
+ProtectHome=true
+
+[Install]
+WantedBy=multi-user.target
