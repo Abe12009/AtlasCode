@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import get_settings
 from app.db.session import init_db
-from app.api import auth, courses, lessons, exercises, projects, dashboard, visual, notifications, users
+from app.api import auth, courses, lessons, exercises, projects, dashboard, visual, notifications, users, cody
 
 settings = get_settings()
 
@@ -29,6 +29,7 @@ app.include_router(dashboard.router)
 app.include_router(visual.router)
 app.include_router(notifications.router)
 app.include_router(users.router)
+app.include_router(cody.router)
 
 
 @app.on_event("startup")

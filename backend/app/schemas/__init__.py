@@ -1,7 +1,7 @@
 from pydantic import BaseModel, EmailStr, Field, field_serializer
 from typing import Optional, List, Dict, Any
 from datetime import datetime, timezone
-from app.models import LanguageEnum, DifficultyEnum, MissionStatusEnum, ExerciseTypeEnum, NotificationTypeEnum
+from app.models import LanguageEnum, DifficultyEnum, MissionStatusEnum, ExerciseTypeEnum, NotificationTypeEnum, CodyRoleEnum
 
 
 class Token(BaseModel):
@@ -493,6 +493,30 @@ class NotificationResponse(BaseModel):
 
 class UnreadCountResponse(BaseModel):
     count: int
+
+
+class CodyChatRequest(BaseModel):
+    message: str = Field(min_length=1, max_length=4000)
+
+
+class CodyMessageResponse(BaseModel):
+    role: CodyRoleEnum
+    content: str
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+    @field_serializer("created_at")
+    def serialize_created_at(self, dt: datetime, _info):
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        return dt.isoformat()
+
+
+class CodyChatResponse(BaseModel):
+    reply: CodyMessageResponse
+    messages_remaining_this_hour: int
 
 
 LessonResponse.model_rebuild()

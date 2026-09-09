@@ -11,6 +11,7 @@ python-dotenv==1.0.0
 alembic==1.12.1
 aiosqlite==0.22.1
 psycopg[binary]==3.2.13
+anthropic==1.4.0
 pytest==7.4.4
 pytest-asyncio==0.21.1
 httpx==0.25.2

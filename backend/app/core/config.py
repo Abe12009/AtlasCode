@@ -23,6 +23,20 @@ class Settings(BaseSettings):
     #: with AtlasCode's own email/password authentication only.
     firebase_project_id: str = ""
 
+    # --- Cody (AI companion) ------------------------------------------------
+    #: Server-side only. Never returned in any response body or logged; the
+    #: frontend only ever talks to /cody/*, never to Anthropic directly.
+    anthropic_api_key: str = ""
+    cody_model: str = "claude-haiku-4-5"
+    #: Per-user cap enforced in app.api.cody by counting that user's own
+    #: CodyMessage rows created in the trailing hour -- no separate counter
+    #: table needed, and it self-corrects if a request fails to write.
+    cody_rate_limit_per_hour: int = 30
+    #: How many of the user's most recent messages (user + assistant turns)
+    #: are replayed as context on each request. Bounds token cost per call
+    #: regardless of how long someone's history has grown.
+    cody_history_context_size: int = 10
+
     class Config:
         env_file = ".env"
 

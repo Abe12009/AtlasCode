@@ -114,6 +114,7 @@ class User(Base):
     exercise_attempts = relationship("ExerciseAttempt", back_populates="user", cascade="all, delete-orphan")
     achievements = relationship("UserAchievement", back_populates="user", cascade="all, delete-orphan")
     notifications = relationship("Notification", back_populates="user", cascade="all, delete-orphan")
+    cody_messages = relationship("CodyMessage", back_populates="user", cascade="all, delete-orphan")
 
 
 class StudentProfile(Base):
@@ -571,6 +572,33 @@ class Notification(Base):
     created_at = Column(DateTime, default=datetime.utcnow, index=True)
 
     user = relationship("User", back_populates="notifications")
+
+
+class CodyRoleEnum(str, enum.Enum):
+    """Who authored a Cody chat turn."""
+
+    user = "user"
+    assistant = "assistant"
+
+
+class CodyMessage(Base):
+    """One turn of a user's persistent chat history with Cody, the CS Q&A
+    companion agent. Kept indefinitely (like other user content) but only
+    the most recent turns are replayed as LLM context per request -- see
+    app.services.cody. Deletes with the owning user (ondelete="CASCADE" +
+    the User.cody_messages cascade) so there is nothing left orphaned once
+    account deletion exists.
+    """
+
+    __tablename__ = "cody_messages"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    role = Column(Enum(CodyRoleEnum), nullable=False)
+    content = Column(Text, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow, index=True)
+
+    user = relationship("User", back_populates="cody_messages")
 
 
 class VisualNode(Base):
