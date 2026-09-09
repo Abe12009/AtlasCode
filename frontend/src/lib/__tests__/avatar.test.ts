@@ -15,6 +15,7 @@ import {
 describe('avatar config serialization', () => {
   it('round-trips a config through serialize/parse', () => {
     const config: AvatarConfig = {
+      version: 1,
       skinTone: 'tone-5',
       hair: 'curly',
       hairColor: 'red',
@@ -43,6 +44,40 @@ describe('avatar config serialization', () => {
     expect(parsed.skinTone).toBe('tone-1');
     expect(parsed.hair).toBe(DEFAULT_AVATAR_CONFIG.hair);
     expect(parsed.face).toBe(DEFAULT_AVATAR_CONFIG.face);
+  });
+
+  it('treats a pre-version-field saved config (no "version" key at all) as v1', () => {
+    // This is exactly what every avatar saved before this field existed
+    // looks like: a plain JSON blob with no `version` key.
+    const preVersionConfig = JSON.stringify({
+      skinTone: 'tone-4',
+      hair: 'bun',
+      hairColor: 'blue',
+      face: 'wink',
+      outfit: 'blazer',
+      accessory: 'headphones',
+    });
+    const parsed = parseAvatarConfig(preVersionConfig);
+    expect(parsed.version).toBe(1);
+    // And every other field survives the migration untouched.
+    expect(parsed.skinTone).toBe('tone-4');
+    expect(parsed.hair).toBe('bun');
+    expect(parsed.hairColor).toBe('blue');
+    expect(parsed.face).toBe('wink');
+    expect(parsed.outfit).toBe('blazer');
+    expect(parsed.accessory).toBe('headphones');
+  });
+
+  it('has the 2 new options added per layer in this rollout, without disturbing existing ids', () => {
+    const hairIds = HAIR_STYLES.map((h) => h.id);
+    const faceIds = FACE_STYLES.map((f) => f.id);
+    const outfitIds = OUTFITS.map((o) => o.id);
+    const accessoryIds = ACCESSORIES.map((a) => a.id);
+
+    expect(hairIds).toEqual(['bald', 'short', 'buzz', 'curly', 'long', 'bun', 'afro', 'spiky', 'ponytail', 'mohawk']);
+    expect(faceIds).toEqual(['smile', 'grin', 'calm', 'wink', 'glasses', 'shades', 'surprised', 'laugh']);
+    expect(outfitIds).toEqual(['tee', 'hoodie', 'buttonup', 'blazer', 'tank', 'sweater', 'jacket']);
+    expect(accessoryIds).toEqual(['none', 'earrings', 'headphones', 'cap', 'beanie', 'scarf', 'bowtie']);
   });
 
   it('every default config value is a real option in its own catalog', () => {

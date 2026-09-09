@@ -11,7 +11,15 @@
  * AvatarFace.tsx is the renderer; AvatarBuilder.tsx is the picker UI.
  */
 
+/** Bumped whenever a change to the option catalogs or renderer would alter
+ * how an *already-saved* config looks (e.g. an option id changing meaning).
+ * Purely additive changes -- new option ids, more detailed art for an
+ * existing id -- don't need a bump; only add one if old saved values would
+ * need to be reinterpreted. See parseAvatarConfig for the migration point. */
+export const CURRENT_AVATAR_CONFIG_VERSION = 1;
+
 export interface AvatarConfig {
+  version: number;
   skinTone: string;
   hair: string;
   hairColor: string;
@@ -21,6 +29,7 @@ export interface AvatarConfig {
 }
 
 export const DEFAULT_AVATAR_CONFIG: AvatarConfig = {
+  version: CURRENT_AVATAR_CONFIG_VERSION,
   skinTone: 'tone-3',
   hair: 'short',
   hairColor: 'brown',
@@ -47,6 +56,8 @@ export const HAIR_STYLES: { id: string; label: string }[] = [
   { id: 'bun', label: 'Bun' },
   { id: 'afro', label: 'Afro' },
   { id: 'spiky', label: 'Spiky' },
+  { id: 'ponytail', label: 'Ponytail' },
+  { id: 'mohawk', label: 'Mohawk' },
 ];
 
 export const HAIR_COLORS: { id: string; color: string }[] = [
@@ -65,6 +76,8 @@ export const FACE_STYLES: { id: string; label: string }[] = [
   { id: 'wink', label: 'Wink' },
   { id: 'glasses', label: 'Glasses' },
   { id: 'shades', label: 'Sunglasses' },
+  { id: 'surprised', label: 'Surprised' },
+  { id: 'laugh', label: 'Laugh' },
 ];
 
 export const OUTFITS: { id: string; label: string; color: string }[] = [
@@ -73,6 +86,8 @@ export const OUTFITS: { id: string; label: string; color: string }[] = [
   { id: 'buttonup', label: 'Button-up', color: '#F8FAFC' },
   { id: 'blazer', label: 'Blazer', color: '#1F2937' },
   { id: 'tank', label: 'Tank Top', color: '#F97316' },
+  { id: 'sweater', label: 'Sweater', color: '#0D9488' },
+  { id: 'jacket', label: 'Jacket', color: '#78350F' },
 ];
 
 export const ACCESSORIES: { id: string; label: string }[] = [
@@ -81,17 +96,31 @@ export const ACCESSORIES: { id: string; label: string }[] = [
   { id: 'headphones', label: 'Headphones' },
   { id: 'cap', label: 'Cap' },
   { id: 'beanie', label: 'Beanie' },
+  { id: 'scarf', label: 'Scarf' },
+  { id: 'bowtie', label: 'Bow Tie' },
 ];
 
 export function serializeAvatarConfig(config: AvatarConfig): string {
   return JSON.stringify(config);
 }
 
+/** Upgrades an old saved config to the current shape. Every config saved
+ * before the `version` field existed has no `version` key at all -- which
+ * is indistinguishable from "was v1 all along", so it's treated as v1 with
+ * no migration needed today. When a future bump changes what an existing
+ * option id means (rather than just adding new ids, which needs no
+ * migration), add a `if (config.version < N) { ... }` step here. */
+function migrateAvatarConfig(config: AvatarConfig): AvatarConfig {
+  return config;
+}
+
 export function parseAvatarConfig(raw: string | null | undefined): AvatarConfig {
   if (!raw) return DEFAULT_AVATAR_CONFIG;
   try {
     const parsed = JSON.parse(raw);
-    return { ...DEFAULT_AVATAR_CONFIG, ...parsed };
+    const version = typeof parsed.version === 'number' ? parsed.version : 1;
+    const migrated = migrateAvatarConfig({ ...DEFAULT_AVATAR_CONFIG, ...parsed, version });
+    return migrated;
   } catch {
     return DEFAULT_AVATAR_CONFIG;
   }
