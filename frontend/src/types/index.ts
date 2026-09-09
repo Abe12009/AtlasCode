@@ -295,6 +295,17 @@ export interface Notification {
   created_at: string;
 }
 
+export interface CodyMessage {
+  role: 'user' | 'assistant';
+  content: string;
+  created_at: string;
+}
+
+export interface CodyChatResponse {
+  reply: CodyMessage;
+  messages_remaining_this_hour: number;
+}
+
 export interface ExerciseSubmitRequest {
   exercise_id: number;
   /** Code exercises. Non-code types send the field matching how they are answered. */

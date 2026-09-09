@@ -2,7 +2,8 @@ import { useState, useEffect, useRef } from 'react';
 import { Outlet, NavLink, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useTranslation } from '../hooks/useTranslation';
-import { LayoutDashboard, BookOpen, FolderKanban, User, LogOut, Menu, X, ChevronDown, Trophy, Code, Zap, Star } from 'lucide-react';
+import { LayoutDashboard, BookOpen, FolderKanban, User, LogOut, Menu, X, ChevronDown, Trophy, Code, Zap, Star, Bot } from 'lucide-react';
+import { CodyBubble } from './CodyBubble';
 import { Button, Dropdown, DropdownItem, DropdownSeparator, Badge, cn } from './ui';
 import { StatusBadge, XPBadge, StreakBadge } from './ui/StatusBadge';
 import { NotificationBell } from './NotificationBell';
@@ -42,6 +43,7 @@ export function Layout() {
     { path: '/app/dashboard', label: t('navigation.dashboard'), icon: LayoutDashboard },
     { path: '/app/courses', label: t('navigation.courses'), icon: BookOpen },
     { path: '/app/projects', label: t('navigation.projects'), icon: FolderKanban },
+    { path: '/app/cody', label: t('navigation.cody'), icon: Bot },
     { path: '/app/profile', label: t('navigation.profile'), icon: User },
   ];
 
@@ -268,6 +270,8 @@ export function Layout() {
           </div>
         </div>
       </footer>
+
+      <CodyBubble />
     </div>
   );
 }

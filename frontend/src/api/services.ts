@@ -17,6 +17,8 @@ import type {
   Notification,
   PublicProfile,
   Section,
+  CodyMessage,
+  CodyChatResponse,
 } from '../types';
 
 export const authApi = {
@@ -131,6 +133,13 @@ export const notificationsApi = {
 
   markAllRead: () =>
     apiClient.post<{ success: boolean }>('/notifications/read-all'),
+};
+
+export const codyApi = {
+  getMessages: () => apiClient.get<CodyMessage[]>('/cody/messages'),
+
+  sendMessage: (message: string) =>
+    apiClient.post<CodyChatResponse>('/cody/chat', { message }),
 };
 
 export const visualApi = {
