@@ -1,9 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
 import { Outlet, NavLink, Link, useNavigate, useLocation } from 'react-router-dom';
+import { AnimatePresence, motion } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
 import { useTranslation } from '../hooks/useTranslation';
 import { LayoutDashboard, BookOpen, FolderKanban, User, LogOut, Menu, X, ChevronDown, Trophy, Code, Zap, Star, Bot } from 'lucide-react';
 import { CodyBubble } from './CodyBubble';
+import { XpToastHost } from './XpToast';
 import { Button, Dropdown, DropdownItem, DropdownSeparator, Badge, cn, Skeleton } from './ui';
 import { StatusBadge, XPBadge, StreakBadge } from './ui/StatusBadge';
 import { NotificationBell } from './NotificationBell';
@@ -266,7 +268,17 @@ export function Layout() {
         id="main-content"
         role="main"
       >
-        <Outlet />
+        <AnimatePresence mode="wait" initial={false}>
+          <motion.div
+            key={location.pathname}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.18, ease: 'easeOut' }}
+          >
+            <Outlet />
+          </motion.div>
+        </AnimatePresence>
       </main>
 
       <footer className="bg-bg-secondary border-t border-border-primary py-6 mt-auto">
@@ -291,6 +303,7 @@ export function Layout() {
       </footer>
 
       <CodyBubble />
+      <XpToastHost />
     </div>
   );
 }

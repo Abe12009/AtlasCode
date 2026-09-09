@@ -1,3 +1,4 @@
+import { motion } from 'framer-motion';
 import { cn } from '../../lib/utils';
 import { CheckCircle, Lock, Clock, AlertCircle } from 'lucide-react';
 
@@ -90,7 +91,14 @@ export function XPBadge({ xp, size = 'md', showIcon = true, className }: XPBadge
       )}
     >
       {showIcon && <span className="flex-shrink-0" aria-hidden="true">⚡</span>}
-      <span>{xp.toLocaleString()} XP</span>
+      <motion.span
+        key={xp}
+        initial={{ scale: 1.3 }}
+        animate={{ scale: 1 }}
+        transition={{ duration: 0.35, ease: 'easeOut' }}
+      >
+        {xp.toLocaleString()} XP
+      </motion.span>
     </span>
   );
 }
@@ -116,7 +124,14 @@ export function StreakBadge({ streak, size = 'md', showIcon = true, className }:
       )}
     >
       {showIcon && <span className="flex-shrink-0" aria-hidden="true">🔥</span>}
-      <span>{streak} Day{streak !== 1 ? 's' : ''}</span>
+      <motion.span
+        key={streak}
+        initial={{ scale: 1.3 }}
+        animate={{ scale: 1 }}
+        transition={{ duration: 0.35, ease: 'easeOut' }}
+      >
+        {streak} Day{streak !== 1 ? 's' : ''}
+      </motion.span>
     </span>
   );
 }

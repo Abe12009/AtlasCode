@@ -1,4 +1,5 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
+import { MotionConfig } from 'framer-motion';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { LoadingFallback } from './components/LoadingFallback';
@@ -109,11 +110,13 @@ function AppRoutes() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <Suspense fallback={<LoadingFallback />}>
-          <AppRoutes />
-        </Suspense>
-      </AuthProvider>
+      <MotionConfig reducedMotion="user">
+        <AuthProvider>
+          <Suspense fallback={<LoadingFallback />}>
+            <AppRoutes />
+          </Suspense>
+        </AuthProvider>
+      </MotionConfig>
     </QueryClientProvider>
   );
 }
