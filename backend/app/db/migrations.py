@@ -119,6 +119,17 @@ MIGRATIONS: tuple[AddColumn, ...] = (
         "VARCHAR(20) DEFAULT 'upload'",
         backfill="UPDATE users SET avatar_type = 'upload' WHERE avatar_type IS NULL",
     ),
+    # --- Onboarding walkthrough ---------------------------------------------
+    # Defaults every pre-existing account to "already onboarded" -- only
+    # freshly created accounts (see app.api.auth.register and
+    # app.services.accounts.get_or_create_user_for_firebase_identity) are
+    # created with this False.
+    AddColumn(
+        "users",
+        "has_completed_onboarding",
+        "BOOLEAN DEFAULT TRUE",
+        backfill="UPDATE users SET has_completed_onboarding = TRUE WHERE has_completed_onboarding IS NULL",
+    ),
 )
 
 #: Indexes for the columns above. ``IF NOT EXISTS`` is supported by both

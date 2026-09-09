@@ -50,6 +50,8 @@ export const authApi = {
 
   loginWithFirebase: (data: { id_token: string; preferred_language?: string; timezone_offset_minutes?: number }) =>
     apiClient.post<{ access_token: string; token_type: string }>('/auth/firebase', data),
+
+  completeOnboarding: () => apiClient.post<User>('/auth/me/complete-onboarding'),
 };
 
 export const usersApi = {

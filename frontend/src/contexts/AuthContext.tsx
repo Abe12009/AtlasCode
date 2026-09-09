@@ -15,6 +15,7 @@ interface AuthContextType {
   sendPasswordReset: (email: string) => Promise<void>;
   logout: () => void;
   refreshProfile: () => Promise<void>;
+  refreshUser: () => Promise<void>;
 }
 
 /** Shared by both OAuth providers: exchange the Firebase ID token for an AtlasCode session. */
@@ -100,6 +101,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const refreshUser = async () => {
+    if (apiClient.getAuthToken()) {
+      const userData = await authApi.getMe();
+      setUser(userData);
+    }
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -113,6 +121,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         sendPasswordReset,
         logout,
         refreshProfile,
+        refreshUser,
       }}
     >
       {children}

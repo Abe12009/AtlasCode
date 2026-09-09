@@ -91,6 +91,7 @@ async def register(user_data: UserCreate, db: AsyncSession = Depends(get_db)):
         preferred_language=user_data.preferred_language,
         timezone_offset_minutes=clamp_timezone_offset(user_data.timezone_offset_minutes),
         last_login_at=datetime.utcnow(),
+        has_completed_onboarding=False,
     )
     db.add(user)
     await db.flush()
@@ -214,6 +215,23 @@ async def update_current_user(
 
     await db.commit()
     await db.refresh(current_user)
+    return current_user
+
+
+@router.post("/me/complete-onboarding", response_model=UserResponse)
+async def complete_onboarding(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Mark the first-login walkthrough as done (finished or skipped).
+
+    Idempotent -- calling this again on an already-onboarded account is a
+    no-op, not an error, so the frontend never has to special-case a retry.
+    """
+    if not current_user.has_completed_onboarding:
+        current_user.has_completed_onboarding = True
+        await db.commit()
+        await db.refresh(current_user)
     return current_user
 
 

@@ -96,6 +96,7 @@ class UserResponse(UserBase):
     #: accounts that exist only through a federated provider.
     has_password: bool = False
     timezone_offset_minutes: int = 0
+    has_completed_onboarding: bool = True
 
     class Config:
         from_attributes = True

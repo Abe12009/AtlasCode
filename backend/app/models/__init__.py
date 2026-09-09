@@ -94,6 +94,12 @@ class User(Base):
     timezone_offset_minutes = Column(Integer, default=0, nullable=False)
     preferred_language = Column(Enum(LanguageEnum), default=LanguageEnum.en, nullable=False)
     is_active = Column(Boolean, default=True)
+    #: True once this account has been through (or skipped) the first-login
+    #: walkthrough. Defaults True so the additive migration backfills every
+    #: pre-existing account as "already onboarded" -- only code paths that
+    #: create a brand-new account (password register, and the Firebase
+    #: creation branch in app.services.accounts) explicitly set this False.
+    has_completed_onboarding = Column(Boolean, default=True, nullable=False)
     last_login_at = Column(DateTime, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)

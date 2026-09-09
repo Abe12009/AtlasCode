@@ -152,6 +152,7 @@ async def get_or_create_user_for_firebase_identity(
         preferred_language=preferred_language,
         timezone_offset_minutes=timezone_offset_minutes,
         last_login_at=datetime.utcnow(),
+        has_completed_onboarding=False,
     )
     db.add(user)
     try:

@@ -34,6 +34,7 @@ export interface User {
   profile_visibility?: 'public' | 'private';
   has_password?: boolean;
   timezone_offset_minutes?: number;
+  has_completed_onboarding?: boolean;
 }
 
 export interface PublicProfile {
