@@ -10,7 +10,13 @@ const variantStyles = {
   default: 'bg-bg-elevated border border-border-primary shadow-card',
   outlined: 'bg-bg-elevated border-2 border-border-primary',
   elevated: 'bg-bg-elevated border border-border-primary shadow-elevated',
-  interactive: 'bg-bg-elevated border border-border-primary shadow-card hover:shadow-card-hover transition-shadow duration-normal cursor-pointer',
+  interactive: cn(
+    'bg-bg-elevated border border-border-primary shadow-card hover:shadow-card-hover transition-shadow duration-normal cursor-pointer',
+    // No-op unless a focusable ancestor (e.g. the <Link> a card is wrapped in)
+    // carries `group` -- lets a keyboard user see which whole-card link is
+    // focused, matching Button's ring treatment.
+    'group-focus-visible:outline-none group-focus-visible:ring-2 group-focus-visible:ring-primary-500 group-focus-visible:ring-offset-2 group-focus-visible:ring-offset-bg-primary',
+  ),
   filled: 'bg-bg-secondary border border-transparent',
 };
 

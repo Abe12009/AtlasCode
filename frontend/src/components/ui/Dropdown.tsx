@@ -157,7 +157,7 @@ function DropdownRoot({
             style={fixedPos ? { top: fixedPos.top, left: fixedPos.left } : undefined}
             role="menu"
           >
-            <div className="bg-bg-elevated border border-border-primary rounded-xl shadow-floating py-1 min-w-[160px] max-w-full overflow-hidden overflow-x-auto">
+            <div className="glass rounded-xl shadow-floating py-1 min-w-[160px] max-w-full overflow-hidden overflow-x-auto">
               {React.Children.map(children, (child) => {
                 if (!React.isValidElement(child)) return child;
                 // Skip the trigger element (rendered separately above) — only the

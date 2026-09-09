@@ -4,7 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useTranslation } from '../hooks/useTranslation';
 import { LayoutDashboard, BookOpen, FolderKanban, User, LogOut, Menu, X, ChevronDown, Trophy, Code, Zap, Star, Bot } from 'lucide-react';
 import { CodyBubble } from './CodyBubble';
-import { Button, Dropdown, DropdownItem, DropdownSeparator, Badge, cn } from './ui';
+import { Button, Dropdown, DropdownItem, DropdownSeparator, Badge, cn, Skeleton } from './ui';
 import { StatusBadge, XPBadge, StreakBadge } from './ui/StatusBadge';
 import { NotificationBell } from './NotificationBell';
 import { LanguageSwitcher } from './LanguageSwitcher';
@@ -55,8 +55,25 @@ export function Layout() {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen bg-bg-primary flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary-500 border-t-transparent" />
+      <div className="min-h-screen bg-bg-primary">
+        <span className="sr-only" role="status">{t('common.loading')}</span>
+        <div className="h-16 border-b border-border-primary flex items-center px-4 sm:px-6 lg:px-8 gap-6" aria-hidden="true">
+          <Skeleton variant="circular" width={36} height={36} />
+          <Skeleton variant="text" width={110} height={20} />
+          <div className="hidden lg:flex items-center gap-3 ml-6">
+            {[1, 2, 3, 4].map((i) => (
+              <Skeleton key={i} variant="rectangular" width={90} height={36} className="rounded-xl" />
+            ))}
+          </div>
+        </div>
+        <div className="pt-8 px-4 sm:px-6 lg:px-8 space-y-6" aria-hidden="true">
+          <Skeleton variant="text" width="25%" height={28} />
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {[1, 2, 3, 4].map((i) => (
+              <Skeleton key={i} variant="rectangular" height={96} className="rounded-2xl" />
+            ))}
+          </div>
+        </div>
       </div>
     );
   }
@@ -80,7 +97,7 @@ export function Layout() {
             <div className="flex items-center gap-6">
               <NavLink
                 to="/app/dashboard"
-                className="flex items-center gap-2"
+                className="flex items-center gap-2 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 focus-visible:ring-offset-bg-primary"
                 aria-label={t('common.home')}
               >
                 <div className="relative flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-primary-500 to-accent-500">
@@ -102,6 +119,7 @@ export function Layout() {
                       className={({ isActive: active }) =>
                         cn(
                           'flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-fast',
+                          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 focus-visible:ring-offset-bg-primary',
                           active
                             ? 'bg-primary-500/10 text-primary-400 border border-primary-500/20'
                             : 'text-text-secondary hover:text-text-primary hover:bg-bg-secondary'
@@ -212,6 +230,7 @@ export function Layout() {
                   className={({ isActive }) =>
                     cn(
                       'flex items-center gap-3 px-3 py-3 rounded-xl text-base font-medium',
+                      'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 focus-visible:ring-offset-bg-primary',
                       isActive
                         ? 'bg-primary-500/10 text-primary-400 border border-primary-500/20'
                         : 'text-text-secondary hover:text-text-primary hover:bg-bg-tertiary'

@@ -394,7 +394,7 @@ export function Dashboard() {
               </div>
               <Link
                 to={`/app/projects/${currentProject.project_id}`}
-                className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-semibold rounded-xl transition-all shadow-lg hover:shadow-blue-500/30 w-full justify-center"
+                className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-semibold rounded-xl transition-all shadow-lg hover:shadow-glow-primary w-full justify-center"
               >
                 <FolderKanban className="h-4 w-4" />
                 <span>{t('dashboard.continue_project')}</span>

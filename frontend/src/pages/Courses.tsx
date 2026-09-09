@@ -196,7 +196,7 @@ function CourseCard({
 
   const card = (
     <Card
-      variant={isCompleted ? 'default' : 'interactive'}
+      variant="interactive"
       padding="lg"
       className={cn(
         'relative overflow-hidden group h-full',
@@ -321,7 +321,7 @@ function CourseCard({
   // click-dead for any user without 100% progress on the prior course —
   // i.e. almost everyone. The hint should nudge order, not block access.
   return (
-    <Link to={`/app/courses/${course.id}`} className="block h-full">
+    <Link to={`/app/courses/${course.id}`} className="group block h-full rounded-2xl">
       {card}
     </Link>
   );
