@@ -25,9 +25,9 @@ class Settings(BaseSettings):
 
     # --- Cody (AI companion) ------------------------------------------------
     #: Server-side only. Never returned in any response body or logged; the
-    #: frontend only ever talks to /cody/*, never to Anthropic directly.
-    anthropic_api_key: str = ""
-    cody_model: str = "claude-haiku-4-5"
+    #: frontend only ever talks to /cody/*, never to OpenRouter directly.
+    openrouter_api_key: str = ""
+    cody_model: str = "anthropic/claude-haiku-4.5"
     #: Per-user cap enforced in app.api.cody by counting that user's own
     #: CodyMessage rows created in the trailing hour -- no separate counter
     #: table needed, and it self-corrects if a request fails to write.

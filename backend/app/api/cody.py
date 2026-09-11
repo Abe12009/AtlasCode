@@ -2,7 +2,8 @@ from datetime import datetime, timedelta
 
 import logging
 
-import anthropic
+import httpx
+from openrouter import errors as openrouter_errors
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -38,7 +39,7 @@ async def chat(
     db: AsyncSession = Depends(get_db),
 ):
     settings = get_settings()
-    if not settings.anthropic_api_key:
+    if not settings.openrouter_api_key:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="Cody isn't configured on this server yet.",
@@ -78,11 +79,20 @@ async def chat(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="Cody isn't configured on this server yet.",
         )
-    except anthropic.APIError:
+    except (
+        openrouter_errors.OpenRouterError,
+        openrouter_errors.NoResponseError,
+        httpx.HTTPError,
+    ):
         # Never leak the provider's raw error (could include request
         # internals) to the client -- log it server-side and hand back a
-        # generic, friendly failure instead.
-        logger.exception("Cody: Anthropic API call failed for user_id=%s", current_user.id)
+        # generic, friendly failure instead. OpenRouterError covers HTTP
+        # error-status responses (bad gateway, rate limit, auth, etc.) and
+        # response-validation failures; NoResponseError and httpx.HTTPError
+        # cover network-level failures (timeouts, connection errors), which
+        # the SDK's own HTTP layer doesn't wrap -- it lets them propagate as
+        # raw httpx exceptions.
+        logger.exception("Cody: OpenRouter API call failed for user_id=%s", current_user.id)
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
             detail="Cody is having trouble answering right now. Please try again shortly.",

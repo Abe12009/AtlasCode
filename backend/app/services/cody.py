@@ -2,7 +2,7 @@
 
 Design constraints this module enforces:
 
-- The Anthropic API key never leaves the backend process (app.core.config,
+- The OpenRouter API key never leaves the backend process (app.core.config,
   read from the server environment only) and is never included in any
   response body or log line.
 - Every call is scoped to the *requesting* user's own data. Progression
@@ -20,7 +20,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Sequence
 
-from anthropic import AsyncAnthropic
+from openrouter import OpenRouter
 
 from app.core.config import get_settings
 from app.models import CodyMessage, Course, CourseProgress, StudentProfile, User
@@ -51,7 +51,7 @@ class CodyReply:
 
 
 class CodyNotConfiguredError(RuntimeError):
-    """Raised when ANTHROPIC_API_KEY is unset -- Cody is disabled."""
+    """Raised when OPENROUTER_API_KEY is unset -- Cody is disabled."""
 
 
 async def build_progression_context(db, user: User) -> str:
@@ -90,26 +90,33 @@ async def build_progression_context(db, user: User) -> str:
     return " ".join(lines)
 
 
-def _to_anthropic_messages(history: Sequence[CodyMessage], new_user_message: str) -> list[dict]:
-    messages = [{"role": m.role.value, "content": m.content} for m in history]
+#: OpenRouter's chat/completions format already uses "user"/"assistant" --
+#: the same roles CodyMessage.role.value is stored as (see CodyRoleEnum) --
+#: so no per-turn role translation is needed here.
+def _to_openrouter_messages(
+    system: str, history: Sequence[CodyMessage], new_user_message: str
+) -> list[dict]:
+    messages = [{"role": "system", "content": system}]
+    messages.extend({"role": m.role.value, "content": m.content} for m in history)
     messages.append({"role": "user", "content": new_user_message})
     return messages
 
 
 async def get_reply(db, user: User, history: Sequence[CodyMessage], user_message: str) -> CodyReply:
     settings = get_settings()
-    if not settings.anthropic_api_key:
-        raise CodyNotConfiguredError("ANTHROPIC_API_KEY is not set")
+    if not settings.openrouter_api_key:
+        raise CodyNotConfiguredError("OPENROUTER_API_KEY is not set")
 
     progression = await build_progression_context(db, user)
     system = f"{SYSTEM_PROMPT}\n\nThis user's own progress (share only with them, as context, not as raw data dump):\n{progression}"
 
-    client = AsyncAnthropic(api_key=settings.anthropic_api_key)
-    response = await client.messages.create(
-        model=settings.cody_model,
-        max_tokens=1024,
-        system=system,
-        messages=_to_anthropic_messages(history, user_message),
-    )
-    text = "".join(block.text for block in response.content if block.type == "text")
-    return CodyReply(content=text)
+    async with OpenRouter(api_key=settings.openrouter_api_key) as client:
+        response = await client.chat.send_async(
+            model=settings.cody_model,
+            messages=_to_openrouter_messages(system, history, user_message),
+            max_tokens=1024,
+        )
+    content = response.choices[0].message.content
+    if isinstance(content, list):
+        content = "".join(part.text for part in content if getattr(part, "type", None) == "text")
+    return CodyReply(content=content or "")
