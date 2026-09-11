@@ -74,6 +74,18 @@ class PasswordChangeRequest(BaseModel):
     new_password: str = Field(min_length=8, max_length=100)
 
 
+class DeleteAccountRequest(BaseModel):
+    """Permanently delete the signed-in account. Irreversible.
+
+    ``current_password`` is required for password accounts (re-verified
+    server-side in app.api.auth) and omitted/ignored for provider-only
+    accounts, which have no password to check.
+    """
+
+    confirmation: str = Field(min_length=1, max_length=20)
+    current_password: Optional[str] = Field(default=None, max_length=100)
+
+
 class AuthConfigResponse(BaseModel):
     """What sign-in methods this deployment actually supports."""
 

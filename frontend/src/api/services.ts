@@ -52,6 +52,9 @@ export const authApi = {
     apiClient.post<{ access_token: string; token_type: string }>('/auth/firebase', data),
 
   completeOnboarding: () => apiClient.post<User>('/auth/me/complete-onboarding'),
+
+  deleteAccount: (data: { confirmation: string; current_password?: string }) =>
+    apiClient.delete<void>('/auth/me', data),
 };
 
 export const usersApi = {

@@ -25,6 +25,7 @@ from app.models import (
 from app.schemas import (
     AuthConfigResponse,
     AvatarUploadRequest,
+    DeleteAccountRequest,
     FirebaseLoginRequest,
     PasswordChangeRequest,
     StudentProfileResponse,
@@ -309,6 +310,37 @@ async def change_password(
         raise HTTPException(status_code=401, detail="Current password is incorrect")
 
     current_user.hashed_password = get_password_hash(payload.new_password)
+    await db.commit()
+    return None
+
+
+@router.delete("/me", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_current_user(
+    payload: DeleteAccountRequest,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Permanently delete the signed-in account and all of its data.
+
+    Irreversible -- this is a hard delete, not a deactivation. Requires
+    typing "DELETE" to confirm, plus the current password for accounts that
+    have one (provider-only accounts have no password to check). Deleting
+    the User row cascades to every user-owned table (StudentProfile,
+    progress, achievements, notifications, Cody history, ...) via the
+    cascade="all, delete-orphan" relationships on User -- see app.models.
+    """
+    if payload.confirmation.strip().upper() != "DELETE":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail='Type "DELETE" to confirm account deletion',
+        )
+    if current_user.hashed_password:
+        if not payload.current_password or not verify_password(
+            payload.current_password, current_user.hashed_password
+        ):
+            raise HTTPException(status_code=401, detail="Current password is incorrect")
+
+    await db.delete(current_user)
     await db.commit()
     return None
 

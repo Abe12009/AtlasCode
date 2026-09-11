@@ -1,11 +1,12 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { dashboardApi, authApi } from '../api/services';
-import { Trophy, Target, Flame, FolderKanban, CheckCircle, Award, Settings, User, TrendingUp, Sparkles, Code, BookOpen, Terminal, Palette } from 'lucide-react';
+import { Trophy, Target, Flame, FolderKanban, CheckCircle, Award, Settings, User, TrendingUp, Sparkles, Code, BookOpen, Terminal, Palette, LogOut, Lock } from 'lucide-react';
 import { useState } from 'react';
 import { formatDistanceToNow } from 'date-fns';
-import { Card, Badge, Progress, Button, cn, Skeleton, XPBadge, StreakBadge, AchievementBadge, Alert, Modal } from '../components/ui';
+import { Card, Badge, Progress, Button, cn, Skeleton, XPBadge, StreakBadge, AchievementBadge, Alert, Modal, Input, PasswordInput } from '../components/ui';
 import { useTranslation } from '../hooks/useTranslation';
+import { useAuth } from '../contexts/AuthContext';
 import { ProfileAvatar } from '../components/ProfileAvatar';
 import { AvatarBuilder } from '../components/AvatarBuilder';
 import { AvatarUpload } from '../components/AvatarUpload';
@@ -14,6 +15,8 @@ import { DEFAULT_AVATAR_CONFIG, parseAvatarConfig, serializeAvatarConfig, type A
 
 export function Profile() {
   const { t, isRTL } = useTranslation();
+  const navigate = useNavigate();
+  const { logout } = useAuth();
   const queryClient = useQueryClient();
   const { data: dashboard, isLoading, error } = useQuery({
     queryKey: ['dashboard'],
@@ -28,8 +31,17 @@ export function Profile() {
   const [privacySaving, setPrivacySaving] = useState(false);
   const [privacySaved, setPrivacySaved] = useState(false);
   const [deleteAccountModalOpen, setDeleteAccountModalOpen] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState('');
+  const [deletePassword, setDeletePassword] = useState('');
+  const [deleteError, setDeleteError] = useState('');
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   const refreshDashboard = () => queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
 
   const saveAvatarConfig = async (config: AvatarConfig) => {
     setAvatarSaving(true);
@@ -106,6 +118,37 @@ export function Profile() {
   const profile = dashboard?.profile;
   const weekly = dashboard?.weekly;
   const recentAchievements = dashboard?.recent_achievements || [];
+
+  const closeDeleteAccountModal = () => {
+    setDeleteAccountModalOpen(false);
+    setDeleteConfirmText('');
+    setDeletePassword('');
+    setDeleteError('');
+  };
+
+  const canConfirmDelete =
+    deleteConfirmText.trim().toUpperCase() === 'DELETE' && (!user?.has_password || deletePassword.length > 0);
+
+  const handleDeleteAccount = async () => {
+    setDeleteError('');
+    setDeleteLoading(true);
+    try {
+      await authApi.deleteAccount({
+        confirmation: deleteConfirmText,
+        current_password: user?.has_password ? deletePassword : undefined,
+      });
+      logout();
+      navigate('/');
+    } catch (err: unknown) {
+      const axiosError = err as { response?: { status?: number; data?: { detail?: string } } };
+      if (axiosError.response?.status === 401) {
+        setDeleteError(t('settings.current_password_incorrect'));
+      } else {
+        setDeleteError(axiosError.response?.data?.detail || t('profile_page.delete_account_failed'));
+      }
+      setDeleteLoading(false);
+    }
+  };
 
   /** A weekly delta only shows for values that actually happened — see backend/app/services/stats.py. */
   const trendFor = (amount: number): string | null => (amount > 0 ? `+${amount}` : null);
@@ -469,6 +512,16 @@ export function Profile() {
                     </div>
                     <div className="pt-6 border-t border-border-primary/50">
                       <Button
+                        variant="outline"
+                        className="w-full"
+                        leftIcon={<LogOut className="h-4 w-4" />}
+                        onClick={handleLogout}
+                      >
+                        {t('common.logout')}
+                      </Button>
+                    </div>
+                    <div className="pt-6 border-t border-border-primary/50">
+                      <Button
                         variant="destructive"
                         className="w-full"
                         onClick={() => setDeleteAccountModalOpen(true)}
@@ -485,26 +538,45 @@ export function Profile() {
 
         <Modal
           isOpen={deleteAccountModalOpen}
-          onClose={() => setDeleteAccountModalOpen(false)}
+          onClose={closeDeleteAccountModal}
           title={t('profile_page.delete_account')}
           size="sm"
         >
-          <p className="text-text-secondary text-sm">
-            {t('profile_page.delete_account_confirm')}
-          </p>
-          <p className="mt-3 text-sm text-text-tertiary">
-            {t('profile_page.delete_account_not_implemented')}
-          </p>
+          <div className="space-y-4">
+            <p className="text-text-secondary text-sm">
+              {t('profile_page.delete_account_confirm')}
+            </p>
+            {deleteError && <Alert variant="error">{deleteError}</Alert>}
+            {user?.has_password && (
+              <PasswordInput
+                label={t('settings.current_password')}
+                value={deletePassword}
+                onChange={(e) => setDeletePassword(e.target.value)}
+                autoComplete="current-password"
+                leftIcon={<Lock className="h-4 w-4" />}
+                disabled={deleteLoading}
+              />
+            )}
+            <Input
+              label={t('profile_page.delete_account_type_to_confirm')}
+              value={deleteConfirmText}
+              onChange={(e) => setDeleteConfirmText(e.target.value)}
+              placeholder={t('profile_page.delete_account_confirmation_placeholder')}
+              disabled={deleteLoading}
+              autoComplete="off"
+            />
+          </div>
           <div className="mt-6 flex justify-end gap-3">
-            <Button variant="outline" onClick={() => setDeleteAccountModalOpen(false)}>
+            <Button variant="outline" onClick={closeDeleteAccountModal} disabled={deleteLoading}>
               {t('common.cancel')}
             </Button>
             <Button
               variant="destructive"
-              disabled
-              title={t('profile_page.delete_account_not_implemented')}
+              disabled={!canConfirmDelete}
+              loading={deleteLoading}
+              onClick={handleDeleteAccount}
             >
-              {t('profile_page.delete_account')}
+              {deleteLoading ? t('profile_page.delete_account_deleting') : t('profile_page.delete_account')}
             </Button>
           </div>
         </Modal>
