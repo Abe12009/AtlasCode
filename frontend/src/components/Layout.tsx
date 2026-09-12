@@ -3,9 +3,12 @@ import { Outlet, NavLink, Link, useNavigate, useLocation } from 'react-router-do
 import { AnimatePresence, motion } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
 import { useTranslation } from '../hooks/useTranslation';
-import { LayoutDashboard, BookOpen, FolderKanban, User, LogOut, Menu, X, ChevronDown, Trophy, Code, Zap, Star, Bot } from 'lucide-react';
-import { CodyBubble } from './CodyBubble';
+import { LayoutDashboard, BookOpen, FolderKanban, User, LogOut, Menu, X, ChevronDown, Trophy, Code, Zap, Star } from 'lucide-react';
+import { CodyBubble, pulseCodyBubble } from './CodyBubble';
+import { CodyCharacter } from './CodyCharacter';
+import { OnboardingTour } from './OnboardingTour';
 import { XpToastHost } from './XpToast';
+import { authApi } from '../api/services';
 import { Button, Dropdown, DropdownItem, DropdownSeparator, Badge, cn, Skeleton } from './ui';
 import { StatusBadge, XPBadge, StreakBadge } from './ui/StatusBadge';
 import { NotificationBell } from './NotificationBell';
@@ -14,14 +17,25 @@ import { ThemeToggle } from './ui/ThemeToggle';
 import { ProfileAvatar } from './ProfileAvatar';
 
 export function Layout() {
-  const { user, profile, logout, loading: authLoading } = useAuth();
+  const { user, profile, logout, loading: authLoading, refreshUser } = useAuth();
   const { t, isRTL } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [onboardingDismissed, setOnboardingDismissed] = useState(false);
   const headerRef = useRef<HTMLDivElement>(null);
+
+  const showOnboarding = !onboardingDismissed && user?.has_completed_onboarding === false;
+
+  const handleOnboardingDone = () => {
+    // Hide immediately for a snappy exit; persist in the background so a
+    // refresh doesn't bring it back, then point at where Cody lives.
+    setOnboardingDismissed(true);
+    authApi.completeOnboarding().then(() => refreshUser());
+    pulseCodyBubble();
+  };
 
   useEffect(() => {
     function handleScroll() {
@@ -43,9 +57,9 @@ export function Layout() {
 
   const navItems = [
     { path: '/app/dashboard', label: t('navigation.dashboard'), icon: LayoutDashboard },
-    { path: '/app/courses', label: t('navigation.courses'), icon: BookOpen },
+    { path: '/app/courses', label: t('navigation.courses'), icon: BookOpen, tourId: 'tour-nav-courses' },
     { path: '/app/projects', label: t('navigation.projects'), icon: FolderKanban },
-    { path: '/app/cody', label: t('navigation.cody'), icon: Bot },
+    { path: '/app/cody', label: t('navigation.cody'), icon: CodyCharacter },
     { path: '/app/profile', label: t('navigation.profile'), icon: User },
   ];
 
@@ -128,6 +142,7 @@ export function Layout() {
                         )
                       }
                       onClick={() => setMobileMenuOpen(false)}
+                      data-tour={item.tourId}
                     >
                       <item.icon className="h-5 w-5 flex-shrink-0" aria-hidden="true" />
                       <span>{item.label}</span>
@@ -138,7 +153,10 @@ export function Layout() {
             </div>
 
             <div className="flex items-center gap-3">
-              <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 bg-bg-secondary rounded-xl border border-border-primary">
+              <div
+                data-tour="tour-xp"
+                className="hidden lg:flex items-center gap-2 px-3 py-1.5 bg-bg-secondary rounded-xl border border-border-primary"
+              >
                 <div className="flex items-center gap-1.5">
                   <span className="text-xs font-mono text-text-tertiary">Lvl.</span>
                   <span className="font-bold text-text-primary tabular-nums">{currentLevel}</span>
@@ -162,7 +180,7 @@ export function Layout() {
 
               <NotificationBell />
 
-              <div className="relative">
+              <div className="relative" data-tour="tour-profile">
                 <Dropdown position="bottom" align="end">
                   <Button
                     variant="ghost"
@@ -304,6 +322,7 @@ export function Layout() {
 
       <CodyBubble />
       <XpToastHost />
+      {showOnboarding && <OnboardingTour onDone={handleOnboardingDone} />}
     </div>
   );
 }

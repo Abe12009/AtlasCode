@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
-import { Bot, Send, User as UserIcon } from 'lucide-react';
+import { Send, User as UserIcon } from 'lucide-react';
 import { Button, cn } from './ui';
 import { useCodyChat } from '../hooks/useCodyChat';
+import { CodyCharacter } from './CodyCharacter';
 
 interface CodyChatPanelProps {
   className?: string;
@@ -34,9 +35,7 @@ export function CodyChatPanel({ className }: CodyChatPanelProps) {
 
         {historyLoaded && messages.length === 0 && (
           <div className="flex flex-col items-center text-center gap-2 py-8 px-4">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-primary-500 to-accent-500">
-              <Bot className="h-5 w-5 text-white" aria-hidden="true" />
-            </div>
+            <CodyCharacter size={40} aria-hidden="true" />
             <p className="text-sm font-medium text-text-primary">Hey, I'm Cody.</p>
             <p className="text-sm text-text-tertiary">
               Ask me anything about computer science — or what to learn next.
@@ -49,17 +48,16 @@ export function CodyChatPanel({ className }: CodyChatPanelProps) {
             key={i}
             className={cn('flex items-start gap-2', m.role === 'user' && 'flex-row-reverse')}
           >
-            <div
-              className={cn(
-                'flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full',
-                m.role === 'user'
-                  ? 'bg-bg-tertiary text-text-secondary'
-                  : 'bg-gradient-to-br from-primary-500 to-accent-500 text-white'
-              )}
-              aria-hidden="true"
-            >
-              {m.role === 'user' ? <UserIcon className="h-4 w-4" /> : <Bot className="h-4 w-4" />}
-            </div>
+            {m.role === 'user' ? (
+              <div
+                className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-bg-tertiary text-text-secondary"
+                aria-hidden="true"
+              >
+                <UserIcon className="h-4 w-4" />
+              </div>
+            ) : (
+              <CodyCharacter size={28} className="flex-shrink-0" aria-hidden="true" />
+            )}
             <div
               className={cn(
                 'max-w-[80%] rounded-2xl px-3.5 py-2 text-sm whitespace-pre-wrap break-words',
@@ -75,9 +73,7 @@ export function CodyChatPanel({ className }: CodyChatPanelProps) {
 
         {sending && (
           <div className="flex items-start gap-2">
-            <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary-500 to-accent-500">
-              <Bot className="h-4 w-4 text-white" aria-hidden="true" />
-            </div>
+            <CodyCharacter size={28} state="talking" className="flex-shrink-0" aria-hidden="true" />
             <div className="rounded-2xl rounded-tl-sm border border-border-primary bg-bg-secondary px-3.5 py-2.5">
               <span className="flex gap-1" aria-label="Cody is typing">
                 <span className="h-1.5 w-1.5 rounded-full bg-text-tertiary animate-pulse-glow" />

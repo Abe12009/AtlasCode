@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Bot, X } from 'lucide-react';
+import { X } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { cn } from './ui';
 import { CodyChatPanel } from './CodyChatPanel';
+import { CodyCharacter } from './CodyCharacter';
 
 const BUBBLE_SIZE = 56;
 const EDGE_MARGIN = 16;
@@ -168,9 +169,7 @@ export function CodyBubble() {
         >
           <div className="flex items-center justify-between px-4 py-3 border-b border-border-primary">
             <div className="flex items-center gap-2">
-              <div className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-primary-500 to-accent-500">
-                <Bot className="h-4 w-4 text-white" aria-hidden="true" />
-              </div>
+              <CodyCharacter size={28} aria-hidden="true" />
               <span className="text-sm font-semibold text-text-primary">Cody</span>
             </div>
             <button
@@ -195,20 +194,20 @@ export function CodyBubble() {
 
       <button
         ref={bubbleRef}
+        data-tour="tour-bubble"
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
         onPointerCancel={handlePointerUp}
         className={cn(
           'fixed z-[60] flex items-center justify-center rounded-full',
-          'bg-gradient-to-br from-primary-500 to-accent-500 shadow-elevated',
           'touch-none select-none cursor-grab active:cursor-grabbing',
           'hover:scale-105 transition-transform duration-fast'
         )}
         style={{ left: position.left, top: position.top, width: BUBBLE_SIZE, height: BUBBLE_SIZE }}
         aria-label={open ? 'Close Cody chat' : 'Open Cody chat'}
       >
-        <Bot className="h-6 w-6 text-white" aria-hidden="true" />
+        <CodyCharacter size={44} state={pulsing ? 'talking' : 'idle'} aria-hidden="true" />
       </button>
     </>
   );

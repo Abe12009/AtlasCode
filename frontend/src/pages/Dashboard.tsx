@@ -1,35 +1,18 @@
-import { useState } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
-import { authApi, dashboardApi } from '../api/services';
+import { dashboardApi } from '../api/services';
 import { BookOpen, FolderKanban, Trophy, Flame, Code, ArrowRight, Target, CheckCircle, TrendingUp, Sparkles, Flag, MapPin } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { Card, Badge, Progress, Button, cn, Skeleton, StatusBadge, XPBadge, StreakBadge, QuestRoadmap } from '../components/ui';
 import type { QuestNodeData } from '../components/ui';
 import { useTranslation } from '../hooks/useTranslation';
-import { OnboardingWalkthrough } from '../components/OnboardingWalkthrough';
-import { pulseCodyBubble } from '../components/CodyBubble';
 
 export function Dashboard() {
   const { t } = useTranslation();
-  const queryClient = useQueryClient();
-  const [onboardingDismissed, setOnboardingDismissed] = useState(false);
   const { data: dashboard, isLoading, error } = useQuery({
     queryKey: ['dashboard'],
     queryFn: dashboardApi.get,
   });
-
-  const showOnboarding = !onboardingDismissed && dashboard?.user?.has_completed_onboarding === false;
-
-  const handleOnboardingDone = () => {
-    // Hide immediately for a snappy exit; persist in the background so a
-    // refresh doesn't bring it back, then point at where Cody lives.
-    setOnboardingDismissed(true);
-    authApi.completeOnboarding().then(() => {
-      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
-    });
-    pulseCodyBubble();
-  };
 
   if (isLoading) {
     return (
@@ -165,8 +148,6 @@ export function Dashboard() {
   const questNodes = buildQuestNodes();
 
   return (
-    <>
-      {showOnboarding && <OnboardingWalkthrough onDone={handleOnboardingDone} />}
       <div className="space-y-8 animate-fade-in">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
@@ -448,7 +429,6 @@ export function Dashboard() {
         </div>
       </div>
       </div>
-    </>
   );
 }
 
