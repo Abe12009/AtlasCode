@@ -37,6 +37,25 @@ class Settings(BaseSettings):
     #: regardless of how long someone's history has grown.
     cody_history_context_size: int = 10
 
+    # --- Password reset by email (local-password accounts) -----------------
+    #: Resend API key. Server-side only. Leave empty to disable password
+    #: reset by email; /auth/forgot-password then returns 503 rather than
+    #: silently failing to deliver anything.
+    resend_api_key: str = ""
+    #: "Display Name <address@domain>" as Resend expects in the From header.
+    #: Must be a verified sender/domain in the Resend account being used.
+    email_from_address: str = "AtlasCode <onboarding@resend.dev>"
+    #: Origin the emailed reset link points at, e.g. https://app.atlascode.com.
+    #: No trailing slash.
+    frontend_base_url: str = "http://localhost:5173"
+    password_reset_token_expire_minutes: int = 30
+    #: Enforced in app.services.password_reset by counting PasswordResetAttempt
+    #: rows in the trailing hour -- same "count rows in a window" style as
+    #: Cody's per-user limit, applied per-email and per-IP since this endpoint
+    #: is reachable pre-auth.
+    password_reset_rate_limit_per_email_per_hour: int = 3
+    password_reset_rate_limit_per_ip_per_hour: int = 10
+
     class Config:
         env_file = ".env"
 

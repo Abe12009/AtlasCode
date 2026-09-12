@@ -1,15 +1,18 @@
 import base64
 import json
+import logging
 import re
 from datetime import datetime
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.config import get_settings
 from app.core.dependencies import get_current_user
 from app.core.security import (
     create_access_token,
+    decode_token,
     get_password_hash,
     verify_and_upgrade_password,
     verify_password,
@@ -27,7 +30,9 @@ from app.schemas import (
     AvatarUploadRequest,
     DeleteAccountRequest,
     FirebaseLoginRequest,
+    ForgotPasswordRequest,
     PasswordChangeRequest,
+    ResetPasswordRequest,
     StudentProfileResponse,
     Token,
     UserCreate,
@@ -39,6 +44,7 @@ from app.services.accounts import (
     AccountLinkConflict,
     get_or_create_user_for_firebase_identity,
 )
+from app.services.email import EmailSendError, is_email_configured, send_password_reset_email
 from app.services.firebase_auth import (
     FirebaseAuthError,
     FirebaseNotConfigured,
@@ -46,9 +52,17 @@ from app.services.firebase_auth import (
     verify_firebase_id_token,
 )
 from app.services.notifications import create_notification
+from app.services.password_reset import (
+    check_and_log_reset_rate_limit,
+    create_password_reset_token,
+    verify_password_reset_token,
+)
 from app.services.stats import clamp_timezone_offset
 
+logger = logging.getLogger(__name__)
+
 router = APIRouter(prefix="/auth", tags=["auth"])
+settings = get_settings()
 
 #: One message for "no such account" and "wrong password" alike. Distinct
 #: messages would turn the login form into an email-enumeration oracle.
@@ -287,6 +301,85 @@ async def upload_avatar(
     await db.commit()
     await db.refresh(current_user)
     return current_user
+
+
+@router.post("/forgot-password", status_code=status.HTTP_204_NO_CONTENT)
+async def forgot_password(
+    payload: ForgotPasswordRequest,
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+):
+    """Request a password-reset email for a local-password account.
+
+    Always answers 204 (unless the deployment or the caller's own rate is the
+    problem) whether or not the address belongs to an account, and whether or
+    not that account has an AtlasCode password to reset -- a federated-only
+    account (Google/GitHub/Firebase) resets through its provider instead, and
+    telling the caller that here would be an email-enumeration oracle.
+    """
+    if not is_email_configured():
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Password reset by email is not available on this deployment yet.",
+        )
+
+    email = payload.email.lower().strip()
+    ip_address = request.client.host if request.client else None
+    if not await check_and_log_reset_rate_limit(db, email, ip_address):
+        await db.commit()
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="Too many password reset requests. Please try again later.",
+        )
+    await db.commit()
+
+    result = await db.execute(select(User).where(User.email == email))
+    user = result.scalar_one_or_none()
+    if user and user.hashed_password:
+        token = create_password_reset_token(user)
+        reset_url = f"{settings.frontend_base_url}/reset-password?token={token}"
+        try:
+            await send_password_reset_email(user.email, reset_url)
+        except EmailSendError:
+            # A provider outage must never surface here -- the response is
+            # identical either way, so it can't be used to probe anything.
+            logger.exception("Failed to send password reset email")
+
+    return None
+
+
+@router.post("/reset-password", status_code=status.HTTP_204_NO_CONTENT)
+async def reset_password(
+    payload: ResetPasswordRequest,
+    db: AsyncSession = Depends(get_db),
+):
+    """Complete a password reset using the token from the emailed link.
+
+    400, not 401, for every failure mode (expired, tampered, already used,
+    unknown user) -- the frontend's 401 handling silently retries/redirects
+    to login, which would hide this error instead of showing it.
+    """
+    invalid_token = HTTPException(
+        status_code=status.HTTP_400_BAD_REQUEST,
+        detail="This reset link is invalid or has expired",
+    )
+
+    unverified = decode_token(payload.token)
+    if unverified is None:
+        raise invalid_token
+    try:
+        user_id = int(unverified.get("sub"))
+    except (TypeError, ValueError):
+        raise invalid_token
+
+    result = await db.execute(select(User).where(User.id == user_id))
+    user = result.scalar_one_or_none()
+    if not user or not verify_password_reset_token(payload.token, user):
+        raise invalid_token
+
+    user.hashed_password = get_password_hash(payload.new_password)
+    await db.commit()
+    return None
 
 
 @router.post("/change-password", status_code=status.HTTP_204_NO_CONTENT)

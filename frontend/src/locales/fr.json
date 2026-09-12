@@ -458,6 +458,12 @@
     "reset_password_sent_title": "Vérifiez vos e-mails",
     "reset_password_sent_description": "Si un compte existe pour cette adresse, un lien de réinitialisation est en route.",
     "reset_password_not_configured": "La réinitialisation du mot de passe par e-mail n'est pas encore disponible sur ce déploiement.",
+    "reset_password_submit": "Réinitialiser le mot de passe",
+    "reset_password_invalid_link_title": "Lien invalide ou expiré",
+    "reset_password_invalid_link_description": "Ce lien de réinitialisation est invalide ou a expiré. Demandez-en un nouveau.",
+    "reset_password_request_new_link": "Demander un nouveau lien",
+    "reset_password_success_title": "Mot de passe réinitialisé",
+    "reset_password_success_description": "Votre mot de passe a été réinitialisé. Vous pouvez maintenant vous connecter avec votre nouveau mot de passe.",
     "back_to_login": "Retour à la connexion"
   },
   "projects_page": {

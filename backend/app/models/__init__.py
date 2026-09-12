@@ -123,6 +123,23 @@ class User(Base):
     cody_messages = relationship("CodyMessage", back_populates="user", cascade="all, delete-orphan")
 
 
+class PasswordResetAttempt(Base):
+    """One row per /auth/forgot-password call, logged unconditionally.
+
+    Logging every attempt -- whether or not the email belongs to an account,
+    and whether or not it's a local-password account -- means the rate limit
+    computed from this table never reveals which emails exist: the counters
+    look identical either way.
+    """
+
+    __tablename__ = "password_reset_attempts"
+
+    id = Column(Integer, primary_key=True, index=True)
+    email = Column(String(255), index=True, nullable=False)
+    ip_address = Column(String(64), nullable=True, index=True)
+    created_at = Column(DateTime, default=datetime.utcnow, index=True)
+
+
 class StudentProfile(Base):
     __tablename__ = "student_profiles"
 

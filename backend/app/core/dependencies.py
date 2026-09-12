@@ -22,6 +22,10 @@ async def get_current_user(
     payload = decode_token(token)
     if payload is None:
         raise credentials_exception
+    if payload.get("purpose"):
+        # A single-purpose token (e.g. password reset) must never double as a
+        # session token, even if it leaks into a log or a Referer header.
+        raise credentials_exception
     user_id: Optional[int] = payload.get("sub")
     if user_id is None:
         raise credentials_exception
@@ -42,6 +46,8 @@ async def get_current_user_optional(
         return None
     payload = decode_token(token)
     if payload is None:
+        return None
+    if payload.get("purpose"):
         return None
     user_id: Optional[int] = payload.get("sub")
     if user_id is None:

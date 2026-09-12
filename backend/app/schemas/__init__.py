@@ -86,6 +86,22 @@ class DeleteAccountRequest(BaseModel):
     current_password: Optional[str] = Field(default=None, max_length=100)
 
 
+class ForgotPasswordRequest(BaseModel):
+    """Request a password-reset email. Always answered the same way
+    regardless of whether the address belongs to an account -- see
+    app.api.auth.forgot_password.
+    """
+
+    email: EmailStr
+
+
+class ResetPasswordRequest(BaseModel):
+    """Complete a password reset using the token from the emailed link."""
+
+    token: str = Field(min_length=16, max_length=2048)
+    new_password: str = Field(min_length=8, max_length=100)
+
+
 class AuthConfigResponse(BaseModel):
     """What sign-in methods this deployment actually supports."""
 

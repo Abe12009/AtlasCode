@@ -463,6 +463,12 @@
     "reset_password_sent_title": "تحقق من بريدك الإلكتروني",
     "reset_password_sent_description": "إذا كان هناك حساب مرتبط بهذا البريد، فسيصلك رابط إعادة تعيين كلمة المرور قريبًا.",
     "reset_password_not_configured": "إعادة تعيين كلمة المرور عبر البريد الإلكتروني غير متاحة بعد على هذا النظام.",
+    "reset_password_submit": "إعادة تعيين كلمة المرور",
+    "reset_password_invalid_link_title": "رابط غير صالح أو منتهي الصلاحية",
+    "reset_password_invalid_link_description": "رابط إعادة تعيين كلمة المرور هذا غير صالح أو منتهي الصلاحية. اطلب رابطًا جديدًا.",
+    "reset_password_request_new_link": "طلب رابط جديد",
+    "reset_password_success_title": "تمت إعادة تعيين كلمة المرور",
+    "reset_password_success_description": "تمت إعادة تعيين كلمة المرور الخاصة بك. يمكنك الآن تسجيل الدخول بكلمة المرور الجديدة.",
     "back_to_login": "العودة إلى تسجيل الدخول"
   },
   "projects_page": {

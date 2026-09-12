@@ -458,6 +458,12 @@
     "reset_password_sent_title": "Check your email",
     "reset_password_sent_description": "If an account exists for that email, a password reset link is on its way.",
     "reset_password_not_configured": "Password reset by email is not available on this deployment yet.",
+    "reset_password_submit": "Reset password",
+    "reset_password_invalid_link_title": "Invalid or expired link",
+    "reset_password_invalid_link_description": "This password reset link is invalid or has expired. Request a new one.",
+    "reset_password_request_new_link": "Request a new link",
+    "reset_password_success_title": "Password reset",
+    "reset_password_success_description": "Your password has been reset. You can now sign in with your new password.",
     "back_to_login": "Back to sign in"
   },
   "projects_page": {

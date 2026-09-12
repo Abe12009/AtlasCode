@@ -5,25 +5,39 @@ import { useAuth } from '../contexts/AuthContext';
 import { useTranslation } from '../hooks/useTranslation';
 import { Button, Input, Card, Alert, cn } from '../components/ui';
 import { isFirebaseConfigured } from '../lib/firebase';
+import { authApi } from '../api/services';
 
 export function ForgotPassword() {
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
+  const [notConfigured, setNotConfigured] = useState(false);
   const { sendPasswordReset } = useAuth();
   const { t, isRTL } = useTranslation();
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
     setLoading(true);
-    try {
-      await sendPasswordReset(email.trim());
-    } catch {
-      // Deliberately swallowed: whether the send failed because the address
-      // doesn't exist or for any other reason, the UI shows the same neutral
-      // confirmation so it never reveals which emails are registered.
-    } finally {
-      setLoading(false);
+
+    // Covers both account types: the backend resets AtlasCode's own
+    // local-password accounts, Firebase resets its own federated accounts
+    // (Google/GitHub/Firebase email+password). Both are fired and both
+    // swallow their own errors so the UI never reveals which emails are
+    // registered, or which sign-in method a given address actually uses.
+    const [backendResult] = await Promise.allSettled([
+      authApi.forgotPassword({ email: email.trim() }),
+      isFirebaseConfigured ? sendPasswordReset(email.trim()) : Promise.resolve(),
+    ]);
+
+    const backendUnavailable =
+      backendResult.status === 'rejected' &&
+      (backendResult.reason as { response?: { status?: number } })?.response?.status === 503;
+
+    setLoading(false);
+    if (backendUnavailable && !isFirebaseConfigured) {
+      // Neither path can actually deliver anything on this deployment.
+      setNotConfigured(true);
+    } else {
       setSent(true);
     }
   };
@@ -49,7 +63,7 @@ export function ForgotPassword() {
             </p>
           </div>
 
-          {!isFirebaseConfigured ? (
+          {notConfigured ? (
             <Alert variant="warning">{t('auth.reset_password_not_configured')}</Alert>
           ) : sent ? (
             <div className="flex flex-col items-center gap-4 text-center">

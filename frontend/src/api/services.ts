@@ -43,6 +43,11 @@ export const authApi = {
   changePassword: (data: { current_password: string; new_password: string }) =>
     apiClient.post<void>('/auth/change-password', data),
 
+  forgotPassword: (data: { email: string }) => apiClient.post<void>('/auth/forgot-password', data),
+
+  resetPassword: (data: { token: string; new_password: string }) =>
+    apiClient.post<void>('/auth/reset-password', data),
+
   getProfile: () => apiClient.get<StudentProfile>('/auth/profile'),
 
   getConfig: () =>

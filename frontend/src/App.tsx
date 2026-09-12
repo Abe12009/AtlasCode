@@ -10,6 +10,7 @@ const Landing = lazy(() => import('./pages/Landing').then(m => ({ default: m.Lan
 const Login = lazy(() => import('./pages/Login').then(m => ({ default: m.Login })));
 const Register = lazy(() => import('./pages/Register').then(m => ({ default: m.Register })));
 const ForgotPassword = lazy(() => import('./pages/ForgotPassword').then(m => ({ default: m.ForgotPassword })));
+const ResetPassword = lazy(() => import('./pages/ResetPassword').then(m => ({ default: m.ResetPassword })));
 const Privacy = lazy(() => import('./pages/Privacy').then(m => ({ default: m.Privacy })));
 const Terms = lazy(() => import('./pages/Terms').then(m => ({ default: m.Terms })));
 const Contact = lazy(() => import('./pages/Contact').then(m => ({ default: m.Contact })));
@@ -77,6 +78,7 @@ function AppRoutes() {
       <Route path="/login" element={<PublicRoute><Suspense fallback={<LoadingFallback />}><Login /></Suspense></PublicRoute>} />
       <Route path="/register" element={<PublicRoute><Suspense fallback={<LoadingFallback />}><Register /></Suspense></PublicRoute>} />
       <Route path="/forgot-password" element={<PublicRoute><Suspense fallback={<LoadingFallback />}><ForgotPassword /></Suspense></PublicRoute>} />
+      <Route path="/reset-password" element={<PublicRoute><Suspense fallback={<LoadingFallback />}><ResetPassword /></Suspense></PublicRoute>} />
       <Route path="/privacy" element={<Suspense fallback={<LoadingFallback />}><Privacy /></Suspense>} />
       <Route path="/terms" element={<Suspense fallback={<LoadingFallback />}><Terms /></Suspense>} />
       <Route path="/contact" element={<Suspense fallback={<LoadingFallback />}><Contact /></Suspense>} />
