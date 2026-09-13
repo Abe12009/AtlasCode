@@ -6,6 +6,7 @@ import { Link } from 'react-router-dom';
 import { useState } from 'react';
 import { useTranslation } from '../hooks/useTranslation';
 import { Card, Badge, Button, Progress, Alert, cn, Skeleton, CodeEditor, TerminalPanel, StatusBadge, XPBadge } from '../components/ui';
+import { showAchievementToast } from '../components/AchievementToast';
 
 export function ProjectDetail() {
   const { t, isRTL, currentLanguage } = useTranslation();
@@ -36,9 +37,10 @@ export function ProjectDetail() {
     onSuccess: (result, variables) => {
       queryClient.invalidateQueries({ queryKey: ['projectProgress', projectId] });
       queryClient.invalidateQueries({ queryKey: ['dashboard'] });
-      if ((result as { success?: boolean }).success) {
+      if (result.success) {
         queryClient.invalidateQueries({ queryKey: ['notifications'] });
       }
+      result.achievements_earned?.forEach((a) => showAchievementToast(a.icon, a.title, a.xp_reward));
       setSubmitFeedback(prev => ({
         ...prev,
         [variables.taskId]: { success: true, message: t('projects.task_submitted') }

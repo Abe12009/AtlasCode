@@ -11,6 +11,7 @@ import { ExercisePanel } from '../components/ExercisePanel';
 import { MicroQuestLesson } from '../components/microquest/MicroQuestLesson';
 import { LESSON_SHELL_HEIGHT_CLASS } from '../lib/layout';
 import { showXpToast } from '../components/XpToast';
+import { showAchievementToast } from '../components/AchievementToast';
 
 export function LessonDetail() {
   const { t, isRTL, currentLanguage } = useTranslation();
@@ -56,6 +57,7 @@ export function LessonDetail() {
       queryClient.invalidateQueries({ queryKey: ['lesson', lessonId] });
       if (data.is_correct) queryClient.invalidateQueries({ queryKey: ['notifications'] });
       if (data.is_correct && data.xp_earned > 0) showXpToast(data.xp_earned);
+      data.achievements_earned?.forEach((a) => showAchievementToast(a.icon, a.title, a.xp_reward));
       if (data.output) setTerminalOutput(data.output);
     },
     onError: (error: any) => {

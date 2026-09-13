@@ -13,9 +13,10 @@ from app.models import (
     MissionStatusEnum, LanguageEnum, NotificationTypeEnum
 )
 from app.schemas import (
-    ProjectResponse, ProjectProgressResponse, LanguageEnum as SchemaLanguageEnum,
+    AchievementEarnedResponse, ProjectResponse, ProjectProgressResponse, LanguageEnum as SchemaLanguageEnum,
     ProjectTaskSubmitRequest
 )
+from app.services.achievements import check_and_award_achievements
 from app.services.notifications import create_notification
 from app.services.stats import record_activity
 
@@ -193,9 +194,8 @@ async def submit_project_task(
     activity_profile_result = await db.execute(
         select(StudentProfile).where(StudentProfile.user_id == current_user.id)
     )
-    await record_activity(
-        db, current_user, activity_profile_result.scalar_one_or_none(), now_utc=now
-    )
+    activity_profile = activity_profile_result.scalar_one_or_none()
+    await record_activity(db, current_user, activity_profile, now_utc=now)
 
     all_tasks_result = await db.execute(select(func.count(ProjectTask.id)).where(ProjectTask.project_id == project_id))
     total_tasks = all_tasks_result.scalar() or 0
@@ -223,10 +223,24 @@ async def submit_project_task(
                 {"project_id": project_id, "xp": project.xp_reward}
             )
 
+    achievements_earned = []
+    if activity_profile:
+        # `activity_profile` and the `profile` fetched above (if this
+        # submission completed the project) are the same identity-mapped row
+        # within this session, so this sees any XP/completed_projects change
+        # made above regardless of which branch ran.
+        earned = await check_and_award_achievements(
+            db, current_user.id, activity_profile, language=current_user.preferred_language
+        )
+        achievements_earned = [
+            AchievementEarnedResponse(slug=a.slug, icon=a.icon, title=a.title, xp_reward=a.xp_reward)
+            for a in earned
+        ]
+
     await db.commit()
     await db.refresh(progress)
 
-    return {"success": True, "progress": progress}
+    return {"success": True, "progress": progress, "achievements_earned": achievements_earned}
 
 
 async def _check_project_unlocked(project: Project, current_user, db: AsyncSession) -> bool:

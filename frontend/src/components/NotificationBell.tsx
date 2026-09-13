@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { formatDistanceToNow } from 'date-fns';
 import { fr as frLocale, arSA as arLocale } from 'date-fns/locale';
-import { Bell, CheckCheck, Inbox, AlertTriangle, CheckCircle, Trophy, Sparkles, Zap } from 'lucide-react';
+import { Bell, CheckCheck, Inbox, AlertTriangle, CheckCircle, Trophy, Sparkles, Zap, Award } from 'lucide-react';
 import { notificationsApi } from '../api/services';
 import { Button, Dropdown, DropdownItem, Skeleton, cn } from './ui';
 import { useTranslation } from '../hooks/useTranslation';
@@ -14,6 +14,7 @@ const TYPE_ICON: Record<NotificationType, typeof CheckCircle> = {
   xp_earned: Zap,
   lesson_completed: CheckCircle,
   project_completed: Trophy,
+  achievement_earned: Award,
 };
 
 function notificationMessage(t: (key: string, opts?: Record<string, unknown>) => string, notification: Notification): string {
@@ -24,6 +25,8 @@ function notificationMessage(t: (key: string, opts?: Record<string, unknown>) =>
       return t('notifications.events.lesson_completed');
     case 'project_completed':
       return t('notifications.events.project_completed', { xp: notification.data.xp ?? 0 });
+    case 'achievement_earned':
+      return t('notifications.events.achievement_earned', { xp: notification.data.xp_reward ?? 0 });
     case 'welcome':
     default:
       return t('notifications.events.welcome');

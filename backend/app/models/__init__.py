@@ -39,6 +39,7 @@ class NotificationTypeEnum(str, enum.Enum):
     xp_earned = "xp_earned"
     lesson_completed = "lesson_completed"
     project_completed = "project_completed"
+    achievement_earned = "achievement_earned"
 
 
 class AuthProviderEnum(str, enum.Enum):

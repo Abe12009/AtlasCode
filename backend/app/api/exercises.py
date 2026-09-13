@@ -12,9 +12,10 @@ from app.models import (
     LanguageEnum, CourseProgress, Module, NotificationTypeEnum
 )
 from app.schemas import (
-    ExerciseResponse, ExerciseSubmitRequest, ExerciseSubmitResponse,
+    AchievementEarnedResponse, ExerciseResponse, ExerciseSubmitRequest, ExerciseSubmitResponse,
     LanguageEnum as SchemaLanguageEnum, ExerciseTypeEnum
 )
+from app.services.achievements import check_and_award_achievements
 from app.services.code_executor import execute_code, validate_python_code
 from app.services.exercise_grading import grade_exercise, resolve_strategy, STRATEGY_SANDBOX
 from app.services.notifications import create_notification
@@ -236,6 +237,16 @@ async def submit_exercise(
                     cp.completed_lessons = completed_in_course
                     cp.progress_percent = (completed_in_course / cp.total_lessons * 100) if cp.total_lessons > 0 else 0
 
+    achievements_earned = []
+    if activity_profile:
+        earned = await check_and_award_achievements(
+            db, current_user.id, activity_profile, language=current_user.preferred_language
+        )
+        achievements_earned = [
+            AchievementEarnedResponse(slug=a.slug, icon=a.icon, title=a.title, xp_reward=a.xp_reward)
+            for a in earned
+        ]
+
     await db.commit()
 
     hint_text = ""
@@ -259,6 +270,7 @@ async def submit_exercise(
         # Completed once solved, whether on this submission or an earlier one.
         is_completed=bool(is_correct or previous_success),
         lesson_completed=lesson_completed,
+        achievements_earned=achievements_earned,
     )
 
 

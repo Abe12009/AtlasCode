@@ -726,7 +726,8 @@
       "welcome": "Welcome to AtlasCode! Start your coding journey today.",
       "xp_earned": "You earned {{xp}} XP!",
       "lesson_completed": "Lesson completed! Great work.",
-      "project_completed": "Project completed! You earned {{xp}} XP."
+      "project_completed": "Project completed! You earned {{xp}} XP.",
+      "achievement_earned": "Achievement unlocked! +{{xp}} XP"
     }
   },
   "landing": {

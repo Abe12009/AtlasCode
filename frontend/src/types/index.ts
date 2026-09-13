@@ -286,7 +286,7 @@ export interface DashboardData {
   current_project: ProjectProgress | null;
 }
 
-export type NotificationType = 'welcome' | 'xp_earned' | 'lesson_completed' | 'project_completed';
+export type NotificationType = 'welcome' | 'xp_earned' | 'lesson_completed' | 'project_completed' | 'achievement_earned';
 
 export interface Notification {
   id: number;
@@ -317,6 +317,15 @@ export interface ExerciseSubmitRequest {
   blanks?: string[];
 }
 
+/** One achievement newly unlocked by the request that returned it, already
+ * translated into the requesting user's language. */
+export interface AchievementEarned {
+  slug: string;
+  icon: string;
+  title: string;
+  xp_reward: number;
+}
+
 export interface ExerciseSubmitResponse {
   is_correct: boolean;
   xp_earned: number;
@@ -326,6 +335,7 @@ export interface ExerciseSubmitResponse {
   /** True once this user has ever solved the exercise. */
   is_completed?: boolean;
   lesson_completed?: boolean;
+  achievements_earned?: AchievementEarned[];
 }
 
 export interface CodeExecutionRequest {

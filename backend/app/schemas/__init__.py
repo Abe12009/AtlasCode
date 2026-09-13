@@ -388,6 +388,9 @@ class AchievementTranslationResponse(BaseModel):
     title: str
     description: Optional[str] = None
 
+    class Config:
+        from_attributes = True
+
 
 class AchievementResponse(BaseModel):
     id: int
@@ -478,6 +481,18 @@ class ExerciseSubmitRequest(BaseModel):
     blanks: Optional[List[str]] = None
 
 
+class AchievementEarnedResponse(BaseModel):
+    """One achievement newly unlocked by this request, already translated
+    into the requesting user's language -- returned inline so the frontend
+    can show a toast immediately, without waiting on the notification feed.
+    """
+
+    slug: str
+    icon: str
+    title: str
+    xp_reward: int
+
+
 class ExerciseSubmitResponse(BaseModel):
     is_correct: bool
     xp_earned: int
@@ -488,6 +503,7 @@ class ExerciseSubmitResponse(BaseModel):
     # completed state without re-deriving it.
     is_completed: bool = False
     lesson_completed: bool = False
+    achievements_earned: List[AchievementEarnedResponse] = []
 
 
 class VisualProgramRequest(BaseModel):

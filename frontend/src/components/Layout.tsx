@@ -8,6 +8,7 @@ import { CodyBubble, pulseCodyBubble } from './CodyBubble';
 import { CodyCharacter } from './CodyCharacter';
 import { OnboardingTour } from './OnboardingTour';
 import { XpToastHost } from './XpToast';
+import { AchievementToastHost } from './AchievementToast';
 import { authApi } from '../api/services';
 import { Button, Dropdown, DropdownItem, DropdownSeparator, Badge, cn, Skeleton } from './ui';
 import { StatusBadge, XPBadge, StreakBadge } from './ui/StatusBadge';
@@ -322,6 +323,7 @@ export function Layout() {
 
       <CodyBubble />
       <XpToastHost />
+      <AchievementToastHost />
       {showOnboarding && <OnboardingTour onDone={handleOnboardingDone} />}
     </div>
   );

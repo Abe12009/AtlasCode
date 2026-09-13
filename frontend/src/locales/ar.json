@@ -731,7 +731,8 @@
       "welcome": "مرحبًا بك في AtlasCode! ابدأ رحلة تعلم البرمجة اليوم.",
       "xp_earned": "لقد كسبت {{xp}} نقطة خبرة!",
       "lesson_completed": "اكتمل الدرس! عمل رائع.",
-      "project_completed": "اكتمل المشروع! لقد كسبت {{xp}} نقطة خبرة."
+      "project_completed": "اكتمل المشروع! لقد كسبت {{xp}} نقطة خبرة.",
+      "achievement_earned": "تم فتح إنجاز جديد! +{{xp}} نقطة خبرة"
     }
   },
   "landing": {

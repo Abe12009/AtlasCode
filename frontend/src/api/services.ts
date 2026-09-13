@@ -19,6 +19,7 @@ import type {
   Section,
   CodyMessage,
   CodyChatResponse,
+  AchievementEarned,
 } from '../types';
 
 export const authApi = {
@@ -121,7 +122,7 @@ export const projectsApi = {
     apiClient.post<ProjectProgress>(`/projects/${projectId}/start`),
 
   submitTask: (projectId: number, taskId: number, code: string) =>
-    apiClient.post<{ success: boolean; progress: ProjectProgress }>(
+    apiClient.post<{ success: boolean; progress: ProjectProgress; achievements_earned?: AchievementEarned[] }>(
       `/projects/${projectId}/submit-task`,
       { task_id: taskId, code }
     ),
