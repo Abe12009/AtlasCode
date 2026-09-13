@@ -590,5 +590,12 @@ class ReportResolveRequest(BaseModel):
     resolution_note: str = Field(min_length=1, max_length=2000)
 
 
+class CodySpendResponse(BaseModel):
+    spend_usd_last_24h: float
+    spend_usd_last_7d: float
+    spend_usd_last_30d: float
+    daily_cap_usd: float
+
+
 LessonResponse.model_rebuild()
 ModuleResponse.model_rebuild()

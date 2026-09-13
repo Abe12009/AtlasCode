@@ -11,16 +11,17 @@ id = <you>` directly against the database, the same "first admin" pattern
 this project already uses for anything with no dedicated onboarding.
 """
 
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.config import get_settings
 from app.core.dependencies import get_current_staff_user
 from app.db.session import get_db
-from app.models import Report, ReportStatusEnum, User
-from app.schemas import ReportResolveRequest, ReportResponse
+from app.models import CodyMessage, Report, ReportStatusEnum, User
+from app.schemas import CodySpendResponse, ReportResolveRequest, ReportResponse
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 
@@ -118,3 +119,32 @@ async def clear_user_avatar(
     user.avatar_type = "upload"
     await db.commit()
     return None
+
+
+@router.get("/cody-spend", response_model=CodySpendResponse)
+async def cody_spend(
+    current_staff: User = Depends(get_current_staff_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Aggregate Cody spend across all users, from OpenRouter's own
+    per-call cost accounting (see app.services.cody.get_reply). Rows from
+    before spend tracking shipped have a NULL estimated_cost_usd and are
+    excluded, not counted as zero, so historical windows aren't understated
+    silently."""
+    now = datetime.utcnow()
+
+    async def _sum_since(cutoff: datetime) -> float:
+        result = await db.execute(
+            select(func.coalesce(func.sum(CodyMessage.estimated_cost_usd), 0.0)).where(
+                CodyMessage.created_at >= cutoff,
+                CodyMessage.estimated_cost_usd.isnot(None),
+            )
+        )
+        return result.scalar_one()
+
+    return CodySpendResponse(
+        spend_usd_last_24h=await _sum_since(now - timedelta(hours=24)),
+        spend_usd_last_7d=await _sum_since(now - timedelta(days=7)),
+        spend_usd_last_30d=await _sum_since(now - timedelta(days=30)),
+        daily_cap_usd=get_settings().cody_daily_spend_cap_usd,
+    )

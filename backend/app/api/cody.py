@@ -32,6 +32,19 @@ async def _messages_sent_this_hour(db: AsyncSession, user_id: int) -> int:
     return result.scalar_one()
 
 
+async def _spend_last_24h(db: AsyncSession) -> float:
+    """Sum of every user's CodyMessage.estimated_cost_usd in the trailing
+    24h -- the global kill-switch counter, independent of any one user's
+    hourly message limit above."""
+    cutoff = datetime.utcnow() - timedelta(hours=24)
+    result = await db.execute(
+        select(func.coalesce(func.sum(CodyMessage.estimated_cost_usd), 0.0)).where(
+            CodyMessage.created_at >= cutoff,
+        )
+    )
+    return result.scalar_one()
+
+
 @router.post("/chat", response_model=CodyChatResponse)
 async def chat(
     payload: CodyChatRequest,
@@ -54,6 +67,22 @@ async def chat(
                 "Take a short break and try again in a bit."
             ),
         )
+
+    if settings.cody_daily_spend_cap_usd > 0:
+        spend_24h = await _spend_last_24h(db)
+        if spend_24h >= settings.cody_daily_spend_cap_usd:
+            # Greppable/alertable marker -- this should surface as a paging
+            # log line, not get discovered from a user complaint that Cody
+            # is down.
+            logger.error(
+                "CODY_SPEND_CAP_EXCEEDED spend_24h_usd=%.4f cap_usd=%.4f",
+                spend_24h,
+                settings.cody_daily_spend_cap_usd,
+            )
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="Cody is temporarily unavailable. Please try again later.",
+            )
 
     history_result = await db.execute(
         select(CodyMessage)
@@ -102,6 +131,9 @@ async def chat(
         user_id=current_user.id,
         role=CodyRoleEnum.assistant,
         content=reply.content,
+        prompt_tokens=reply.prompt_tokens,
+        completion_tokens=reply.completion_tokens,
+        estimated_cost_usd=reply.cost_usd,
     )
     db.add(assistant_message)
     await db.commit()

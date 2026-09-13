@@ -137,6 +137,10 @@ MIGRATIONS: tuple[AddColumn, ...] = (
         "BOOLEAN DEFAULT FALSE",
         backfill="UPDATE users SET is_staff = FALSE WHERE is_staff IS NULL",
     ),
+    # --- Cody spend monitoring -----------------------------------------------
+    AddColumn("cody_messages", "prompt_tokens", "INTEGER"),
+    AddColumn("cody_messages", "completion_tokens", "INTEGER"),
+    AddColumn("cody_messages", "estimated_cost_usd", "FLOAT"),
 )
 
 #: Indexes for the columns above. ``IF NOT EXISTS`` is supported by both

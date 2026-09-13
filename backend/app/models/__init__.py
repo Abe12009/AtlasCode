@@ -627,6 +627,13 @@ class CodyMessage(Base):
     role = Column(Enum(CodyRoleEnum), nullable=False)
     content = Column(Text, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow, index=True)
+    #: Only ever set on assistant-role rows, from the OpenRouter response's
+    #: own usage/cost accounting -- see app.services.cody.get_reply. Null on
+    #: user-role rows and on any assistant row from before this column
+    #: existed, or if the provider didn't return usage data for that call.
+    prompt_tokens = Column(Integer, nullable=True)
+    completion_tokens = Column(Integer, nullable=True)
+    estimated_cost_usd = Column(Float, nullable=True)
 
     user = relationship("User", back_populates="cody_messages")
 

@@ -48,6 +48,14 @@ that wasn't given to you.
 @dataclass(frozen=True)
 class CodyReply:
     content: str
+    #: From the OpenRouter response's own usage/cost accounting -- None if
+    #: the provider didn't return usage data for this call. `cost_usd` is
+    #: OpenRouter's own computed dollar cost, not something we price out
+    #: ourselves, so it stays accurate across whatever model cody_model
+    #: names without a hand-maintained pricing table.
+    prompt_tokens: int | None = None
+    completion_tokens: int | None = None
+    cost_usd: float | None = None
 
 
 class CodyNotConfiguredError(RuntimeError):
@@ -119,4 +127,10 @@ async def get_reply(db, user: User, history: Sequence[CodyMessage], user_message
     content = response.choices[0].message.content
     if isinstance(content, list):
         content = "".join(part.text for part in content if getattr(part, "type", None) == "text")
-    return CodyReply(content=content or "")
+    usage = response.usage
+    return CodyReply(
+        content=content or "",
+        prompt_tokens=usage.prompt_tokens if usage else None,
+        completion_tokens=usage.completion_tokens if usage else None,
+        cost_usd=usage.cost if usage else None,
+    )

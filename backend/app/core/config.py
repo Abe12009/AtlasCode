@@ -36,6 +36,11 @@ class Settings(BaseSettings):
     #: are replayed as context on each request. Bounds token cost per call
     #: regardless of how long someone's history has grown.
     cody_history_context_size: int = 10
+    #: Global kill switch, independent of the per-user hourly rate limit
+    #: above: if every user's combined CodyMessage.estimated_cost_usd in the
+    #: trailing 24h reaches this, app.api.cody stops calling OpenRouter and
+    #: returns 503 until the window rolls forward. Set to 0 to disable.
+    cody_daily_spend_cap_usd: float = 10.0
 
     # --- Password reset by email (local-password accounts) -----------------
     #: Resend API key. Server-side only. Leave empty to disable password
