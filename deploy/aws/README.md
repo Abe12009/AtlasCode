@@ -76,6 +76,49 @@ python -m app.seed
 This runs `init_db()` (create_all + additive migrations) then the idempotent
 `seed_all()`. Safe to re-run.
 
+### Backups
+
+**Automated snapshots (enable this — it's the actual backup mechanism, not
+optional):** in the RDS instance's settings, under "Additional configuration"
+&gt; "Backup", enable "Automated backups" with:
+- **Retention period: 7 days.** RDS's automated backups are for
+  "something broke in the last few days" recovery, not a long-term
+  archive — this app has no data-volume or compliance reason to pay for
+  longer, and RDS backup storage up to the DB's own allocated size (20 GB
+  here) is free; only the incremental cost of retaining beyond that is
+  billed. Revisit upward only if you have an actual reason (e.g. a
+  compliance requirement) once real user data exists.
+- **Backup window:** any low-traffic hour in your primary user base's
+  timezone — for Morocco-based users, `02:00-03:00 UTC` (about 2-3am
+  local) is a reasonable default.
+- This also gives you **point-in-time recovery** to any second within the
+  retention window, not just the daily snapshot boundary — RDS does this
+  automatically once automated backups are on, via transaction logs.
+
+**A backup nobody has restored from isn't a verified backup.** Test a real
+restore periodically (e.g. once after initial setup, then roughly
+quarterly, or after any major schema change):
+1. RDS console → the automated backup or a manual snapshot → **Restore to
+   new DB instance**. This always creates a *new* instance — RDS has no
+   in-place restore, which is a safety feature, not a limitation to work
+   around.
+2. Point a throwaway copy of the backend at the restored instance's
+   endpoint (a separate `DATABASE_URL`, not the production one) and
+   confirm: the app boots, `/health` responds, and a spot-check query
+   (e.g. `SELECT COUNT(*) FROM users;` via `psql`) matches what you expect.
+3. **Delete the restored instance and its extra storage** once confirmed —
+   this test costs real money for as long as that instance exists (a
+   second `db.t4g.micro` + storage, roughly the same as the primary
+   instance's own cost per Section 10 below).
+
+The local-development equivalent (SQLite, no RDS involved) is
+`backend/migrations/backup_database.py` — `--backup` takes a timestamped
+copy, `--verify-restore &lt;file&gt;` proves a given backup actually opens,
+passes SQLite's own integrity check, and has row counts consistent with a
+real snapshot, entirely read-only against both files. Not a substitute for
+the RDS procedure above once this is actually deployed, but the same
+discipline (verify, don't just trust the copy succeeded) applies to both.
+
 ---
 
 ## 3. EC2 backend hosting
