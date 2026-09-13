@@ -170,9 +170,9 @@ export function Progress({
     <div className={cn('w-full', className)} {...props}>
       {(showLabel || label) && (
         <div className="flex items-center justify-between mb-1.5">
-          <span className="text-sm font-medium text-text-primary">
-            {label || `${Math.round(percentage)}%`}
-          </span>
+          {label && (
+            <span className="text-sm font-medium text-text-primary">{label}</span>
+          )}
           {showLabel && (
             <span className="text-sm text-text-tertiary tabular-nums">
               {Math.round(percentage)}%

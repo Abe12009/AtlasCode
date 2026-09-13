@@ -324,7 +324,6 @@ export function LessonDetail() {
                   size="md"
                   variant="primary"
                   showLabel
-                  label={`${Math.round(((currentBlockIndex + 1) / totalSteps) * 100)}%`}
                   className="w-full max-w-48"
                 />
               </div>
