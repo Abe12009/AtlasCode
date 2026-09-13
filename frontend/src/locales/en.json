@@ -627,7 +627,21 @@
     "view_public": "View public profile",
     "member_since": "Member {{date}}",
     "not_found_title": "Profile not found",
-    "not_found_description": "This profile doesn't exist, or its owner has kept it private."
+    "not_found_description": "This profile doesn't exist, or its owner has kept it private.",
+    "report": "Report",
+    "report_title": "Report this profile",
+    "report_description": "Let us know what's wrong. A staff member will review it.",
+    "report_reason_label": "Reason",
+    "report_reason_harassment": "Harassment or abuse",
+    "report_reason_inappropriate_username": "Inappropriate username",
+    "report_reason_inappropriate_content": "Inappropriate content",
+    "report_reason_spam": "Spam",
+    "report_reason_other": "Other",
+    "report_details_label": "Details (optional)",
+    "report_details_placeholder": "Anything that would help us review this",
+    "report_submit": "Submit report",
+    "report_success": "Thanks — we've received your report.",
+    "report_error": "Couldn't submit your report. Please try again."
   },
   "footer": {
     "copyright": "© {{year}} AtlasCode. All rights reserved.",

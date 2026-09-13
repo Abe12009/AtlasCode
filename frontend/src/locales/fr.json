@@ -627,7 +627,21 @@
     "view_public": "Voir le profil public",
     "member_since": "Membre {{date}}",
     "not_found_title": "Profil introuvable",
-    "not_found_description": "Ce profil n'existe pas, ou son propriétaire l'a rendu privé."
+    "not_found_description": "Ce profil n'existe pas, ou son propriétaire l'a rendu privé.",
+    "report": "Signaler",
+    "report_title": "Signaler ce profil",
+    "report_description": "Dites-nous ce qui ne va pas. Un membre de l'équipe l'examinera.",
+    "report_reason_label": "Motif",
+    "report_reason_harassment": "Harcèlement ou abus",
+    "report_reason_inappropriate_username": "Nom d'utilisateur inapproprié",
+    "report_reason_inappropriate_content": "Contenu inapproprié",
+    "report_reason_spam": "Spam",
+    "report_reason_other": "Autre",
+    "report_details_label": "Détails (facultatif)",
+    "report_details_placeholder": "Toute information utile pour l'examen",
+    "report_submit": "Envoyer le signalement",
+    "report_success": "Merci — votre signalement a bien été reçu.",
+    "report_error": "Impossible d'envoyer le signalement. Veuillez réessayer."
   },
   "footer": {
     "copyright": "© {{year}} AtlasCode. Tous droits réservés.",

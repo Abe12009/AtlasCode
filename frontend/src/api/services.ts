@@ -65,6 +65,8 @@ export const authApi = {
 
 export const usersApi = {
   getPublicProfile: (username: string) => apiClient.get<PublicProfile>(`/users/${encodeURIComponent(username)}`),
+  reportUser: (username: string, data: { reason: string; details?: string }) =>
+    apiClient.post<void>(`/users/${encodeURIComponent(username)}/report`, data),
 };
 
 export const coursesApi = {

@@ -1,7 +1,7 @@
 from pydantic import BaseModel, EmailStr, Field, field_serializer
 from typing import Optional, List, Dict, Any
 from datetime import datetime, timezone
-from app.models import LanguageEnum, DifficultyEnum, MissionStatusEnum, ExerciseTypeEnum, NotificationTypeEnum, CodyRoleEnum
+from app.models import LanguageEnum, DifficultyEnum, MissionStatusEnum, ExerciseTypeEnum, NotificationTypeEnum, CodyRoleEnum, ReportReasonEnum, ReportStatusEnum
 
 
 class Token(BaseModel):
@@ -562,6 +562,32 @@ class CodyMessageResponse(BaseModel):
 class CodyChatResponse(BaseModel):
     reply: CodyMessageResponse
     messages_remaining_this_hour: int
+
+
+class ReportCreateRequest(BaseModel):
+    reason: ReportReasonEnum
+    details: Optional[str] = Field(default=None, max_length=2000)
+
+
+class ReportResponse(BaseModel):
+    id: int
+    reporter_user_id: Optional[int] = None
+    reported_user_id: Optional[int] = None
+    reported_username: str
+    reason: ReportReasonEnum
+    details: Optional[str] = None
+    status: ReportStatusEnum
+    resolution_note: Optional[str] = None
+    resolved_by_user_id: Optional[int] = None
+    resolved_at: Optional[datetime] = None
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class ReportResolveRequest(BaseModel):
+    resolution_note: str = Field(min_length=1, max_length=2000)
 
 
 LessonResponse.model_rebuild()

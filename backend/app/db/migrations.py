@@ -130,6 +130,13 @@ MIGRATIONS: tuple[AddColumn, ...] = (
         "BOOLEAN DEFAULT TRUE",
         backfill="UPDATE users SET has_completed_onboarding = TRUE WHERE has_completed_onboarding IS NULL",
     ),
+    # --- Moderation ----------------------------------------------------------
+    AddColumn(
+        "users",
+        "is_staff",
+        "BOOLEAN DEFAULT FALSE",
+        backfill="UPDATE users SET is_staff = FALSE WHERE is_staff IS NULL",
+    ),
 )
 
 #: Indexes for the columns above. ``IF NOT EXISTS`` is supported by both

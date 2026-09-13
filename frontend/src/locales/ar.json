@@ -632,7 +632,21 @@
     "view_public": "عرض الملف الشخصي العام",
     "member_since": "عضو منذ {{date}}",
     "not_found_title": "الملف الشخصي غير موجود",
-    "not_found_description": "هذا الملف الشخصي غير موجود، أو أن صاحبه جعله خاصًا."
+    "not_found_description": "هذا الملف الشخصي غير موجود، أو أن صاحبه جعله خاصًا.",
+    "report": "إبلاغ",
+    "report_title": "الإبلاغ عن هذا الملف الشخصي",
+    "report_description": "أخبرنا بما هو خاطئ. سيقوم أحد أعضاء الفريق بمراجعته.",
+    "report_reason_label": "السبب",
+    "report_reason_harassment": "تحرش أو إساءة",
+    "report_reason_inappropriate_username": "اسم مستخدم غير لائق",
+    "report_reason_inappropriate_content": "محتوى غير لائق",
+    "report_reason_spam": "رسائل مزعجة",
+    "report_reason_other": "أخرى",
+    "report_details_label": "تفاصيل (اختياري)",
+    "report_details_placeholder": "أي معلومة قد تساعدنا في المراجعة",
+    "report_submit": "إرسال البلاغ",
+    "report_success": "شكرًا — تم استلام بلاغك.",
+    "report_error": "تعذّر إرسال البلاغ. حاول مرة أخرى."
   },
   "footer": {
     "copyright": "© {{year}} AtlasCode. جميع الحقوق محفوظة.",

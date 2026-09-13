@@ -1,15 +1,66 @@
 import { useParams, Link } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
-import { Trophy, Target, Flame, Award, UserX } from 'lucide-react';
+import { useQuery, useMutation } from '@tanstack/react-query';
+import { useState } from 'react';
+import { Trophy, Target, Flame, Award, UserX, Flag } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { usersApi } from '../api/services';
-import { Card, Skeleton, AchievementBadge, EmptyState } from '../components/ui';
+import { Card, Skeleton, AchievementBadge, EmptyState, Modal, Select, Textarea, Button, Alert } from '../components/ui';
 import { ProfileAvatar } from '../components/ProfileAvatar';
 import { useTranslation } from '../hooks/useTranslation';
+import { useAuth } from '../contexts/AuthContext';
+
+const REPORT_REASONS = ['harassment', 'inappropriate_username', 'inappropriate_content', 'spam', 'other'] as const;
+
+function ReportProfileModal({ username, onClose }: { username: string; onClose: () => void }) {
+  const { t } = useTranslation();
+  const [reason, setReason] = useState<string>(REPORT_REASONS[0]);
+  const [details, setDetails] = useState('');
+
+  const reportMutation = useMutation({
+    mutationFn: () => usersApi.reportUser(username, { reason, details: details.trim() || undefined }),
+  });
+
+  return (
+    <Modal isOpen onClose={onClose} title={t('public_profile.report_title')} description={t('public_profile.report_description')} size="sm">
+      {reportMutation.isSuccess ? (
+        <Alert variant="success">{t('public_profile.report_success')}</Alert>
+      ) : (
+        <form
+          className="space-y-4"
+          onSubmit={(e) => {
+            e.preventDefault();
+            reportMutation.mutate();
+          }}
+        >
+          <Select
+            label={t('public_profile.report_reason_label')}
+            value={reason}
+            onChange={(e) => setReason(e.target.value)}
+            options={REPORT_REASONS.map((r) => ({ value: r, label: t(`public_profile.report_reason_${r}`) }))}
+          />
+          <Textarea
+            label={t('public_profile.report_details_label')}
+            placeholder={t('public_profile.report_details_placeholder')}
+            value={details}
+            onChange={(e) => setDetails(e.target.value)}
+            rows={3}
+            maxLength={2000}
+          />
+          {reportMutation.isError && <Alert variant="error">{t('public_profile.report_error')}</Alert>}
+          <Button type="submit" fullWidth loading={reportMutation.isPending}>
+            {t('public_profile.report_submit')}
+          </Button>
+        </form>
+      )}
+    </Modal>
+  );
+}
 
 export function PublicProfile() {
   const { username } = useParams<{ username: string }>();
   const { t, isRTL } = useTranslation();
+  const { user } = useAuth();
+  const [reportOpen, setReportOpen] = useState(false);
 
   const { data: profile, isLoading, error } = useQuery({
     queryKey: ['public-profile', username],
@@ -47,6 +98,15 @@ export function PublicProfile() {
   return (
     <div className="max-w-2xl mx-auto space-y-6 animate-fade-in" dir={isRTL ? 'rtl' : 'ltr'}>
       <Card variant="default" padding="lg" className="text-center relative overflow-hidden">
+        {user?.username !== profile.username && (
+          <button
+            onClick={() => setReportOpen(true)}
+            className="absolute top-4 end-4 z-20 inline-flex items-center gap-1.5 text-xs text-text-tertiary hover:text-error-500 transition-colors"
+          >
+            <Flag className="h-3.5 w-3.5" aria-hidden="true" />
+            {t('public_profile.report')}
+          </button>
+        )}
         <div className="relative z-10 flex flex-col items-center">
           <ProfileAvatar user={profile} size="2xl" className="ring-4 ring-primary-500/20 mb-4" />
           <h1 className="text-2xl font-bold text-text-primary">{profile.username}</h1>
@@ -102,6 +162,8 @@ export function PublicProfile() {
           )}
         </div>
       </Card>
+
+      {reportOpen && <ReportProfileModal username={profile.username} onClose={() => setReportOpen(false)} />}
     </div>
   );
 }

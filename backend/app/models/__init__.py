@@ -95,6 +95,12 @@ class User(Base):
     timezone_offset_minutes = Column(Integer, default=0, nullable=False)
     preferred_language = Column(Enum(LanguageEnum), default=LanguageEnum.en, nullable=False)
     is_active = Column(Boolean, default=True)
+    #: Grants access to the /admin/* moderation endpoints (report review,
+    #: suspend/reinstate, avatar clearing). Nobody has this by default --
+    #: the first staff account is granted by a direct DB update, the same
+    #: pattern this project already uses for anything that has no signup
+    #: flow of its own.
+    is_staff = Column(Boolean, default=False, nullable=False)
     #: True once this account has been through (or skipped) the first-login
     #: walkthrough. Defaults True so the additive migration backfills every
     #: pre-existing account as "already onboarded" -- only code paths that
@@ -636,3 +642,41 @@ class VisualNode(Base):
     config = Column(Text)
 
     exercise = relationship("Exercise", foreign_keys=[exercise_id])
+
+
+class ReportReasonEnum(str, enum.Enum):
+    harassment = "harassment"
+    inappropriate_username = "inappropriate_username"
+    inappropriate_content = "inappropriate_content"
+    spam = "spam"
+    other = "other"
+
+
+class ReportStatusEnum(str, enum.Enum):
+    open = "open"
+    resolved = "resolved"
+
+
+class Report(Base):
+    """A user-filed report against another account, reviewed by staff.
+
+    reporter_user_id/reported_user_id are SET NULL (not CASCADE) on account
+    deletion -- unlike a user's own content, a report is an audit trail of a
+    moderation event, and either party deleting their account shouldn't
+    erase that history. reported_username is snapshotted at creation time so
+    the report stays legible even after the reported account is gone.
+    """
+
+    __tablename__ = "reports"
+
+    id = Column(Integer, primary_key=True, index=True)
+    reporter_user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True)
+    reported_user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True)
+    reported_username = Column(String(100), nullable=False)
+    reason = Column(Enum(ReportReasonEnum), nullable=False)
+    details = Column(Text, nullable=True)
+    status = Column(Enum(ReportStatusEnum), default=ReportStatusEnum.open, nullable=False, index=True)
+    resolution_note = Column(Text, nullable=True)
+    resolved_by_user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    resolved_at = Column(DateTime, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow, index=True)

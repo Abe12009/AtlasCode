@@ -34,8 +34,23 @@ async def get_current_user(
     if user is None:
         raise credentials_exception
     if not user.is_active:
-        raise HTTPException(status_code=400, detail="Inactive user")
+        # 403, not 401: the token itself is valid (it decoded and names a
+        # real account) -- the account is suspended. Matches the status
+        # code the Firebase login path already uses for the same state
+        # (app.api.auth.login_with_firebase), which previously disagreed
+        # with this one (400 here, 403 there) for no reason.
+        raise HTTPException(status_code=403, detail="This account has been disabled")
     return user
+
+
+async def get_current_staff_user(
+    current_user: User = Depends(get_current_user),
+) -> User:
+    """Gate for /admin/* routes. 404, not 403: an unmoderated account
+    probing for admin routes learns nothing about whether they exist."""
+    if not current_user.is_staff:
+        raise HTTPException(status_code=404, detail="Not found")
+    return current_user
 
 
 async def get_current_user_optional(
