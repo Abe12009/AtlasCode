@@ -280,6 +280,37 @@ internet; only CloudFront (using OAC's signed requests) can read from it.
    domain already has HTTPS with no extra cert needed if you're fine with
    that URL for now.
 
+### Security headers (CSP included)
+The FastAPI backend already sets baseline hardening headers on its own
+responses (`X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`,
+`Permissions-Policy`, `Strict-Transport-Security` — see
+`app.main.add_security_headers`), but it never serves HTML, so a
+Content-Security-Policy belongs here instead, on the layer that actually
+serves the SPA shell:
+
+1. In the CloudFront console, create a **Response headers policy** (or attach
+   an existing security-headers-optimized one) and associate it with this
+   distribution's default cache behavior.
+2. Add a custom `Content-Security-Policy` header, e.g.:
+   ```
+   default-src 'self';
+   script-src 'self';
+   style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+   font-src 'self' https://fonts.gstatic.com;
+   img-src 'self' data: https:;
+   connect-src 'self' https://api.yourdomain.com;
+   frame-ancestors 'none';
+   ```
+   Swap `https://api.yourdomain.com` for wherever `VITE_API_URL` actually
+   points (and add the Firebase/OpenRouter-adjacent origins only if the
+   frontend ever calls them directly — today it doesn't, everything routes
+   through the backend). `style-src 'unsafe-inline'` is only needed if a
+   library injects inline `<style>` tags at runtime; drop it if none do.
+3. The managed **SecurityHeadersPolicy** AWS provides as a starting point
+   already covers `X-Content-Type-Options`, `X-Frame-Options`,
+   `Referrer-Policy`, and HSTS for the SPA's own responses — CSP is the one
+   header you still have to add by hand, since it's site-specific.
+
 ### `VITE_API_URL`
 Same mechanism as before — a build-time env var, nothing Vercel-specific
 about it. Set it wherever you run `npm run build` (CI environment, or your
