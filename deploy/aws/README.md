@@ -271,10 +271,33 @@ Values that need to live somewhere other than the repo:
 | `SECRET_KEY` | Parameter Store (`SecureString`) or `.env` per Section 3 |
 | `DATABASE_URL` (with the real RDS password embedded) | Same |
 | `FIREBASE_PROJECT_ID` | Same, though it's a public value — fine either way |
+| `OPENROUTER_API_KEY` | Same — Cody (the AI companion) calls OpenRouter with this key server-side; never exposed to the frontend |
+| `RESEND_API_KEY` | Same — sends password-reset emails for local-password accounts |
 
 Consistent with Section 3's recommendation: Parameter Store `SecureString`
 entries, pulled via `fetch-env-from-ssm.sh` into the same `.env`-shaped file
 the systemd unit already expects.
+
+Both features above also need a handful of plain (non-secret) config values
+alongside their key — same `.env`/Parameter Store prefix, ordinary `String`
+parameters rather than `SecureString` is fine for these:
+| Value | Default | Purpose |
+|---|---|---|
+| `CODY_MODEL` | `anthropic/claude-haiku-4.5` | Model routed to via OpenRouter |
+| `CODY_RATE_LIMIT_PER_HOUR` | `30` | Per-user Cody message cap |
+| `CODY_HISTORY_CONTEXT_SIZE` | `10` | Messages replayed as chat context |
+| `EMAIL_FROM_ADDRESS` | `AtlasCode <onboarding@resend.dev>` | Must be a verified sender/domain in the Resend account above |
+| `FRONTEND_BASE_URL` | — | Origin the emailed password-reset link points at, e.g. `https://app.yourdomain.com`. No trailing slash |
+| `PASSWORD_RESET_TOKEN_EXPIRE_MINUTES` | `30` | Reset link lifetime |
+| `PASSWORD_RESET_RATE_LIMIT_PER_EMAIL_PER_HOUR` | `3` | Abuse guard, keyed by requested email |
+| `PASSWORD_RESET_RATE_LIMIT_PER_IP_PER_HOUR` | `10` | Abuse guard, keyed by requester IP |
+
+Both `OPENROUTER_API_KEY` and `RESEND_API_KEY` degrade gracefully when unset
+— `/cody/chat` and `/auth/forgot-password` return 503 rather than the app
+failing to boot — so a deploy missing them ships with those two features
+silently disabled rather than crashing. See `backend/.env.example` for the
+complete, authoritative list of every environment variable the app reads;
+that file is the source of truth this section is kept in sync with.
 
 ---
 

@@ -28,6 +28,36 @@ services:
       # password reset. Leave unset to run with email/password auth only.
       - key: FIREBASE_PROJECT_ID
         sync: false
+      # Optional: only needed to enable Cody (the AI companion). Leave unset
+      # and /cody/chat returns 503 rather than the app failing to boot.
+      - key: OPENROUTER_API_KEY
+        sync: false
+      - key: CODY_MODEL
+        value: anthropic/claude-haiku-4.5
+      - key: CODY_RATE_LIMIT_PER_HOUR
+        value: "30"
+      - key: CODY_HISTORY_CONTEXT_SIZE
+        value: "10"
+      # Optional: only needed to enable password reset by email for
+      # local-password accounts. Leave RESEND_API_KEY unset and
+      # /auth/forgot-password returns 503 rather than the app failing to boot.
+      - key: RESEND_API_KEY
+        sync: false
+      # Must be a verified sender/domain in the Resend account above --
+      # prompted rather than defaulted so production never silently uses
+      # Resend's shared onboarding@resend.dev sandbox sender.
+      - key: EMAIL_FROM_ADDRESS
+        sync: false
+      # Origin the emailed reset link points at, e.g. your frontend's
+      # production URL. No trailing slash.
+      - key: FRONTEND_BASE_URL
+        sync: false
+      - key: PASSWORD_RESET_TOKEN_EXPIRE_MINUTES
+        value: "30"
+      - key: PASSWORD_RESET_RATE_LIMIT_PER_EMAIL_PER_HOUR
+        value: "3"
+      - key: PASSWORD_RESET_RATE_LIMIT_PER_IP_PER_HOUR
+        value: "10"
 
 databases:
   - name: atlascode-db
