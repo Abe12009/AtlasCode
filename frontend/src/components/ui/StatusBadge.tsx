@@ -14,7 +14,7 @@ export interface StatusBadgeProps {
 const statusStyles = {
   completed: 'bg-success-900/30 text-success-400 border-success-500/30',
   current: 'bg-primary-900/30 text-primary-400 border-primary-500/30 animate-pulse-glow',
-  available: 'bg-blue-900/30 text-blue-400 border-blue-500/30',
+  available: 'bg-primary-900/30 text-primary-400 border-primary-500/30',
   locked: 'bg-bg-tertiary text-text-tertiary border-border-primary',
   in_progress: 'bg-accent-900/30 text-accent-400 border-accent-500/30',
   pending: 'bg-warning-900/30 text-warning-400 border-warning-500/30',
@@ -114,8 +114,8 @@ export function StreakBadge({ streak, size = 'md', showIcon = true, className }:
   return (
     <span
       className={cn(
-        'inline-flex items-center font-semibold text-orange-400',
-        'bg-orange-900/30 border border-orange-500/30',
+        'inline-flex items-center font-semibold text-accent-400',
+        'bg-accent-900/30 border border-accent-500/30',
         'rounded-full transition-all duration-fast',
         size === 'sm' && 'px-2 py-0.5 text-xs gap-1',
         size === 'md' && 'px-3 py-1 text-sm gap-1.5',

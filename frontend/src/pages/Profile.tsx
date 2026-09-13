@@ -158,7 +158,7 @@ export function Profile() {
     { label: t('profile.total_xp'), value: profile?.xp || 0, icon: Target, color: 'text-blue-500 bg-blue-900/30 border-blue-500/30', trend: trendFor(weekly?.xp ?? 0) },
     { label: t('profile.streak'), value: `${profile?.streak || 0} ${t('profile.days')}`, icon: Flame, color: 'text-orange-500 bg-orange-900/30 border-orange-500/30', trend: null },
     { label: t('profile.completed_lessons'), value: profile?.completed_lessons || 0, icon: CheckCircle, color: 'text-green-500 bg-green-900/30 border-green-500/30', trend: trendFor(weekly?.lessons_completed ?? 0) },
-    { label: t('profile.completed_projects'), value: profile?.completed_projects || 0, icon: FolderKanban, color: 'text-purple-500 bg-purple-900/30 border-purple-500/30', trend: trendFor(weekly?.projects_completed ?? 0) },
+    { label: t('profile.completed_projects'), value: profile?.completed_projects || 0, icon: FolderKanban, color: 'text-success-500 bg-success-900/30 border-success-500/30', trend: trendFor(weekly?.projects_completed ?? 0) },
   ];
 
   const tabs = [

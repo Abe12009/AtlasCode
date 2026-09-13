@@ -357,11 +357,11 @@ export function Dashboard() {
           </Card>
 
           {currentProject && (
-            <Card variant="interactive" padding="lg" className="border-blue-500/20 bg-blue-500/5">
+            <Card variant="interactive" padding="lg" className="border-primary-500/20 bg-primary-500/5">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-3">
-                  <div className="p-3 bg-blue-500/10 rounded-xl">
-                    <FolderKanban className="h-6 w-6 text-blue-400" />
+                  <div className="p-3 bg-primary-500/10 rounded-xl">
+                    <FolderKanban className="h-6 w-6 text-primary-400" />
                   </div>
                   <div>
                     <h2 className="text-lg font-semibold text-text-primary">{t('dashboard.current_project')}</h2>
@@ -375,7 +375,7 @@ export function Dashboard() {
               </div>
               <Link
                 to={`/app/projects/${currentProject.project_id}`}
-                className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-semibold rounded-xl transition-all shadow-lg hover:shadow-glow-primary w-full justify-center"
+                className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white font-semibold rounded-xl transition-all shadow-lg hover:shadow-glow-primary w-full justify-center"
               >
                 <FolderKanban className="h-4 w-4" />
                 <span>{t('dashboard.continue_project')}</span>
