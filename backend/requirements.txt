@@ -1,13 +1,24 @@
-fastapi==0.109.0
+fastapi==0.109.1
 uvicorn[standard]==0.27.0
-sqlalchemy==2.0.23
+# 2.0.23 doesn't import under Python 3.13+/3.14 (fails a TypingOnly assertion
+# in sqlalchemy.sql.elements -- a class-namespace shape check that trips on
+# __static_attributes__/__firstlineno__, attributes newer CPython adds to
+# every class). This install had drifted to an unpinned 2.0.35 that happened
+# to work; pinning explicitly to the first 2.0.x release with the fix.
+sqlalchemy==2.0.36
 pydantic==2.12.5
 pydantic[email]==2.12.5
 pydantic-settings==2.0.0
-python-jose[cryptography]==3.3.0
+# python-jose pulls in `ecdsa` transitively, which pip-audit will keep flagging
+# for PYSEC-2026-1325 (Minerva timing attack on P-256). No fixed version exists
+# -- the ecdsa maintainers consider it unfixable in a pure-Python implementation.
+# Not reachable here regardless: this app only verifies HS256/RS256 tokens
+# (see app.core.security and app.services.firebase_auth, both of which pin
+# `algorithms=[...]` explicitly), so `ecdsa`'s EC sign/verify code never runs.
+python-jose[cryptography]==3.4.0
 passlib[bcrypt]==1.7.4
-python-multipart==0.0.6
-python-dotenv==1.0.0
+python-multipart==0.0.32
+python-dotenv==1.2.2
 alembic==1.12.1
 aiosqlite==0.22.1
 psycopg[binary]==3.2.13
