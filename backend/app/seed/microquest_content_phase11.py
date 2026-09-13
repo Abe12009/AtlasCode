@@ -5,17 +5,26 @@ Written with the ``microquest_authoring`` builders throughout (Phase 10's
 authoring improvement) — no raw block dicts, so English prose is typed once
 per field and ``content`` is derived from it, never hand-duplicated.
 
-WHY THESE 10, AND WHY ONLY FROM 5 COURSES
-------------------------------------------
-The curriculum has 15 courses, but only 5 of them -- Python Foundations,
-Web Fundamentals, SQL & Databases, Git & GitHub, CS Fundamentals -- are built
-by ``app/seed/seed_all()``, which is what populates the *test* database
-(``test_atlascode.db``) that every backend test runs against. The other 10
-courses (JavaScript, Frontend Development, Networking, and so on) exist only
-in the live ``atlascode.db``, seeded once by the standalone
-``seed_curriculum_expansion.py``, which ``seed_all()`` never calls.
+WHY THESE 10, AND WHY ONLY FROM 5 COURSES (AT THE TIME THIS WAS WRITTEN)
+-------------------------------------------------------------------------
+When this file was written, the curriculum had 15 courses, but only 5 of
+them -- Python Foundations, Web Fundamentals, SQL & Databases, Git & GitHub,
+CS Fundamentals -- were built by ``app/seed/seed_all()``, which is what
+populates the *test* database (``test_atlascode.db``) that every backend
+test runs against. A standalone script, ``seed_curriculum_expansion.py``,
+was meant to add 10 more courses (JavaScript, Frontend Development,
+Networking, and so on) but was never wired into ``seed_all()`` -- and, as
+later confirmed by an audit, was never actually run against the live
+database either. Those slugs sat (and 7 of them still sit) in
+``app/curriculum.py`` with no course behind them; see that module's
+``PLANNED_SLUGS`` for the current, accurate list of what's still unbuilt.
+(Networking and Data Structures & Algorithms, both mentioned above as
+examples at the time, have since been built for real via
+``app/seed/expansions.py``/``stage_dsa_core.py`` -- unrelated to the
+abandoned expansion script.) `seed_all()` today builds all 24 real courses,
+not just 5.
 
-A Micro-Quest lesson chosen from one of those other 10 courses would work
+A Micro-Quest lesson chosen from one of the untestable courses would work
 fine against the live database but could never be exercised by a real,
 passing backend test -- there would be no lesson row for the test client to
 even fetch. Given this phase's explicit requirement for real, verified

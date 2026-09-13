@@ -67,15 +67,8 @@ ROADMAP: tuple[RoadmapEntry, ...] = (
     RoadmapEntry("sql-databases", 4, "systems", "🗄️", "beginner", 6, "python-basics"),
     RoadmapEntry("database-design", 4, "systems", "🏛️", "beginner", 8, "sql-databases"),
     RoadmapEntry("networking", 4, "systems", "🌐", "intermediate", 10, "cs-foundations"),
-    RoadmapEntry("computer-systems", 4, "systems", "🖥️", "intermediate", 10, "cs-foundations"),
-    RoadmapEntry("c-programming", 4, "systems", "🔧", "intermediate", 12, "python-basics"),
-    RoadmapEntry("cpp-programming", 4, "systems", "🧱", "advanced", 12, "c-programming"),
     # --- Stage 5 · Software and Web Engineering ----------------------------
     RoadmapEntry("web-basics", 5, "engineering", "📄", "beginner", 6, "python-basics"),
-    RoadmapEntry("javascript", 5, "engineering", "🟨", "beginner", 10, "web-basics"),
-    RoadmapEntry("frontend-development", 5, "engineering", "🎨", "intermediate", 10, "javascript"),
-    RoadmapEntry("backend-development", 5, "engineering", "🔌", "intermediate", 12, "python-in-depth"),
-    RoadmapEntry("fullstack-development", 5, "engineering", "🧬", "advanced", 12, "backend-development"),
     RoadmapEntry("software-engineering", 5, "engineering", "🏗️", "intermediate", 12, "git-github"),
     # --- Stage 6 · Cybersecurity -------------------------------------------
     RoadmapEntry("cybersecurity-foundations", 6, "security", "🛡️", "intermediate", 10, "networking"),
@@ -86,8 +79,13 @@ ROADMAP: tuple[RoadmapEntry, ...] = (
     RoadmapEntry("machine-learning-fundamentals", 7, "ai", "📊", "advanced", 12, "ai-foundations"),
     RoadmapEntry("ai-literacy", 7, "ai", "🧠", "beginner", 6, "ai-foundations"),
     # --- Stage 8 · Advanced Computer Science -------------------------------
-    RoadmapEntry("operating-systems", 8, "advanced", "⚙️", "advanced", 12, "computer-systems"),
-    RoadmapEntry("computer-architecture", 8, "advanced", "🔬", "advanced", 12, "computer-systems"),
+    # operating-systems and computer-architecture were originally meant to
+    # require computer-systems (see PLANNED_SLUGS below) -- that prerequisite
+    # is dropped for now since the course doesn't exist yet. Restore
+    # `"computer-systems"` as the prerequisite_slug for both once it's
+    # actually seeded.
+    RoadmapEntry("operating-systems", 8, "advanced", "⚙️", "advanced", 12),
+    RoadmapEntry("computer-architecture", 8, "advanced", "🔬", "advanced", 12),
     RoadmapEntry("advanced-computing", 8, "advanced", "🚀", "advanced", 14, "algorithms-complexity"),
 )
 
@@ -96,8 +94,28 @@ ROADMAP_BY_SLUG: dict[str, RoadmapEntry] = {entry.slug: entry for entry in ROADM
 #: `Course.order` for each slug: 1-based position in ROADMAP.
 ORDER_BY_SLUG: dict[str, int] = {entry.slug: i for i, entry in enumerate(ROADMAP, start=1)}
 
+#: Slugs that were once in ROADMAP (or planned for it) but have no seeded
+#: course behind them yet -- real curriculum work, not a placement decision.
+#: `apply_roadmap`/`seed_sections` already skip any slug with no matching
+#: course, so leaving these out of ROADMAP entirely is safe; they're listed
+#: here only so the gap is documented instead of silently rediscovered.
+PLANNED_SLUGS: frozenset[str] = frozenset(
+    {
+        "computer-systems",
+        "javascript",
+        "frontend-development",
+        "backend-development",
+        "fullstack-development",
+        "c-programming",
+        "cpp-programming",
+    }
+)
+
 #: Courses that existed before the roadmap was introduced. They keep their
 #: content and their rows; only their placement metadata is refreshed.
+#: (Currently unread by any code -- `ORDER_BY_SLUG`/`ROADMAP_BY_SLUG` are the
+#: exports actually consumed by app.seed.roadmap -- kept as documentation of
+#: which courses predate the roadmap.)
 LEGACY_SLUGS: frozenset[str] = frozenset(
     {
         "python-basics",
@@ -105,14 +123,7 @@ LEGACY_SLUGS: frozenset[str] = frozenset(
         "sql-databases",
         "git-github",
         "cs-fundamentals",
-        "javascript",
-        "frontend-development",
-        "backend-development",
-        "fullstack-development",
-        "c-programming",
-        "cpp-programming",
         "data-structures-algorithms",
-        "computer-systems",
         "networking",
     }
 )

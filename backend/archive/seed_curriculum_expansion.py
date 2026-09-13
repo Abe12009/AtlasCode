@@ -1,4 +1,28 @@
 """
+ARCHIVED -- NOT WIRED UP, REFERENCE ONLY. Do not run this against a real
+database without re-reading it fully first.
+
+This script is never imported or called by anything (`app/seed/seed_all()`
+does not call it, no test references it), and as of the audit that found
+this, it had apparently never actually been run against the live dev
+database either -- none of the 10 courses below exist there. The 7 course
+slugs it never got as far as replacing with a real seeder (javascript,
+frontend-development, backend-development, fullstack-development,
+c-programming, cpp-programming, computer-systems) are tracked in
+`app/curriculum.py`'s `PLANNED_SLUGS` as still-unbuilt. The other 3 it
+claims to add (Databases, Data Structures & Algorithms, Networking) have
+since been built for real via proper `app/seed/*` seeders, unrelated to this
+file.
+
+Kept here rather than deleted in case its authored lesson content is worth
+salvaging when those 7 courses are eventually built for real -- but treat
+everything below as a draft that predates the current seed architecture's
+conventions, not as ready-to-run code.
+
+---
+
+Original docstring, unedited below:
+
 Idempotent curriculum-expansion seed for AtlasCode.
 
 Adds the 10 missing required courses (Databases, JavaScript, Frontend Development,
