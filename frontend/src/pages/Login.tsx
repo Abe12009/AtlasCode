@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '../contexts/AuthContext';
@@ -8,11 +8,20 @@ import { Button, Input, PasswordInput, Card, Alert, cn } from '../components/ui'
 import { GoogleIcon, GithubIcon } from '../components/icons/BrandIcons';
 import { describeFirebaseAuthError } from '../lib/firebase';
 import { authApi } from '../api/services';
+import { AUTH_NOTICE_KEY } from '../api/client';
 
 export function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    const notice = sessionStorage.getItem(AUTH_NOTICE_KEY);
+    if (notice) {
+      sessionStorage.removeItem(AUTH_NOTICE_KEY);
+      setError(notice);
+    }
+  }, []);
   const [loading, setLoading] = useState(false);
   const [oauthLoading, setOauthLoading] = useState<'google' | 'github' | null>(null);
   const { login, loginWithGoogle, loginWithGithub } = useAuth();

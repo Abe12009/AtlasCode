@@ -12,6 +12,7 @@ import { ProjectDetail } from '../pages/ProjectDetail';
 import { VisualProgrammingPage } from '../pages/VisualProgramming';
 
 vi.mock('../api/client', () => ({
+  AUTH_NOTICE_KEY: 'atlas_auth_notice',
   apiClient: {
     post: vi.fn(),
     get: vi.fn(),

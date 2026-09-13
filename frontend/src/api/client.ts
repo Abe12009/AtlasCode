@@ -2,6 +2,10 @@ import axios, { AxiosError, type AxiosInstance, type InternalAxiosRequestConfig 
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
+/** Read once by the Login page to show why the user landed there, instead of a silent redirect. */
+export const AUTH_NOTICE_KEY = 'atlas_auth_notice';
+const DISABLED_ACCOUNT_DETAIL = 'This account has been disabled';
+
 class ApiClient {
   private client: AxiosInstance;
   private refreshTokenPromise: Promise<string> | null = null;
@@ -29,6 +33,16 @@ class ApiClient {
       (response) => response,
       async (error: AxiosError) => {
         const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
+
+        if (
+          error.response?.status === 403 &&
+          (error.response.data as { detail?: string } | undefined)?.detail === DISABLED_ACCOUNT_DETAIL
+        ) {
+          localStorage.removeItem('access_token');
+          sessionStorage.setItem(AUTH_NOTICE_KEY, DISABLED_ACCOUNT_DETAIL);
+          window.location.href = '/login';
+          return Promise.reject(error);
+        }
 
         if (error.response?.status === 401 && !originalRequest._retry) {
           originalRequest._retry = true;

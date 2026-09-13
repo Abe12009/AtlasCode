@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
 import { authApi } from '../api/services';
 import type { User, StudentProfile } from '../types';
-import { apiClient } from '../api/client';
+import { apiClient, AUTH_NOTICE_KEY } from '../api/client';
 import { signInWithGoogle, signInWithGithub, sendPasswordResetEmail } from '../lib/firebase';
 
 interface AuthContextType {
@@ -45,7 +45,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(userData);
       const profileData = await authApi.getProfile();
       setProfile(profileData);
-    } catch {
+    } catch (err: unknown) {
+      const axiosError = err as { response?: { status?: number; data?: { detail?: string } } };
+      if (axiosError.response?.status === 403 && axiosError.response.data?.detail === 'This account has been disabled') {
+        sessionStorage.setItem(AUTH_NOTICE_KEY, axiosError.response.data.detail);
+      }
       apiClient.setAuthToken(null);
       setUser(null);
       setProfile(null);
