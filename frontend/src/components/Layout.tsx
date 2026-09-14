@@ -16,6 +16,7 @@ import { NotificationBell } from './NotificationBell';
 import { LanguageSwitcher } from './LanguageSwitcher';
 import { ThemeToggle } from './ui/ThemeToggle';
 import { ProfileAvatar } from './ProfileAvatar';
+import { FeedbackModal } from './FeedbackModal';
 
 export function Layout() {
   const { user, profile, logout, loading: authLoading, refreshUser } = useAuth();
@@ -26,6 +27,7 @@ export function Layout() {
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [onboardingDismissed, setOnboardingDismissed] = useState(false);
+  const [feedbackModalOpen, setFeedbackModalOpen] = useState(false);
   const headerRef = useRef<HTMLDivElement>(null);
 
   const showOnboarding = !onboardingDismissed && user?.has_completed_onboarding === false;
@@ -111,7 +113,7 @@ export function Layout() {
       >
         <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
-            <div className="flex items-center gap-6">
+            <div className="flex items-center gap-4">
               <NavLink
                 to="/app/dashboard"
                 className="flex items-center gap-2 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 focus-visible:ring-offset-bg-primary"
@@ -135,7 +137,7 @@ export function Layout() {
                       to={item.path}
                       className={({ isActive: active }) =>
                         cn(
-                          'flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-fast',
+                          'flex items-center gap-2 px-2 py-2 rounded-xl text-sm font-medium transition-all duration-fast',
                           'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 focus-visible:ring-offset-bg-primary',
                           active
                             ? 'bg-primary-500/10 text-primary-400 border border-primary-500/20'
@@ -153,10 +155,15 @@ export function Layout() {
               </nav>
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
+              {/* Duplicated on Dashboard/Profile, so it's the first thing to
+                  give up header space -- kept off until there's comfortably
+                  enough width (>=1536px) rather than the 1024px breakpoint
+                  the rest of this row uses, which is what let the header
+                  overflow at common 1280px-wide laptop screens. */}
               <div
                 data-tour="tour-xp"
-                className="hidden lg:flex items-center gap-2 px-3 py-1.5 bg-bg-secondary rounded-xl border border-border-primary"
+                className="hidden 2xl:flex items-center gap-2 px-3 py-1.5 bg-bg-secondary rounded-xl border border-border-primary"
               >
                 <div className="flex items-center gap-1.5">
                   <span className="text-xs font-mono text-text-tertiary">Lvl.</span>
@@ -316,10 +323,19 @@ export function Layout() {
               <Link to="/contact" className="text-text-tertiary hover:text-text-primary transition-colors">
                 {t('footer.contact')}
               </Link>
+              <button
+                type="button"
+                onClick={() => setFeedbackModalOpen(true)}
+                className="text-text-tertiary hover:text-text-primary transition-colors"
+              >
+                {t('footer.feedback')}
+              </button>
             </div>
           </div>
         </div>
       </footer>
+
+      {feedbackModalOpen && <FeedbackModal onClose={() => setFeedbackModalOpen(false)} />}
 
       <CodyBubble />
       <XpToastHost />

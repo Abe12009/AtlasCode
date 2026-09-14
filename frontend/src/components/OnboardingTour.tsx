@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Button, cn } from './ui';
+import { Button, cn, getFocusableElements } from './ui';
 import { CodyCharacter } from './CodyCharacter';
 import { useElementRect } from '../hooks/useElementRect';
 import { useMediaQuery } from '../hooks/useMediaQuery';
@@ -120,6 +120,44 @@ export function OnboardingTour({ onDone }: OnboardingTourProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const isDesktop = useMediaQuery('(min-width: 1024px)');
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // Focus containment: this dialog claims aria-modal, so it must actually
+  // trap Tab -- without this, a keyboard user drifts out of the tour into
+  // real nav links behind the dimmed spotlight without realizing they left.
+  useEffect(() => {
+    const previouslyFocused = document.activeElement as HTMLElement | null;
+    const container = containerRef.current;
+    const focusable = container ? getFocusableElements(container) : [];
+    (focusable[0] ?? container)?.focus();
+
+    function handleKeydown(event: KeyboardEvent) {
+      if (event.key !== 'Tab' || !container) return;
+      const elements = getFocusableElements(container);
+      if (elements.length === 0) {
+        event.preventDefault();
+        return;
+      }
+      const first = elements[0];
+      const last = elements[elements.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    }
+
+    document.addEventListener('keydown', handleKeydown);
+    return () => {
+      document.removeEventListener('keydown', handleKeydown);
+      previouslyFocused?.focus();
+    };
+    // Runs once for the tour's whole lifetime (not per-step): the same two
+    // buttons exist at every step, so there's nothing to re-focus on change.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const step = TOUR_STEPS[stepIndex];
   const isLast = stepIndex === TOUR_STEPS.length - 1;
@@ -144,7 +182,7 @@ export function OnboardingTour({ onDone }: OnboardingTourProps) {
   const goNext = () => (isLast ? onDone() : setStepIndex((i) => i + 1));
 
   return (
-    <div className="fixed inset-0 z-[80]" role="dialog" aria-modal="true" aria-label="Onboarding tour">
+    <div ref={containerRef} className="fixed inset-0 z-[80]" role="dialog" aria-modal="true" aria-label="Onboarding tour">
       <SpotlightBackdrop rect={rect} />
 
       <motion.div

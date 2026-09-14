@@ -165,6 +165,15 @@ const modalSizes = {
   full: 'max-w-4xl',
 };
 
+const FOCUSABLE_SELECTOR =
+  'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
+export function getFocusableElements(container: HTMLElement): HTMLElement[] {
+  return Array.from(container.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR)).filter(
+    (el) => el.offsetParent !== null
+  );
+}
+
 export function Modal({
   isOpen,
   onClose,
@@ -177,12 +186,20 @@ export function Modal({
   closeOnEscape = true,
 }: ModalProps) {
   const [isMounted, setIsMounted] = useState(false);
+  const contentRef = useRef<HTMLDivElement>(null);
+  const previouslyFocusedRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
     if (isOpen) {
       setIsMounted(true);
       document.body.style.overflow = 'hidden';
     } else {
+      // Without this, a Modal a parent keeps mounted and toggles only via
+      // `isOpen` (e.g. the delete-account confirmation) would set isMounted
+      // once and never unset it, so `!isOpen && !isMounted` never becomes
+      // true again -- the modal would stay visibly open forever after the
+      // first time, no matter how many times onClose fires.
+      setIsMounted(false);
       document.body.style.overflow = '';
     }
 
@@ -191,24 +208,53 @@ export function Modal({
     };
   }, [isOpen]);
 
+  // Focus containment: move focus into the modal on open, trap Tab/Shift+Tab
+  // to its own focusable elements while open, and return focus to whatever
+  // triggered the modal on close -- without this, a keyboard user tabs
+  // straight out into the page behind the dimmed overlay.
+  useEffect(() => {
+    if (!isOpen) return;
+
+    previouslyFocusedRef.current = document.activeElement as HTMLElement | null;
+    const container = contentRef.current;
+    const focusable = container ? getFocusableElements(container) : [];
+    (focusable[0] ?? container)?.focus();
+
+    function handleKeydown(event: KeyboardEvent) {
+      if (event.key === 'Escape') {
+        if (closeOnEscape) onClose();
+        return;
+      }
+      if (event.key !== 'Tab' || !container) return;
+
+      const elements = getFocusableElements(container);
+      if (elements.length === 0) {
+        event.preventDefault();
+        return;
+      }
+      const first = elements[0];
+      const last = elements[elements.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    }
+
+    document.addEventListener('keydown', handleKeydown);
+    return () => {
+      document.removeEventListener('keydown', handleKeydown);
+      previouslyFocusedRef.current?.focus();
+    };
+  }, [isOpen, closeOnEscape, onClose]);
+
   const handleOverlayClick = (e: React.MouseEvent) => {
     if (closeOnOverlayClick && e.target === e.currentTarget) {
       onClose();
     }
   };
-
-  useEffect(() => {
-    function handleEscape(event: KeyboardEvent) {
-      if (closeOnEscape && event.key === 'Escape') {
-        onClose();
-      }
-    }
-
-    if (isOpen) {
-      document.addEventListener('keydown', handleEscape);
-    }
-    return () => document.removeEventListener('keydown', handleEscape);
-  }, [isOpen, closeOnEscape, onClose]);
 
   if (!isOpen && !isMounted) return null;
 
@@ -227,6 +273,7 @@ export function Modal({
         onClick={handleOverlayClick}
       />
       <div
+        ref={contentRef}
         className={cn(
           'glass-strong relative w-full rounded-xl shadow-modal',
           'animate-scale-in',
@@ -234,6 +281,7 @@ export function Modal({
           modalSizes[size],
         )}
         role="document"
+        tabIndex={-1}
       >
         {(title || showCloseButton) && (
           <div className="flex items-start justify-between p-4 border-b border-border-primary">

@@ -63,6 +63,11 @@ export function CodyBubble() {
   const movedRef = useRef(false);
   const dragStartRef = useRef<{ pointerX: number; pointerY: number; left: number; top: number } | null>(null);
   const bubbleRef = useRef<HTMLButtonElement>(null);
+  // A completed drag still fires a trailing `click` event in most browsers;
+  // this flag lets the click handler ignore that one so a drag never also
+  // toggles the panel. Keyboard activation (Enter/Space) fires only `click`,
+  // with no pointer events at all, so it's never suppressed.
+  const suppressNextClickRef = useRef(false);
 
   useEffect(() => {
     if (!user) return;
@@ -133,13 +138,20 @@ export function CodyBubble() {
     if (!draggingRef.current) return;
     draggingRef.current = false;
     if (movedRef.current) {
+      suppressNextClickRef.current = true;
       setPosition((prev) => {
         if (prev) persistPosition(prev);
         return prev;
       });
-    } else {
-      setOpen((prev) => !prev);
     }
+  };
+
+  const handleClick = () => {
+    if (suppressNextClickRef.current) {
+      suppressNextClickRef.current = false;
+      return;
+    }
+    setOpen((prev) => !prev);
   };
 
   if (!user || !position) return null;
@@ -199,6 +211,7 @@ export function CodyBubble() {
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
         onPointerCancel={handlePointerUp}
+        onClick={handleClick}
         className={cn(
           'fixed z-[60] flex items-center justify-center rounded-full',
           'touch-none select-none cursor-grab active:cursor-grabbing',
