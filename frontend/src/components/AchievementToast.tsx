@@ -45,7 +45,10 @@ export function AchievementToastHost() {
   }, []);
 
   return (
-    <div className="fixed top-20 left-1/2 -translate-x-1/2 z-[70] flex flex-col items-center gap-2 pointer-events-none">
+    <div
+      className="fixed top-20 left-1/2 -translate-x-1/2 z-[70] flex flex-col items-center gap-2 pointer-events-none"
+      role="alert"
+    >
       <AnimatePresence>
         {toasts.map((toast) => (
           <motion.div

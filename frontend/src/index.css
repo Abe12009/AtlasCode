@@ -38,7 +38,10 @@
   --color-text-primary: #101828;
   --color-text-secondary: #44546B;
   --color-text-tertiary: #5E6E85;
-  --color-text-quaternary: #9AA6B8;
+  /* 4.58:1 against --color-bg-primary -- the old #9AA6B8 was ~2.3:1, failing
+     WCAG AA (4.5:1) for normal text. Used for real content (code-editor
+     placeholder, locked-achievement descriptions), not just decoration. */
+  --color-text-quaternary: #66728C;
   --color-text-inverse: #F8FAFC;
   --color-text-link: #1D4ED8;
   --color-text-link-hover: #1E40AF;
@@ -245,7 +248,9 @@
   --color-text-primary: #F8FAFC;
   --color-text-secondary: #A6B4C8;
   --color-text-tertiary: #7C8CA5;
-  --color-text-quaternary: #5B6A82;
+  /* 5.1:1 against --color-bg-primary -- the old #5B6A82 was ~3.4:1, also
+     failing WCAG AA (4.5:1), same issue as the light theme above. */
+  --color-text-quaternary: #7686A0;
   --color-text-inverse: #0F172A;
   --color-text-link: #7DAAFF;
   --color-text-link-hover: #A9C7FF;
