@@ -8,6 +8,10 @@ from app.core.security import decode_token
 from app.models import User
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
+#: auto_error=False so a request with no Authorization header at all reaches
+#: get_current_user_optional's own body (returning None) instead of FastAPI
+#: raising 401 itself before that function ever runs.
+oauth2_scheme_optional = OAuth2PasswordBearer(tokenUrl="/api/auth/login", auto_error=False)
 
 
 async def get_current_user(
@@ -54,7 +58,7 @@ async def get_current_staff_user(
 
 
 async def get_current_user_optional(
-    token: Optional[str] = Depends(oauth2_scheme),
+    token: Optional[str] = Depends(oauth2_scheme_optional),
     db: AsyncSession = Depends(get_db)
 ) -> Optional[User]:
     if not token:

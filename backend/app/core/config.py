@@ -61,6 +61,11 @@ class Settings(BaseSettings):
     password_reset_rate_limit_per_email_per_hour: int = 3
     password_reset_rate_limit_per_ip_per_hour: int = 10
 
+    # --- In-app feedback -----------------------------------------------------
+    #: Per-user (or per-IP, for an anonymous submitter) cap, same "count rows
+    #: in a window" style as Cody's and password-reset's rate limits above.
+    feedback_rate_limit_per_hour: int = 5
+
     class Config:
         env_file = ".env"
 

@@ -69,6 +69,11 @@ export const usersApi = {
     apiClient.post<void>(`/users/${encodeURIComponent(username)}/report`, data),
 };
 
+export const feedbackApi = {
+  submit: (data: { category: string; message: string; page_path?: string }) =>
+    apiClient.post<void>('/feedback', data),
+};
+
 export const coursesApi = {
   getAll: (language: string = 'en') =>
     apiClient.get<Course[]>('/courses', { language }),

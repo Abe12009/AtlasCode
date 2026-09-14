@@ -1,7 +1,7 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { dashboardApi, authApi } from '../api/services';
-import { Trophy, Target, Flame, FolderKanban, CheckCircle, Award, Settings, User, TrendingUp, Sparkles, Code, BookOpen, Terminal, Palette, LogOut, Lock } from 'lucide-react';
+import { Trophy, Target, Flame, FolderKanban, CheckCircle, Award, Settings, User, TrendingUp, Sparkles, Code, BookOpen, Terminal, Palette, LogOut, Lock, MessageSquare } from 'lucide-react';
 import { useState } from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import { Card, Badge, Progress, Button, cn, Skeleton, XPBadge, StreakBadge, AchievementBadge, Alert, Modal, Input, PasswordInput } from '../components/ui';
@@ -11,6 +11,7 @@ import { ProfileAvatar } from '../components/ProfileAvatar';
 import { AvatarBuilder } from '../components/AvatarBuilder';
 import { AvatarUpload } from '../components/AvatarUpload';
 import { ChangePasswordForm } from '../components/ChangePasswordForm';
+import { FeedbackModal } from '../components/FeedbackModal';
 import { DEFAULT_AVATAR_CONFIG, parseAvatarConfig, serializeAvatarConfig, type AvatarConfig } from '../lib/avatar';
 
 export function Profile() {
@@ -31,6 +32,7 @@ export function Profile() {
   const [privacySaving, setPrivacySaving] = useState(false);
   const [privacySaved, setPrivacySaved] = useState(false);
   const [deleteAccountModalOpen, setDeleteAccountModalOpen] = useState(false);
+  const [feedbackModalOpen, setFeedbackModalOpen] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState('');
   const [deletePassword, setDeletePassword] = useState('');
   const [deleteError, setDeleteError] = useState('');
@@ -492,6 +494,19 @@ export function Profile() {
 
               <Card variant="default" padding="lg" className="relative overflow-hidden">
                 <div className="relative z-10">
+                  <h2 className="text-lg font-semibold text-text-primary mb-2 flex items-center gap-2">
+                    <MessageSquare className="h-5 w-5 text-accent-400" />
+                    <span>{t('feedback.settings_title')}</span>
+                  </h2>
+                  <p className="text-text-secondary text-sm mb-4">{t('feedback.settings_description')}</p>
+                  <Button variant="outline" onClick={() => setFeedbackModalOpen(true)}>
+                    {t('feedback.open_button')}
+                  </Button>
+                </div>
+              </Card>
+
+              <Card variant="default" padding="lg" className="relative overflow-hidden">
+                <div className="relative z-10">
                   <h2 className="text-lg font-semibold text-text-primary mb-6 flex items-center gap-2">
                     <Settings className="h-5 w-5 text-accent-400" />
                     <span>{t('profile_page.settings')}</span>
@@ -580,6 +595,8 @@ export function Profile() {
             </Button>
           </div>
         </Modal>
+
+        {feedbackModalOpen && <FeedbackModal onClose={() => setFeedbackModalOpen(false)} />}
       </div>
     </div>
   );

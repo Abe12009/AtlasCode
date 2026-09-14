@@ -687,3 +687,31 @@ class Report(Base):
     resolved_by_user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
     resolved_at = Column(DateTime, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow, index=True)
+
+
+class FeedbackCategoryEnum(str, enum.Enum):
+    bug = "bug"
+    suggestion = "suggestion"
+    other = "other"
+
+
+class FeedbackSubmission(Base):
+    """A free-text bug report / suggestion, reachable from Settings (and the
+    signed-in app footer). user_id is nullable and SET NULL on account
+    deletion, the same audit-trail rationale as Report above: feedback is a
+    record of something that was said, not the user's own content, so it
+    outlives the account. Anonymous submission is supported at the schema
+    level (ip_address covers rate limiting when there's no user_id) even
+    though every current entry point requires being signed in.
+    """
+
+    __tablename__ = "feedback_submissions"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True)
+    category = Column(Enum(FeedbackCategoryEnum), default=FeedbackCategoryEnum.other, nullable=False)
+    message = Column(Text, nullable=False)
+    page_path = Column(String(500), nullable=True)
+    user_agent = Column(String(500), nullable=True)
+    ip_address = Column(String(64), nullable=True, index=True)
+    created_at = Column(DateTime, default=datetime.utcnow, index=True)

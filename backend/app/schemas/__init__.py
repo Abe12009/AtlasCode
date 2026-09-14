@@ -1,7 +1,7 @@
 from pydantic import BaseModel, EmailStr, Field, field_serializer
 from typing import Optional, List, Dict, Any
 from datetime import datetime, timezone
-from app.models import LanguageEnum, DifficultyEnum, MissionStatusEnum, ExerciseTypeEnum, NotificationTypeEnum, CodyRoleEnum, ReportReasonEnum, ReportStatusEnum
+from app.models import LanguageEnum, DifficultyEnum, MissionStatusEnum, ExerciseTypeEnum, NotificationTypeEnum, CodyRoleEnum, ReportReasonEnum, ReportStatusEnum, FeedbackCategoryEnum
 
 
 class Token(BaseModel):
@@ -588,6 +588,27 @@ class ReportResponse(BaseModel):
 
 class ReportResolveRequest(BaseModel):
     resolution_note: str = Field(min_length=1, max_length=2000)
+
+
+class FeedbackCreateRequest(BaseModel):
+    category: FeedbackCategoryEnum = FeedbackCategoryEnum.other
+    message: str = Field(min_length=1, max_length=4000)
+    #: Frontend route the user was on, e.g. "/app/dashboard" -- the backend
+    #: has no way to know this on its own, so the client reports it.
+    page_path: Optional[str] = Field(default=None, max_length=500)
+
+
+class FeedbackResponse(BaseModel):
+    id: int
+    user_id: Optional[int] = None
+    category: FeedbackCategoryEnum
+    message: str
+    page_path: Optional[str] = None
+    user_agent: Optional[str] = None
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
 
 
 class CodySpendResponse(BaseModel):

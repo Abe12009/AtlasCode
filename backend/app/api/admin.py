@@ -20,8 +20,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.config import get_settings
 from app.core.dependencies import get_current_staff_user
 from app.db.session import get_db
-from app.models import CodyMessage, Report, ReportStatusEnum, User
-from app.schemas import CodySpendResponse, ReportResolveRequest, ReportResponse
+from app.models import CodyMessage, FeedbackSubmission, Report, ReportStatusEnum, User
+from app.schemas import CodySpendResponse, FeedbackResponse, ReportResolveRequest, ReportResponse
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 
@@ -148,3 +148,14 @@ async def cody_spend(
         spend_usd_last_30d=await _sum_since(now - timedelta(days=30)),
         daily_cap_usd=get_settings().cody_daily_spend_cap_usd,
     )
+
+
+@router.get("/feedback", response_model=list[FeedbackResponse])
+async def list_feedback(
+    current_staff: User = Depends(get_current_staff_user),
+    db: AsyncSession = Depends(get_db),
+):
+    result = await db.execute(
+        select(FeedbackSubmission).order_by(FeedbackSubmission.created_at.desc())
+    )
+    return result.scalars().all()

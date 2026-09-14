@@ -650,7 +650,24 @@
     "contact": "Contact",
     "github": "GitHub",
     "instagram": "Instagram",
-    "x": "X"
+    "x": "X",
+    "feedback": "Retours"
+  },
+  "feedback": {
+    "title": "Envoyer un retour",
+    "description": "Un bug ou une suggestion ? Faites-le nous savoir.",
+    "settings_title": "Retours",
+    "settings_description": "Signalez un bug ou proposez une idée — cela va directement à l'équipe.",
+    "open_button": "Donner un avis",
+    "category_label": "Catégorie",
+    "category_bug": "Bug",
+    "category_suggestion": "Suggestion",
+    "category_other": "Autre",
+    "message_label": "Message",
+    "message_placeholder": "Que s'est-il passé, ou que souhaiteriez-vous voir ?",
+    "submit": "Envoyer",
+    "success": "Merci — nous avons bien reçu votre retour.",
+    "error": "Impossible d'envoyer votre retour. Veuillez réessayer."
   },
   "legal": {
     "last_updated": "Dernière mise à jour : {{date}}",

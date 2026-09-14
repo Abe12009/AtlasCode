@@ -650,7 +650,24 @@
     "contact": "Contact",
     "github": "GitHub",
     "instagram": "Instagram",
-    "x": "X"
+    "x": "X",
+    "feedback": "Feedback"
+  },
+  "feedback": {
+    "title": "Send feedback",
+    "description": "Found a bug or have a suggestion? Let us know.",
+    "settings_title": "Feedback",
+    "settings_description": "Report a bug or suggest something — it goes straight to the team.",
+    "open_button": "Give feedback",
+    "category_label": "Category",
+    "category_bug": "Bug",
+    "category_suggestion": "Suggestion",
+    "category_other": "Other",
+    "message_label": "Message",
+    "message_placeholder": "What happened, or what would you like to see?",
+    "submit": "Send feedback",
+    "success": "Thanks — we've received your feedback.",
+    "error": "Couldn't send your feedback. Please try again."
   },
   "legal": {
     "last_updated": "Last updated: {{date}}",

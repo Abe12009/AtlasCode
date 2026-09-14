@@ -655,7 +655,24 @@
     "contact": "اتصل بنا",
     "github": "GitHub",
     "instagram": "Instagram",
-    "x": "X"
+    "x": "X",
+    "feedback": "الملاحظات"
+  },
+  "feedback": {
+    "title": "إرسال ملاحظات",
+    "description": "وجدت خطأً أو لديك اقتراح؟ أخبرنا.",
+    "settings_title": "الملاحظات",
+    "settings_description": "أبلغ عن خطأ أو اقترح شيئًا — يصل مباشرة إلى الفريق.",
+    "open_button": "أرسل ملاحظاتك",
+    "category_label": "الفئة",
+    "category_bug": "خطأ",
+    "category_suggestion": "اقتراح",
+    "category_other": "أخرى",
+    "message_label": "الرسالة",
+    "message_placeholder": "ماذا حدث، أو ماذا تود أن ترى؟",
+    "submit": "إرسال",
+    "success": "شكرًا — لقد استلمنا ملاحظاتك.",
+    "error": "تعذر إرسال ملاحظاتك. حاول مرة أخرى."
   },
   "legal": {
     "last_updated": "آخر تحديث: {{date}}",
