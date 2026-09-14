@@ -115,7 +115,7 @@ export function Login() {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022"
+                placeholder="••••••••"
                 disabled={loading}
                 leftIcon={<Lock className="h-4 w-4" />}
               />

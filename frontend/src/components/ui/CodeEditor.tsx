@@ -204,6 +204,8 @@ export function TerminalPanel({ output, error, isRunning, clearable = true, onCl
       </div>
       <div
         ref={terminalRef}
+        role="status"
+        aria-live="polite"
         className="flex-1 p-4 font-mono text-sm text-gray-100 overflow-y-auto min-h-[150px] max-h-[400px]"
       >
         {output && (

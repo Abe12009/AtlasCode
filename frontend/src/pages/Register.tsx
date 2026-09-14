@@ -207,7 +207,7 @@ export function Register() {
                 required
                 value={formData.password}
                 onChange={(e) => handleChange('password', e.target.value)}
-                placeholder="\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022"
+                placeholder="••••••••"
                 disabled={loading}
                 error={errors.password}
                 leftIcon={<Lock className="h-4 w-4" />}
@@ -241,7 +241,7 @@ export function Register() {
                 required
                 value={formData.confirmPassword}
                 onChange={(e) => handleChange('confirmPassword', e.target.value)}
-                placeholder="\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022"
+                placeholder="••••••••"
                 disabled={loading}
                 error={errors.confirmPassword}
                 leftIcon={<Lock className="h-4 w-4" />}

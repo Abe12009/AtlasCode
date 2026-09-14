@@ -38,7 +38,11 @@ export function ProfileAvatar({
   if (user?.avatar_type === 'generated' && user.avatar_config) {
     return (
       <div className={cn('overflow-hidden rounded-full bg-bg-secondary flex-shrink-0', SIZE_CLASSES[size], className)}>
-        <AvatarFace config={parseAvatarConfig(user.avatar_config)} className="h-full w-full" />
+        <AvatarFace
+          config={parseAvatarConfig(user.avatar_config)}
+          className="h-full w-full"
+          label={user.username ? `${user.username}'s avatar` : undefined}
+        />
       </div>
     );
   }

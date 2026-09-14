@@ -22,7 +22,18 @@ import {
  * (circle radius, neck bounding box) is deliberately UNCHANGED so the
  * not-yet-upgraded hair styles and every accessory -- both hand-tuned to
  * the old coordinates -- still align correctly. */
-export function AvatarFace({ config, className }: { config: AvatarConfig; className?: string }) {
+export function AvatarFace({
+  config,
+  className,
+  label = 'Avatar',
+}: {
+  config: AvatarConfig;
+  className?: string;
+  /** Override the generic default with something like "username's avatar"
+   * when several avatars appear together (leaderboards, profile lists) and
+   * a screen reader user needs to tell them apart. */
+  label?: string;
+}) {
   const skin = SKIN_TONES.find((s) => s.id === config.skinTone)?.color ?? SKIN_TONES[2].color;
   const hairColor = HAIR_COLORS.find((c) => c.id === config.hairColor)?.color ?? HAIR_COLORS[1].color;
   const outfitColor = OUTFITS.find((o) => o.id === config.outfit)?.color ?? OUTFITS[0].color;
@@ -34,7 +45,7 @@ export function AvatarFace({ config, className }: { config: AvatarConfig; classN
   const skinGradId = `${uid}-skin`;
 
   return (
-    <svg viewBox="0 0 100 100" className={className} role="img" aria-label="Avatar">
+    <svg viewBox="0 0 100 100" className={className} role="img" aria-label={label}>
       <defs>
         <radialGradient id={skinGradId} cx="38%" cy="32%" r="75%">
           <stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.22" />
