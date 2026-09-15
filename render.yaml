@@ -38,6 +38,11 @@ services:
         value: "30"
       - key: CODY_HISTORY_CONTEXT_SIZE
         value: "10"
+      # Global kill switch on top of the per-user hourly limit above: once
+      # every user's combined Cody spend in the trailing 24h reaches this,
+      # /cody/chat returns 503 instead of calling OpenRouter. 0 disables it.
+      - key: CODY_DAILY_SPEND_CAP_USD
+        value: "10.0"
       # Optional: only needed to enable password reset by email for
       # local-password accounts. Leave RESEND_API_KEY unset and
       # /auth/forgot-password returns 503 rather than the app failing to boot.
@@ -58,6 +63,11 @@ services:
         value: "3"
       - key: PASSWORD_RESET_RATE_LIMIT_PER_IP_PER_HOUR
         value: "10"
+      # Per-user (or per-IP, for an anonymous submitter) cap on the in-app
+      # feedback form -- same "count rows in a window" style as the limits
+      # above.
+      - key: FEEDBACK_RATE_LIMIT_PER_HOUR
+        value: "5"
 
 databases:
   - name: atlascode-db

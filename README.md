@@ -86,6 +86,18 @@ provisions an `atlascode-db` instance and injects its connection string as
 | `ACCESS_TOKEN_EXPIRE_MINUTES` | no | Defaults to 43200 (30 days) |
 | `CORS_ORIGINS` | **yes in prod** | JSON array or comma-separated list of allowed frontend origins. Must include your Vercel URL. Never `*` |
 | `FIREBASE_PROJECT_ID` | optional | Only needed for Google/GitHub sign-in and Firebase password reset. Public value — no secret involved |
+| `OPENROUTER_API_KEY` | optional | Only needed to enable Cody (the AI companion). Leave unset and `/cody/chat` returns 503 rather than the app failing to boot |
+| `CODY_MODEL` | no | Defaults to `anthropic/claude-haiku-4.5` |
+| `CODY_RATE_LIMIT_PER_HOUR` | no | Per-user hourly message cap. Defaults to 30 |
+| `CODY_HISTORY_CONTEXT_SIZE` | no | Defaults to 10 |
+| `CODY_DAILY_SPEND_CAP_USD` | no | Global kill switch on top of the per-user limit above — once every user's combined spend in the trailing 24h reaches this, Cody returns 503 instead of calling OpenRouter. Defaults to `10.0`; `0` disables it |
+| `RESEND_API_KEY` | optional | Only needed to enable password reset by email for local-password accounts. Leave unset and `/auth/forgot-password` returns 503 rather than the app failing to boot |
+| `EMAIL_FROM_ADDRESS` | **yes if `RESEND_API_KEY` is set** | Must be a verified sender/domain in that Resend account — prompted rather than defaulted so production never silently uses Resend's shared sandbox sender |
+| `FRONTEND_BASE_URL` | **yes if `RESEND_API_KEY` is set** | Origin the emailed reset link points at, e.g. your Vercel URL. No trailing slash |
+| `PASSWORD_RESET_TOKEN_EXPIRE_MINUTES` | no | Defaults to 30 |
+| `PASSWORD_RESET_RATE_LIMIT_PER_EMAIL_PER_HOUR` | no | Defaults to 3 |
+| `PASSWORD_RESET_RATE_LIMIT_PER_IP_PER_HOUR` | no | Defaults to 10 |
+| `FEEDBACK_RATE_LIMIT_PER_HOUR` | no | Per-user (or per-IP, for an anonymous submitter) cap on the in-app feedback form. Defaults to 5 |
 
 ### Frontend (`frontend/.env.example`)
 
@@ -120,9 +132,13 @@ tracked — see [§9](#9-git--secrets).
    - Health check: `/health`
    - A managed PostgreSQL database, wired to `DATABASE_URL` automatically
    - `SECRET_KEY` auto-generated
-3. Set the two variables Render leaves for you (`sync: false` in `render.yaml`):
+3. Set the variables Render leaves for you (`sync: false` in `render.yaml`):
    - `CORS_ORIGINS` — your Vercel URL, e.g. `https://atlascode.vercel.app`
    - `FIREBASE_PROJECT_ID` — only if you want Google/GitHub sign-in
+   - `OPENROUTER_API_KEY` — only if you want Cody enabled
+   - `RESEND_API_KEY` — only if you want password reset by email
+   - `EMAIL_FROM_ADDRESS` — required if you set `RESEND_API_KEY`; must be a verified sender/domain in that Resend account
+   - `FRONTEND_BASE_URL` — required if you set `RESEND_API_KEY`, e.g. your Vercel URL
 4. Deploy. Render builds and boots the service; `/health` should return
    `{"status": "ok"}`.
 5. Seed the curriculum once (see [§8](#8-migrations--seeding)) — Render's
