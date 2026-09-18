@@ -141,6 +141,11 @@ MIGRATIONS: tuple[AddColumn, ...] = (
     AddColumn("cody_messages", "prompt_tokens", "INTEGER"),
     AddColumn("cody_messages", "completion_tokens", "INTEGER"),
     AddColumn("cody_messages", "estimated_cost_usd", "FLOAT"),
+    # --- Orientini -------------------------------------------------------------
+    # Every other Orientini table is new, so create_all handles them. Only
+    # this column, added to the pre-existing `student_profiles` table, needs
+    # an additive migration.
+    AddColumn("student_profiles", "bac_track", "VARCHAR(20)"),
 )
 
 #: Indexes for the columns above. ``IF NOT EXISTS`` is supported by both
