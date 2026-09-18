@@ -302,6 +302,14 @@ class LessonResponse(BaseModel):
     blocks: List[LessonBlockResponse] = []
     exercises: List[ExerciseResponse] = []
     status: Optional[str] = None
+    #: Set by GET /lessons/{id} from the lesson's own module/course
+    #: relationship -- not stored columns, so these are absent (None)
+    #: anywhere else this schema might theoretically be reused.
+    course_title: Optional[str] = None
+    #: Numeric id, not slug -- CourseDetail.tsx's route (/app/courses/:courseId)
+    #: takes the numeric Course.id, not a slug.
+    course_id: Optional[int] = None
+    module_title: Optional[str] = None
 
     class Config:
         from_attributes = True
@@ -502,6 +510,12 @@ class AchievementEarnedResponse(BaseModel):
     xp_reward: int
 
 
+class TestCaseResultResponse(BaseModel):
+    assertion: str
+    passed: bool
+    message: Optional[str] = None
+
+
 class ExerciseSubmitResponse(BaseModel):
     is_correct: bool
     xp_earned: int
@@ -513,6 +527,12 @@ class ExerciseSubmitResponse(BaseModel):
     is_completed: bool = False
     lesson_completed: bool = False
     achievements_earned: List[AchievementEarnedResponse] = []
+    #: Per-assertion pass/fail, present only for a code_writing/debugging
+    #: exercise whose test_code decomposed into a trailing run of plain
+    #: asserts (see code_executor._split_assertion_tail). None for every
+    #: other exercise type, and for the ones whose test_code didn't
+    #: decompose that way -- those keep the single pass/fail in `error`.
+    test_results: Optional[List[TestCaseResultResponse]] = None
 
 
 class VisualProgramRequest(BaseModel):

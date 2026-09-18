@@ -332,6 +332,72 @@ class TestCodeExercisesStillWork:
         assert await get_xp(client, test_user["headers"]) == after_first
 
 
+class TestPerAssertionTestResults:
+    """The Step 3 checklist UI's data: submit/run responses carry a
+    test_results breakdown for exercises whose test_code decomposes into a
+    trailing run of asserts (see code_executor._split_assertion_tail). Engine
+    edge cases (multi-row checklists, fallback shapes) are covered directly
+    against execute_code() in test_code_executor.py -- these confirm the
+    schema/endpoint plumbing actually carries the field through for real."""
+
+    async def test_submit_correct_solution_reports_a_passing_checklist_row(
+        self, client: AsyncClient, test_user
+    ):
+        response = await client.post(
+            f"/exercises/{CODE_ID}/submit",
+            headers=test_user["headers"],
+            json={"exercise_id": CODE_ID, "code": "print('Hello, World!')"},
+        )
+        assert response.status_code == 200
+        body = response.json()
+        assert body["is_correct"] is True
+        assert body["test_results"] is not None
+        assert len(body["test_results"]) >= 1
+        assert all(r["passed"] for r in body["test_results"])
+        assert body["test_results"][0]["assertion"]
+
+    async def test_submit_wrong_solution_reports_a_failing_checklist_row(
+        self, client: AsyncClient, test_user
+    ):
+        response = await client.post(
+            f"/exercises/{CODE_ID}/submit",
+            headers=test_user["headers"],
+            json={"exercise_id": CODE_ID, "code": "print('wrong output entirely')"},
+        )
+        assert response.status_code == 200
+        body = response.json()
+        assert body["is_correct"] is False
+        assert body["test_results"] is not None
+        assert any(not r["passed"] for r in body["test_results"])
+
+    async def test_run_also_reports_test_results_not_just_submit(
+        self, client: AsyncClient, test_user
+    ):
+        response = await client.post(
+            f"/exercises/{CODE_ID}/run",
+            headers=test_user["headers"],
+            json={"exercise_id": CODE_ID, "code": "print('Hello, World!')"},
+        )
+        assert response.status_code == 200
+        body = response.json()
+        assert body["test_results"] is not None
+
+    async def test_non_code_exercise_has_no_test_results(
+        self, client: AsyncClient, test_user, db_session
+    ):
+        # An MCQ never goes through the sandbox at all -- the field must
+        # stay None, not an empty list (which the UI would read as "0/0
+        # passing" rather than "not applicable here").
+        option_id = await correct_option_id(db_session, MCQ_ID)
+        response = await client.post(
+            f"/exercises/{MCQ_ID}/submit",
+            headers=test_user["headers"],
+            json={"exercise_id": MCQ_ID, "selected_option_id": option_id},
+        )
+        assert response.status_code == 200
+        assert response.json()["test_results"] is None
+
+
 class TestLessonCompletionAndNotifications:
     async def test_multiple_choice_completion_completes_the_lesson_and_notifies(
         self, client: AsyncClient, test_user, db_session

@@ -29,6 +29,31 @@ export function ExerciseResult({ result }: ExerciseResultProps) {
         {result.xp_earned > 0 && <XPBadge xp={result.xp_earned} size="sm" />}
       </div>
       <p className="text-sm text-text-secondary break-words">{result.feedback}</p>
+      {result.test_results && result.test_results.length > 0 && (
+        <ul dir="ltr" className="mt-3 space-y-1.5 text-left" data-testid="test-results-checklist">
+          {result.test_results.map((tc, i) => (
+            <li
+              key={i}
+              className={cn(
+                'flex items-start gap-2 rounded-lg px-3 py-2 font-mono text-xs',
+                tc.passed ? 'bg-success-500/10 text-success-300' : 'bg-error-500/10 text-error-300'
+              )}
+            >
+              {tc.passed ? (
+                <Check className="h-3.5 w-3.5 mt-0.5 flex-shrink-0 text-success-500" aria-hidden="true" />
+              ) : (
+                <X className="h-3.5 w-3.5 mt-0.5 flex-shrink-0 text-error-500" aria-hidden="true" />
+              )}
+              <span className="break-all">
+                {tc.assertion}
+                {!tc.passed && tc.message && (
+                  <span className="block text-error-400/80 mt-0.5">{tc.message}</span>
+                )}
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
       {result.output && (
         <div
           dir="ltr"

@@ -182,6 +182,12 @@ export interface Lesson {
   blocks: LessonBlock[];
   exercises: Exercise[];
   status?: 'completed' | 'current' | 'available' | 'locked';
+  /** Breadcrumb data (Dashboard / Course / Lesson), resolved server-side
+   * from the lesson's module/course relationship -- null when the module or
+   * a translation for it doesn't exist. */
+  course_title?: string | null;
+  course_id?: number | null;
+  module_title?: string | null;
 }
 
 export interface LessonProgress {
@@ -329,6 +335,12 @@ export interface AchievementEarned {
   xp_reward: number;
 }
 
+export interface TestCaseResult {
+  assertion: string;
+  passed: boolean;
+  message: string | null;
+}
+
 export interface ExerciseSubmitResponse {
   is_correct: boolean;
   xp_earned: number;
@@ -339,6 +351,11 @@ export interface ExerciseSubmitResponse {
   is_completed?: boolean;
   lesson_completed?: boolean;
   achievements_earned?: AchievementEarned[];
+  /** Per-assertion pass/fail, present only when the exercise's test_code
+   * decomposed into a trailing run of plain asserts server-side -- null
+   * otherwise (non-code exercise types, and code exercises whose test_code
+   * didn't decompose that way keep only the single pass/fail above). */
+  test_results?: TestCaseResult[] | null;
 }
 
 export interface CodeExecutionRequest {

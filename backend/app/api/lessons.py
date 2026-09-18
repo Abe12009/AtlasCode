@@ -9,7 +9,7 @@ from app.core.dependencies import get_current_user
 from app.models import (
     Lesson, LessonBlock, LessonBlockTranslation, Exercise, ExerciseTranslation,
     ExerciseOption, ExerciseOptionTranslation, LessonProgress, StudentProfile,
-    MissionStatusEnum, LanguageEnum
+    MissionStatusEnum, LanguageEnum, Module, Course
 )
 from app.schemas import LessonResponse, LessonProgressResponse, ExerciseResponse, LanguageEnum as SchemaLanguageEnum
 
@@ -59,6 +59,8 @@ async def get_lesson(
         selectinload(Lesson.blocks).selectinload(LessonBlock.translations),
         selectinload(Lesson.exercises).selectinload(Exercise.translations),
         selectinload(Lesson.exercises).selectinload(Exercise.options).selectinload(ExerciseOption.translations),
+        selectinload(Lesson.module).selectinload(Module.translations),
+        selectinload(Lesson.module).selectinload(Module.course).selectinload(Course.translations),
     ).where(Lesson.id == lesson_id)
 
     result = await db.execute(query)
@@ -78,6 +80,25 @@ async def get_lesson(
         exercise.solution_code = None
         exercise.test_code = None
         exercise.validation_config = None
+
+    # Breadcrumb (Dashboard / Course / Lesson): Lesson carries a module_id on
+    # the ORM model but LessonResponse never exposed it (or a course), so the
+    # frontend had no way to render a real trail -- same gap Step 2 found and
+    # fixed for the dashboard's current-mission card.
+    course_title = None
+    course_id = None
+    module_title = None
+    module = lesson.module
+    if module:
+        module_translation = next((t for t in module.translations if t.language == language), None)
+        module_title = module_translation.title if module_translation else None
+        if module.course:
+            course_translation = next((t for t in module.course.translations if t.language == language), None)
+            course_title = course_translation.title if course_translation else None
+            course_id = module.course.id
+    lesson.course_title = course_title
+    lesson.course_id = course_id
+    lesson.module_title = module_title
 
     progress_query = select(LessonProgress).where(
         LessonProgress.user_id == current_user.id,

@@ -233,6 +233,8 @@
     "not_found": "Lesson not found",
     "content": "Content",
     "lesson_navigation": "Lesson navigation",
+    "breadcrumb": "Breadcrumb",
+    "step_of": "Step {{current}} of {{total}}",
     "submit_answer": "Submit Answer",
     "blank": "Blank",
     "your_prediction": "Your prediction",

@@ -233,6 +233,8 @@
     "not_found": "Leçon non trouvée",
     "content": "Contenu",
     "lesson_navigation": "Navigation des leçons",
+    "breadcrumb": "Fil d'Ariane",
+    "step_of": "Étape {{current}} sur {{total}}",
     "submit_answer": "Valider la réponse",
     "blank": "Blanc",
     "your_prediction": "Votre prédiction",

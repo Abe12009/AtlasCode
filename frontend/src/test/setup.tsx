@@ -1,5 +1,16 @@
 import '@testing-library/jest-dom';
 import { vi } from 'vitest';
+
+// jsdom doesn't implement Range.getClientRects/getBoundingClientRect, which
+// CodeMirror's view layer calls on every measurement pass (including ones
+// queued via requestAnimationFrame that can fire after a test's component
+// has already unmounted). Without this, those calls throw and surface as
+// unhandled-rejection noise in otherwise-passing test runs -- a known
+// jsdom+CodeMirror gap, not something specific to this app's usage.
+if (typeof Range !== 'undefined') {
+  Range.prototype.getClientRects = Range.prototype.getClientRects || (() => ({ length: 0, item: () => null, [Symbol.iterator]: function* () {} }) as unknown as DOMRectList);
+  Range.prototype.getBoundingClientRect = Range.prototype.getBoundingClientRect || (() => ({ top: 0, left: 0, right: 0, bottom: 0, width: 0, height: 0, x: 0, y: 0, toJSON() { return {}; } }));
+}
 import React from 'react';
 import { render } from '@testing-library/react';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';

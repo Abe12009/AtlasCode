@@ -238,6 +238,8 @@
     "not_found": "الدرس غير موجود",
     "content": "المحتوى",
     "lesson_navigation": "التنقل بين الدروس",
+    "breadcrumb": "مسار التنقل",
+    "step_of": "الخطوة {{current}} من {{total}}",
     "submit_answer": "إرسال الإجابة",
     "blank": "فراغ",
     "your_prediction": "توقعك",

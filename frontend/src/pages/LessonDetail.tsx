@@ -121,7 +121,8 @@ export function LessonDetail() {
   const blocks = lesson.blocks || [];
   const exercises = lesson.exercises || [];
   const currentBlock = blocks[currentBlockIndex];
-  const currentExercise = currentBlockIndex >= blocks.length
+  const isExerciseStep = currentBlockIndex >= blocks.length;
+  const currentExercise = isExerciseStep
     ? exercises.find((ex) => ex.order === currentBlockIndex - blocks.length + 1)
     : undefined;
   const totalSteps = blocks.length + exercises.length;
@@ -147,7 +148,7 @@ export function LessonDetail() {
 
   return (
     <div className={cn(LESSON_SHELL_HEIGHT_CLASS, 'flex flex-col overflow-hidden bg-bg-primary')} dir={isRTL ? 'rtl' : 'ltr'}>
-      <header className="bg-bg-secondary/80 backdrop-blur-xl border-b border-border-primary/50 px-4 py-3 flex-shrink-0">
+      <header className="bg-bg-secondary/80 backdrop-blur-xl border-b border-border-primary/50 px-4 py-3 flex-shrink-0 space-y-2">
         <div className="max-w-full mx-auto flex items-center justify-between gap-3">
           {/* min-w-0 lets this column shrink so the title's truncate applies;
               without it the header forces the whole page wider than a 320px
@@ -160,7 +161,29 @@ export function LessonDetail() {
               <ArrowLeft className="h-5 w-5" />
             </Link>
             <div className="min-w-0">
-              <p className="text-xs text-text-tertiary uppercase tracking-wide">{t('lessons.lesson')} {lesson.order}</p>
+              <nav
+                aria-label={t('lessons.breadcrumb')}
+                className="hidden sm:flex items-center gap-1.5 text-xs text-text-tertiary mb-0.5"
+              >
+                <Link to="/app/dashboard" className="hover:text-text-secondary truncate">
+                  {t('navigation.dashboard')}
+                </Link>
+                {lesson.course_title && (
+                  <>
+                    <ChevronRight className={cn('h-3 w-3 flex-shrink-0', isRTL && 'rotate-180')} aria-hidden="true" />
+                    {lesson.course_id ? (
+                      <Link to={`/app/courses/${lesson.course_id}`} className="hover:text-text-secondary truncate max-w-[10rem]">
+                        {lesson.course_title}
+                      </Link>
+                    ) : (
+                      <span className="truncate max-w-[10rem]">{lesson.course_title}</span>
+                    )}
+                  </>
+                )}
+                <ChevronRight className={cn('h-3 w-3 flex-shrink-0', isRTL && 'rotate-180')} aria-hidden="true" />
+                <span className="text-text-secondary truncate max-w-[12rem]">{lesson.translations[0]?.title}</span>
+              </nav>
+              <p className="text-xs text-text-tertiary uppercase tracking-wide sm:hidden">{t('lessons.lesson')} {lesson.order}</p>
               <h1 className="font-semibold text-text-primary truncate max-w-md">
                 {lesson.translations[0]?.title}
               </h1>
@@ -180,6 +203,19 @@ export function LessonDetail() {
             </span>
             <XPBadge xp={lesson.xp_reward} size="sm" />
           </div>
+        </div>
+
+        <div className="max-w-full mx-auto flex items-center gap-3">
+          <span className="text-xs text-text-tertiary flex-shrink-0 tabular-nums">
+            {t('lessons.step_of', { current: currentBlockIndex + 1, total: totalSteps })}
+          </span>
+          <Progress
+            value={((currentBlockIndex + 1) / totalSteps) * 100}
+            size="sm"
+            variant="primary"
+            showLabel={false}
+            className="flex-1 max-w-xs"
+          />
         </div>
       </header>
 
@@ -262,22 +298,16 @@ export function LessonDetail() {
         </aside>
 
         <main className="flex-1 min-w-0 flex flex-col overflow-hidden">
-          <div className="flex-1 min-w-0 overflow-x-hidden overflow-y-auto p-6 lg:p-8">
-            <div className="max-w-4xl mx-auto space-y-6">
-              <div className="flex items-center justify-between text-sm text-text-tertiary mb-4">
-                <span>
-                  {currentBlockIndex < blocks.length
-                    ? `${t('lessons.block')} ${currentBlockIndex + 1} ${t('lessons.of')} ${totalSteps}`
-                    : `${t('lessons.exercise')} ${currentBlockIndex - blocks.length + 1} ${t('lessons.of')} ${totalSteps}`}
-                </span>
-                <div className="flex items-center gap-2">
-                  <span className="px-2 py-1 bg-bg-tertiary rounded-full text-xs font-mono tabular-nums">
-                    {currentBlockIndex + 1} / {totalSteps}
-                  </span>
-                </div>
-              </div>
-
-              {currentBlockIndex < blocks.length ? (
+          <div
+            className={cn(
+              'flex-1 min-w-0',
+              isExerciseStep
+                ? 'overflow-hidden p-4 lg:p-6 flex flex-col'
+                : 'overflow-x-hidden overflow-y-auto p-6 lg:p-8'
+            )}
+          >
+            <div className={cn(isExerciseStep ? 'max-w-6xl mx-auto w-full flex-1 min-h-0 flex flex-col' : 'max-w-4xl mx-auto space-y-6')}>
+              {!isExerciseStep ? (
                 <LessonBlockView
                   block={currentBlock}
                   index={currentBlockIndex}
@@ -309,48 +339,49 @@ export function LessonDetail() {
             </div>
           </div>
 
-          <div className="border-t border-border-primary/50 p-4 lg:p-6 bg-bg-secondary/30 backdrop-blur-sm">
-            <div className="max-w-4xl mx-auto flex items-center justify-between gap-2">
-              <Button
-                variant="ghost"
-                onClick={goToPrev}
-                disabled={!hasPrev}
-                leftIcon={isRTL ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
-                data-testid="lesson-nav-prev"
-              >
-                {t('lessons.previous')}
-              </Button>
-              <div className="hidden sm:flex items-center gap-3 min-w-0 flex-1 justify-center">
-                <Progress
-                  value={((currentBlockIndex + 1) / totalSteps) * 100}
-                  size="md"
-                  variant="primary"
-                  showLabel
-                  className="w-full max-w-48"
-                />
-              </div>
-              {currentBlockIndex < totalSteps - 1 ? (
+          {!isExerciseStep && (
+            <div className="border-t border-border-primary/50 p-4 lg:p-6 bg-bg-secondary/30 backdrop-blur-sm">
+              <div className="max-w-4xl mx-auto flex items-center justify-between gap-2">
                 <Button
-                  onClick={goToNext}
-                  disabled={currentBlockIndex >= blocks.length && exerciseResults[currentExercise!.id] && !exerciseResults[currentExercise!.id].is_correct}
-                  rightIcon={isRTL ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-                  className="bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 shadow-lg hover:shadow-glow-primary"
-                  data-testid="lesson-nav-next"
+                  variant="ghost"
+                  onClick={goToPrev}
+                  disabled={!hasPrev}
+                  leftIcon={isRTL ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+                  data-testid="lesson-nav-prev"
                 >
-                  {t('lessons.next')}
+                  {t('lessons.previous')}
                 </Button>
-              ) : (
-                <Link
-                  to="/app/dashboard"
-                  className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-accent-500 to-accent-600 hover:from-accent-600 hover:to-accent-700 text-white font-semibold rounded-xl transition-all shadow-lg hover:shadow-glow-accent"
-                  data-testid="lesson-nav-finish"
-                >
-                  <span>{t('lessons.finish_lesson')}</span>
-                  <ChevronRight className="h-4 w-4" />
-                </Link>
-              )}
+                <div className="hidden sm:flex items-center gap-3 min-w-0 flex-1 justify-center">
+                  <Progress
+                    value={((currentBlockIndex + 1) / totalSteps) * 100}
+                    size="md"
+                    variant="primary"
+                    showLabel
+                    className="w-full max-w-48"
+                  />
+                </div>
+                {currentBlockIndex < totalSteps - 1 ? (
+                  <Button
+                    onClick={goToNext}
+                    rightIcon={isRTL ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                    className="bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 shadow-lg hover:shadow-glow-primary"
+                    data-testid="lesson-nav-next"
+                  >
+                    {t('lessons.next')}
+                  </Button>
+                ) : (
+                  <Link
+                    to="/app/dashboard"
+                    className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-accent-500 to-accent-600 hover:from-accent-600 hover:to-accent-700 text-white font-semibold rounded-xl transition-all shadow-lg hover:shadow-glow-accent"
+                    data-testid="lesson-nav-finish"
+                  >
+                    <span>{t('lessons.finish_lesson')}</span>
+                    <ChevronRight className="h-4 w-4" />
+                  </Link>
+                )}
+              </div>
             </div>
-          </div>
+          )}
         </main>
       </div>
     </div>
@@ -491,11 +522,11 @@ function ExerciseView({
   terminalError,
   onClearTerminal,
 }: ExerciseViewProps) {
-  const { t, isRTL } = useTranslation();
+  const { t } = useTranslation();
 
   return (
-    <div className="max-w-4xl min-w-0 mx-auto space-y-6 animate-fade-in">
-      <div className="flex items-center justify-between">
+    <div className="flex-1 min-h-0 flex flex-col gap-3 animate-fade-in">
+      <div className="flex items-center justify-between flex-shrink-0">
         <div className="flex items-center gap-2">
           <StatusBadge status="current" size="sm" />
           <Badge variant="primary" size="sm" dot dotColor="primary">
@@ -514,36 +545,11 @@ function ExerciseView({
         terminalOutput={terminalOutput}
         terminalError={terminalError}
         onClearTerminal={onClearTerminal}
+        onNext={onNext}
+        onPrev={onPrev}
+        hasNext={hasNext}
+        hasPrev={hasPrev}
       />
-
-      <div className="flex items-center justify-between pt-4 border-t border-border-primary/50">
-        <Button
-          variant="ghost"
-          onClick={onPrev}
-          disabled={!hasPrev}
-          leftIcon={isRTL ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
-        >
-          {t('lessons.previous')}
-        </Button>
-        {hasNext ? (
-          <Button
-            onClick={onNext}
-            disabled={result && !result.is_correct}
-            rightIcon={isRTL ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-            className="bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 shadow-lg hover:shadow-glow-primary"
-          >
-            {t('lessons.next')}
-          </Button>
-        ) : (
-          <Link
-            to="/app/dashboard"
-            className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-accent-500 to-accent-600 hover:from-accent-600 hover:to-accent-700 text-white font-semibold rounded-xl transition-all shadow-lg hover:shadow-glow-accent"
-          >
-            <span>{t('lessons.finish_lesson')}</span>
-            <ChevronRight className="h-4 w-4" />
-          </Link>
-        )}
-      </div>
     </div>
   );
 }

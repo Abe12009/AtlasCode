@@ -27,7 +27,9 @@ describe('LessonDetail Page', () => {
     renderWithProviders(null, { initialLanguage: 'en', lessonId: '1' });
     
     await waitFor(() => {
-      expect(screen.getByText(/What Is Programming?/i)).toBeInTheDocument();
+      // The title now also appears in the header's breadcrumb trail, not
+      // just the <h1> -- both are real, expected occurrences.
+      expect(screen.getAllByText(/What Is Programming?/i).length).toBeGreaterThan(0);
       expect(screen.getByText(/30 min/i)).toBeInTheDocument();
       expect(screen.getByText(/Beginner/i)).toBeInTheDocument();
       expect(screen.getByText(/50 XP/i)).toBeInTheDocument();
@@ -73,7 +75,12 @@ describe('LessonDetail Page', () => {
     
     await waitFor(() => {
       expect(screen.getByText(/Your first program:/i)).toBeInTheDocument();
-      expect(screen.getByText(/print\("Hello, World!"\)/i)).toBeInTheDocument();
+      // CodeMirror renders one line per DOM element rather than a single
+      // text node, so the code is checked via the editor's combined
+      // textContent instead of getByText (which only matches within one
+      // element).
+      const editors = screen.getAllByTestId('code-editor');
+      expect(editors.some((el) => /print\("Hello, World!"\)/.test(el.textContent || ''))).toBe(true);
       expect(screen.getByRole('button', { name: /copy/i })).toBeInTheDocument();
     });
   });
@@ -92,16 +99,18 @@ describe('LessonDetail Page', () => {
     await userEvent.click(nextButton);
     
     await waitFor(() => {
-      // Total includes exercises (3 blocks + 3 exercises = 6)
-      expect(screen.getByText(/Block 2 of 6/i)).toBeInTheDocument();
+      // Total includes exercises (3 blocks + 3 exercises = 6); the step
+      // counter moved into the header (breadcrumb + step bar) in the Step 3
+      // layout, replacing the old per-block-type "Block X of Y" label.
+      expect(screen.getByText(/Step 2 of 6/i)).toBeInTheDocument();
     });
-    
+
     // Go back
     const prevButton = screen.getByTestId('lesson-nav-prev');
     await userEvent.click(prevButton);
-    
+
     await waitFor(() => {
-      expect(screen.getByText(/Block 1 of 6/i)).toBeInTheDocument();
+      expect(screen.getByText(/Step 1 of 6/i)).toBeInTheDocument();
     });
   });
 
@@ -120,8 +129,8 @@ describe('LessonDetail Page', () => {
     }
     
     await waitFor(() => {
-      // After 3 blocks, we're at first exercise (index 3): "Exercise 1 of 6"
-      expect(screen.getByText(/Exercise 1 of 6/i)).toBeInTheDocument();
+      // After 3 blocks, we're at the first exercise (index 3, step 4 of 6).
+      expect(screen.getByText(/Step 4 of 6/i)).toBeInTheDocument();
       expect(screen.getByTestId('code-editor-run-btn')).toBeInTheDocument();
       expect(screen.getByRole('button', { name: /submit solution/i })).toBeInTheDocument();
     });
@@ -215,8 +224,11 @@ describe('LessonDetail Page', () => {
     renderWithProviders(null, { initialLanguage: 'en', lessonId: '1' });
     
     await waitFor(() => {
-      // Header has a link with ArrowLeft icon to /courses
-      expect(screen.getByRole('link', { href: '/courses' })).toBeInTheDocument();
+      // Header has a link with ArrowLeft icon back to /app/courses -- the
+      // breadcrumb also adds its own Dashboard/course links now, so this
+      // checks for the specific back-arrow link rather than "the one link".
+      const links = screen.getAllByRole('link');
+      expect(links.some((link) => link.getAttribute('href') === '/app/courses')).toBe(true);
     });
   });
 });

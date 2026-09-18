@@ -19,6 +19,23 @@ class TestLessons:
         assert len(lesson["blocks"]) > 0
         assert len(lesson["exercises"]) > 0
 
+    async def test_lesson_detail_carries_breadcrumb_course_and_module_titles(
+        self, client: AsyncClient, test_user
+    ):
+        response = await client.get("/lessons/1", headers=test_user["headers"])
+        assert response.status_code == 200
+        lesson = response.json()
+        assert lesson["course_title"]
+        assert lesson["course_id"]
+        assert lesson["module_title"]
+
+    async def test_lesson_breadcrumb_titles_follow_the_requested_language(
+        self, client: AsyncClient, test_user
+    ):
+        en = (await client.get("/lessons/1?language=en", headers=test_user["headers"])).json()
+        fr = (await client.get("/lessons/1?language=fr", headers=test_user["headers"])).json()
+        assert en["course_title"] != fr["course_title"]
+
     async def test_lesson_blocks_render(self, client: AsyncClient, test_user):
         response = await client.get("/lessons/1", headers=test_user["headers"])
         lesson = response.json()

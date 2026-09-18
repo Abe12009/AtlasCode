@@ -103,9 +103,13 @@ describe('Visual Programming Page', () => {
     });
     
     await userEvent.click(screen.getByRole('button', { name: /Show Code/i }));
-    
+
     await waitFor(() => {
-      expect(screen.getByText(/print.*Hello/i)).toBeInTheDocument();
+      // CodeMirror renders one line per DOM element, so the code is checked
+      // via the editor's combined textContent rather than getByText (which
+      // only matches within a single element).
+      const editors = screen.getAllByTestId('code-editor');
+      expect(editors.some((el) => /print.*Hello/.test(el.textContent || ''))).toBe(true);
     });
   });
 

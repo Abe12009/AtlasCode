@@ -13,7 +13,7 @@ from app.models import (
 )
 from app.schemas import (
     AchievementEarnedResponse, ExerciseResponse, ExerciseSubmitRequest, ExerciseSubmitResponse,
-    LanguageEnum as SchemaLanguageEnum, ExerciseTypeEnum
+    LanguageEnum as SchemaLanguageEnum, ExerciseTypeEnum, TestCaseResultResponse
 )
 from app.services.achievements import check_and_award_achievements
 from app.services.code_executor import execute_code, validate_python_code
@@ -108,7 +108,11 @@ async def run_exercise(
         xp_earned=0,
         feedback="Code executed successfully" if exec_result.success else exec_result.error or "Execution failed",
         output=exec_result.output,
-        error=exec_result.error
+        error=exec_result.error,
+        test_results=(
+            [TestCaseResultResponse(assertion=r.assertion, passed=r.passed, message=r.message) for r in exec_result.test_results]
+            if exec_result.test_results is not None else None
+        ),
     )
 
 
@@ -271,6 +275,10 @@ async def submit_exercise(
         is_completed=bool(is_correct or previous_success),
         lesson_completed=lesson_completed,
         achievements_earned=achievements_earned,
+        test_results=(
+            [TestCaseResultResponse(**r) for r in grading.details["test_results"]]
+            if "test_results" in grading.details else None
+        ),
     )
 
 

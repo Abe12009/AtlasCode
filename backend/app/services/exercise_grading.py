@@ -239,7 +239,12 @@ def _grade_blanks(config, request) -> GradingResult:
 
 
 def _grade_sandbox(exercise, request) -> GradingResult:
-    """Unchanged behaviour: run the student's Python in the existing sandbox."""
+    """Run the student's Python in the existing sandbox. When test_code
+    decomposes into a trailing run of plain asserts (see
+    code_executor._split_assertion_tail), each is graded individually and the
+    per-assertion breakdown rides along in `details["test_results"]` for the
+    UI's pass/fail checklist -- exercises whose test_code doesn't decompose
+    that way keep the original single pass/fail with no test_results."""
     code = request.code or ""
     validation = validate_python_code(code)
     if not validation.is_valid:
@@ -249,11 +254,18 @@ def _grade_sandbox(exercise, request) -> GradingResult:
             feedback="Code validation failed: " + "; ".join(validation.errors),
         )
     exec_result = execute_code(code, exercise.test_code)
+    details = {}
+    if exec_result.test_results is not None:
+        details["test_results"] = [
+            {"assertion": r.assertion, "passed": r.passed, "message": r.message}
+            for r in exec_result.test_results
+        ]
     return GradingResult(
         is_correct=exec_result.success, strategy=STRATEGY_SANDBOX,
         output=exec_result.output,
         error=None if exec_result.success else (exec_result.error or "Incorrect solution"),
         feedback=exec_result.output if exec_result.success else (exec_result.error or "Incorrect solution"),
+        details=details,
     )
 
 
