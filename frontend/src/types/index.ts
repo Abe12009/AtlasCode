@@ -11,7 +11,9 @@ export type ExerciseType =
   | 'ordering'
   | 'debugging'
   | 'code_writing'
-  | 'visual_programming';
+  | 'visual_programming'
+  | 'circuit_lab'
+  | 'git_quest';
 
 export interface Token {
   access_token: string;
@@ -147,6 +149,12 @@ export interface ExerciseTranslation {
   explanation: string | null;
 }
 
+export interface TraceStep {
+  line: number;
+  /** variable name -> value (already JSON-serializable; a non-primitive is a repr() string). */
+  locals: Record<string, unknown>;
+}
+
 export interface Exercise {
   id: number;
   exercise_type: ExerciseType;
@@ -159,6 +167,9 @@ export interface Exercise {
   course_title?: string;
   lesson_id?: number;
   lesson_title?: string;
+  /** Break-the-Code's step-through trace of the buggy starter_code. Only
+   * ever present on a `debugging` exercise authored with one. */
+  trace?: TraceStep[] | null;
 }
 
 export interface LessonTranslation {
@@ -388,6 +399,84 @@ export interface CodeValidationRequest {
 export interface CodeValidationResponse {
   is_valid: boolean;
   errors: string[];
+}
+
+// --- Orientini ---------------------------------------------------------
+
+export type BacTrack = 'sciences_math_a' | 'sciences_math_b' | 'pc' | 'svt' | 'ste' | 'stm';
+
+export type InstitutionType = 'code_school' | 'est' | 'fst' | 'cpge' | 'engineering_school';
+
+export interface InstitutionRequirement {
+  eligible_bac_tracks: BacTrack[] | null;
+  min_bac_average: number | null;
+  entrance_exam_name: string | null;
+  entrance_exam_format: string | null;
+  application_window: string | null;
+  /** False means the fields above are placeholders, not confirmed facts --
+   * render a "needs verification" indicator instead of presenting them as
+   * reliable admission requirements. */
+  data_verified: boolean;
+  verification_notes: string | null;
+}
+
+export interface InstitutionTranslation {
+  language: Language;
+  name: string;
+  description: string | null;
+  career_outcomes: string | null;
+}
+
+export interface Institution {
+  id: number;
+  slug: string;
+  type: InstitutionType;
+  order: number;
+  icon?: string | null;
+  translations: InstitutionTranslation[];
+  requirement: InstitutionRequirement | null;
+}
+
+export interface OrientiniOptionTranslation {
+  language: Language;
+  text: string;
+}
+
+export interface OrientiniOption {
+  id: number;
+  order: number;
+  translations: OrientiniOptionTranslation[];
+}
+
+export interface OrientiniQuestionTranslation {
+  language: Language;
+  text: string;
+}
+
+export interface OrientiniQuestion {
+  id: number;
+  order: number;
+  translations: OrientiniQuestionTranslation[];
+  options: OrientiniOption[];
+}
+
+export interface OrientiniSubmitRequest {
+  answers: Record<number, number>;
+  bac_track?: BacTrack | null;
+}
+
+export interface OrientiniScore {
+  institution_id: number;
+  score: number;
+  eligible: boolean;
+  trait_breakdown: Record<string, number>;
+}
+
+export interface OrientiniResult {
+  id: number;
+  bac_track: BacTrack | null;
+  scores: OrientiniScore[];
+  created_at: string;
 }
 
 export type DuelDifficulty = 'beginner' | 'intermediate' | 'advanced';

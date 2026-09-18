@@ -108,6 +108,12 @@ vi.mock('../api/services', () => ({
     submit: vi.fn(),
     getStarter: vi.fn(),
   },
+  orientiniApi: {
+    getQuestions: vi.fn(),
+    getInstitutions: vi.fn(),
+    submit: vi.fn(),
+    getLatestResult: vi.fn(),
+  },
   notificationsApi: {
     list: vi.fn().mockResolvedValue([]),
     getUnreadCount: vi.fn().mockResolvedValue({ count: 0 }),

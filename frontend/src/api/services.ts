@@ -20,6 +20,10 @@ import type {
   CodyMessage,
   CodyChatResponse,
   AchievementEarned,
+  Institution,
+  OrientiniQuestion,
+  OrientiniSubmitRequest,
+  OrientiniResult,
   DuelDifficulty,
   DuelQueueStatusResponse,
   DuelTicketResponse,
@@ -77,6 +81,19 @@ export const usersApi = {
 export const feedbackApi = {
   submit: (data: { category: string; message: string; page_path?: string }) =>
     apiClient.post<void>('/feedback', data),
+};
+
+export const orientiniApi = {
+  getQuestions: (language: string = 'en') =>
+    apiClient.get<OrientiniQuestion[]>('/orientini/questions', { language }),
+
+  getInstitutions: (language: string = 'en') =>
+    apiClient.get<Institution[]>('/orientini/institutions', { language }),
+
+  submit: (data: OrientiniSubmitRequest) =>
+    apiClient.post<OrientiniResult>('/orientini/submit', data),
+
+  getLatestResult: () => apiClient.get<OrientiniResult>('/orientini/results/latest'),
 };
 
 export const duelsApi = {
