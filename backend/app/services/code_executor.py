@@ -23,11 +23,29 @@ class ValidationResult:
 
 
 @dataclass
+class TestCaseResult:
+    #: Exact source text of the assert statement (via ast.get_source_segment),
+    #: e.g. "assert circuit(a=True, b=True) == {'sum': False, 'carry': True}".
+    assertion: str
+    passed: bool
+    #: The AssertionError's message (str(e)), or another exception's message
+    #: if the assertion itself errored rather than failed. None when passed.
+    message: Optional[str] = None
+
+
+@dataclass
 class ExecutionResult:
     success: bool
     output: str
     error: Optional[str]
     execution_time: float
+    #: Per-assertion pass/fail, when test_code decomposes into a trailing run
+    #: of plain `assert` statements (see _split_assertion_tail) -- None when
+    #: there's no test_code, or its shape doesn't decompose that way (a loop,
+    #: a try/except, a nested def interleaved with asserts, etc.), in which
+    #: case the caller falls back to the single whole-block pass/fail this
+    #: type already carried before test_results existed.
+    test_results: Optional[List["TestCaseResult"]] = None
 
 
 FORBIDDEN_IMPORTS = {
@@ -269,6 +287,151 @@ except Exception as e:
 """
 
 
+#: Statement types simple/safe enough to sit in the trailing "test suite"
+#: portion of test_code: a bare assertion, a bare expression (almost always a
+#: trailing `print("...")` success message), or a plain assignment feeding a
+#: later assert (e.g. `result = solve(x)` before `assert result == ...`).
+#: Anything else -- a loop, a conditional, a def, a try/except, an import --
+#: is "setup" and stays out of the per-assertion breakdown.
+_SIMPLE_TAIL_STMTS = (ast.Assert, ast.Expr, ast.Assign)
+
+
+def _split_assertion_tail(test_code: str):
+    """Splits test_code's parsed body into (setup_statements, tail_statements),
+    where tail_statements is the longest trailing run of _SIMPLE_TAIL_STMTS
+    that contains at least one Assert. Returns None if test_code doesn't
+    parse, or no such trailing run exists (e.g. every assert is interleaved
+    with control flow) -- the caller's signal to fall back to the original
+    whole-block pass/fail rather than attempt a checklist.
+
+    Audited against every exercise's stored test_code before this was wired
+    into grading (see Step 3 planning): 36/37 decompose this way (15 of those
+    with a genuine multi-row checklist), most authored via
+    seed/authoring.py's asserts() helper, which always opens with
+    `exec(compile(code, "<student>", "exec"), globals())` -- itself an Expr,
+    but it belongs in setup (it must run before ANY assert), so it's excluded
+    by construction since it's followed by asserts, not preceded only by
+    other simple statements at the very end. The one holdout (a decorator
+    exercise with an assert before a nested def and another after) correctly
+    falls back whole-block -- see the "setup contains an Assert" check below.
+    """
+    try:
+        tree = ast.parse(test_code)
+    except SyntaxError:
+        return None
+
+    body = tree.body
+    i = len(body)
+    while i > 0 and isinstance(body[i - 1], _SIMPLE_TAIL_STMTS):
+        i -= 1
+    tail = body[i:]
+    setup = body[:i]
+    if not any(isinstance(n, ast.Assert) for n in tail):
+        return None
+    # An Assert stuck in "setup" (before whatever non-simple statement broke
+    # the trailing run -- a def, a for loop, etc.) would run unwrapped and
+    # unreported: silently unchecked on pass, or misreported as a generic
+    # __SETUP_ERROR__ on fail instead of a named assertion. Neither is
+    # acceptable, so any assert anywhere in setup disqualifies the whole
+    # test_code from checklist mode, full fallback instead of a checklist
+    # that quietly drops a real check.
+    if any(isinstance(n, ast.Assert) for n in ast.walk(ast.Module(body=setup, type_ignores=[]))):
+        return None
+    return setup, tail
+
+
+def _source_upto(test_code: str, node) -> str:
+    """test_code from the very start through the end of `node` (its
+    end_lineno/end_col_offset). Used for setup, in place of whole-line
+    slicing: the legacy `import x; a = 1; assert ...` style crams several
+    top-level statements onto a single physical line via semicolons, so
+    slicing by line alone (end_lineno) would pull the trailing assert into
+    "setup" right along with the import that precedes it on the same line."""
+    lines = test_code.split("\n")
+    end_line = node.end_lineno
+    end_col = node.end_col_offset
+    if end_line == 1:
+        return lines[0][:end_col]
+    return "\n".join(lines[: end_line - 1] + [lines[end_line - 1][:end_col]])
+
+
+def _indent(source: str, prefix: str = "    ") -> str:
+    """Indents every line of a (possibly multi-line) statement's source --
+    a plain `prefix + source` only indents the first line, which breaks any
+    assert whose expression wraps onto a second line."""
+    return "\n".join(prefix + line for line in source.split("\n"))
+
+
+def _one_line(text: str) -> str:
+    """Sentinel lines are parsed one-per-line (see _parse_assertion_results),
+    so an assertion message or source containing a real newline would corrupt
+    parsing -- collapse to single-line rather than assume every AssertionError
+    message is short and newline-free."""
+    return " ".join(text.split("\n"))
+
+
+def _create_assertion_wrapper(user_output: str, user_code: str, test_code: str, setup, tail) -> str:
+    # Sliced from the start of the file through the end of the last setup
+    # statement, NOT joined from per-statement ast.get_source_segment() calls
+    # (a decorated def's FunctionDef node starts at the `def` line, so
+    # get_source_segment on the node silently drops the `@decorator` line
+    # above it) and NOT sliced by whole lines (the legacy
+    # `import x; a = 1; assert ...` style crams several statements onto one
+    # physical line via semicolons, so a whole-line slice would pull a
+    # same-line trailing assert into "setup" too). _source_upto uses the
+    # statement's exact end column, not just its end line.
+    setup_src = _source_upto(test_code, setup[-1]) if setup else ""
+    lines = [
+        "import sys",
+        "import io",
+        "",
+        f"code = {repr(user_code)}",
+        f"output = {repr(user_output)}",
+        "",
+        "try:",
+    ]
+    if setup_src.strip():
+        lines.append(_indent(setup_src))
+    else:
+        lines.append("    pass")
+    lines += [
+        "except Exception as e:",
+        '    print("__SETUP_ERROR__" + str(e).replace(chr(10), " "))',
+        "    sys.exit(0)",
+        "",
+    ]
+    for index, node in enumerate(tail):
+        if isinstance(node, ast.Assert):
+            source = ast.get_source_segment(test_code, node)
+            escaped = repr(_one_line(source))
+            lines += [
+                "try:",
+                _indent(source),
+                f'    print("__ASSERT_{index}__PASS__" + {escaped})',
+                "except AssertionError as e:",
+                f'    print("__ASSERT_{index}__FAIL__" + {escaped} + "__MSG__" + str(e).replace(chr(10), " "))',
+                "except Exception as e:",
+                f'    print("__ASSERT_{index}__FAIL__" + {escaped} + "__MSG__" + str(e).replace(chr(10), " "))',
+            ]
+        else:
+            source = ast.get_source_segment(test_code, node)
+            lines.append(source)
+    return "\n".join(lines)
+
+
+def _parse_assertion_results(stdout: str) -> List[TestCaseResult]:
+    results: List[TestCaseResult] = []
+    for line in stdout.split("\n"):
+        if line.startswith("__ASSERT_") and "__PASS__" in line:
+            assertion = line.split("__PASS__", 1)[1]
+            results.append(TestCaseResult(assertion=assertion, passed=True))
+        elif line.startswith("__ASSERT_") and "__FAIL__" in line:
+            rest = line.split("__FAIL__", 1)[1]
+            assertion, _, message = rest.partition("__MSG__")
+            results.append(TestCaseResult(assertion=assertion, passed=False, message=message or None))
+    return results
+
+
 def _run_subprocess(python_code: str, timeout: float) -> tuple[str, str, int, bool]:
     with tempfile.NamedTemporaryFile(mode='w', suffix='.py', delete=False, encoding='utf-8') as f:
         f.write(python_code)
@@ -362,6 +525,72 @@ def execute_code(code: str, test_code: Optional[str] = None, timeout: float = 5.
         )
 
     if test_code:
+        split = _split_assertion_tail(test_code)
+
+        if split is not None:
+            setup, tail = split
+            expected_asserts = sum(1 for n in tail if isinstance(n, ast.Assert))
+            test_wrapper = _create_assertion_wrapper(user_output, code, test_code, setup, tail)
+            test_stdout, test_stderr, test_returncode, test_timed_out = _run_subprocess(test_wrapper, timeout)
+
+            if test_timed_out:
+                execution_time = time.time() - start_time
+                return ExecutionResult(
+                    success=False,
+                    output=user_output.strip(),
+                    error=f"Test execution timed out after {timeout} seconds",
+                    execution_time=execution_time,
+                )
+
+            if "__SETUP_ERROR__" in test_stdout:
+                # The setup portion (almost always re-running the student's
+                # own code to bring their functions into scope) itself threw
+                # -- there's nothing to check assertions against, so this is
+                # a single whole-submission failure like the pre-checklist
+                # behavior, not a partial/misleading checklist.
+                start_idx = test_stdout.index("__SETUP_ERROR__") + len("__SETUP_ERROR__")
+                execution_time = time.time() - start_time
+                if len(user_output) > 100000:
+                    user_output = user_output[:100000] + "\n[Output truncated - limit exceeded]"
+                return ExecutionResult(
+                    success=False,
+                    output=user_output.strip(),
+                    error=test_stdout[start_idx:].strip() or "Test setup failed",
+                    execution_time=execution_time,
+                )
+
+            test_results = _parse_assertion_results(test_stdout)
+            execution_time = time.time() - start_time
+            if len(user_output) > 100000:
+                user_output = user_output[:100000] + "\n[Output truncated - limit exceeded]"
+
+            if len(test_results) == expected_asserts and expected_asserts > 0:
+                return ExecutionResult(
+                    success=all(r.passed for r in test_results),
+                    output=user_output.strip(),
+                    error=None if all(r.passed for r in test_results) else "; ".join(
+                        f"{r.assertion}: {r.message}" for r in test_results if not r.passed
+                    ),
+                    execution_time=execution_time,
+                    test_results=test_results,
+                )
+
+            # Fewer results than expected asserts means something in the tail
+            # (a plain Expr/Assign between asserts) raised uncaught and the
+            # script died partway through -- fall back to a single failure
+            # rather than show a checklist that stopped partway through for
+            # reasons unrelated to any one assertion.
+            error = (test_stderr or "").strip() or f"Test process exited with code {test_returncode}"
+            return ExecutionResult(
+                success=False,
+                output=user_output.strip(),
+                error=error,
+                execution_time=execution_time,
+            )
+
+        # test_code doesn't decompose into a trailing run of asserts (a loop,
+        # an interleaved def, a try/except, or similar) -- original whole-
+        # block behavior, unchanged.
         test_wrapper = _create_test_code_wrapper(user_output, code, test_code)
         test_stdout, test_stderr, test_returncode, test_timed_out = _run_subprocess(test_wrapper, timeout)
 

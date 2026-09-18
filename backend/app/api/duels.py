@@ -1,19 +1,53 @@
-"""Duel Arena endpoints: matchmaking (queue join/status/cancel).
+"""Duel Arena endpoints: matchmaking, the WebSocket auth-ticket handshake,
+the live duel connection, and submission/winner resolution.
 
-Pairing lives in app.services.duels.join_queue (the atomic-claim logic) --
-this module is the thin HTTP surface over it. See app.services.duels'
-module docstring for the concurrency-safety reasoning.
+Pairing lives in app.services.duels.join_queue, submission grading and
+winner resolution in app.services.duels.submit_solution (the atomic-claim
+logic for both) -- this module is the thin HTTP/WebSocket surface over
+them. See app.services.duels' module docstring for the concurrency-safety
+reasoning behind both, and app.services.duel_tickets / duel_realtime for
+the WebSocket-specific auth and connection-registry pieces.
 """
 
-from fastapi import APIRouter, Depends, HTTPException
+from datetime import datetime
+
+from fastapi import APIRouter, Depends, HTTPException, WebSocket, WebSocketDisconnect
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.dependencies import get_current_user
 from app.db.session import get_db
-from app.models import DuelQueueEntry, DuelQueueStatusEnum
-from app.schemas import DuelQueueJoinRequest, DuelQueueStatusResponse
-from app.services.duels import AlreadyInQueue, NoDuelProblemAvailable, join_queue
+from app.models import (
+    Duel,
+    DuelParticipant,
+    DuelProblem,
+    DuelQueueEntry,
+    DuelQueueStatusEnum,
+    DuelStatusEnum,
+    Exercise,
+    ExerciseTranslation,
+    User,
+)
+from app.schemas import (
+    DuelParticipantView,
+    DuelQueueJoinRequest,
+    DuelQueueStatusResponse,
+    DuelStateResponse,
+    DuelSubmitRequest,
+    DuelSubmitResponse,
+    DuelTicketResponse,
+)
+from app.services.duel_realtime import connection_manager
+from app.services.duel_tickets import consume_ticket, mint_ticket
+from app.services.duels import (
+    AlreadyInQueue,
+    DuelNotActive,
+    NoDuelProblemAvailable,
+    NotAParticipant,
+    best_pass_counts,
+    join_queue,
+    submit_solution,
+)
 
 router = APIRouter(prefix="/duels", tags=["duels"])
 
@@ -78,3 +112,189 @@ async def cancel_duel_queue(
     )
     await db.commit()
     return DuelQueueStatusResponse(status="idle")
+
+
+async def _get_participant_or_403(db: AsyncSession, duel_id: int, user_id: int) -> DuelParticipant:
+    participant = (
+        await db.execute(
+            select(DuelParticipant).where(
+                DuelParticipant.duel_id == duel_id, DuelParticipant.user_id == user_id
+            )
+        )
+    ).scalar_one_or_none()
+    if participant is None:
+        raise HTTPException(status_code=403, detail="You're not a participant of this duel.")
+    return participant
+
+
+@router.post("/{duel_id}/ticket", response_model=DuelTicketResponse)
+async def mint_duel_ticket(
+    duel_id: int,
+    current_user=Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Mints the short-lived, single-use ticket the client exchanges for a
+    WebSocket connection -- see app.services.duel_tickets. An ordinary
+    authenticated REST call, so it goes through the normal Authorization
+    header, unlike the WebSocket upgrade that follows it."""
+    await _get_participant_or_403(db, duel_id, current_user.id)
+    return DuelTicketResponse(ticket=mint_ticket(current_user.id, duel_id))
+
+
+@router.get("/{duel_id}", response_model=DuelStateResponse)
+async def get_duel_state(
+    duel_id: int,
+    current_user=Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Full current state -- used for the initial page load and for a
+    reconnecting client's resync before it re-attaches its WebSocket (see
+    the Step 4 architecture: never trust the socket alone to have carried
+    every state change while it was closed)."""
+    duel = await db.get(Duel, duel_id)
+    if duel is None:
+        raise HTTPException(status_code=404, detail="Duel not found.")
+
+    me_participant = await _get_participant_or_403(db, duel_id, current_user.id)
+    opponent_participant = (
+        await db.execute(
+            select(DuelParticipant).where(
+                DuelParticipant.duel_id == duel_id, DuelParticipant.user_id != current_user.id
+            )
+        )
+    ).scalar_one()
+
+    duel_problem = await db.get(DuelProblem, duel.duel_problem_id)
+    exercise = await db.get(Exercise, duel_problem.exercise_id)
+    translation = (
+        await db.execute(
+            select(ExerciseTranslation).where(
+                ExerciseTranslation.exercise_id == exercise.id,
+                ExerciseTranslation.language == current_user.preferred_language,
+            )
+        )
+    ).scalar_one_or_none()
+
+    me_user = await db.get(User, current_user.id)
+    opponent_user = await db.get(User, opponent_participant.user_id)
+    me_passed, me_total = await best_pass_counts(db, duel_id, current_user.id)
+    opp_passed, opp_total = await best_pass_counts(db, duel_id, opponent_participant.user_id)
+
+    return DuelStateResponse(
+        id=duel.id,
+        status=duel.status.value,
+        started_at=duel.started_at,
+        ends_at=duel.ends_at,
+        ended_at=duel.ended_at,
+        winner_user_id=duel.winner_user_id,
+        problem_prompt=translation.prompt if translation else "",
+        problem_starter_code=exercise.starter_code,
+        me=DuelParticipantView(
+            user_id=me_user.id,
+            username=me_user.username,
+            is_connected=connection_manager.is_connected(duel_id, me_user.id),
+            passed_count=me_passed,
+            total_count=me_total,
+        ),
+        opponent=DuelParticipantView(
+            user_id=opponent_user.id,
+            username=opponent_user.username,
+            is_connected=connection_manager.is_connected(duel_id, opponent_user.id),
+            passed_count=opp_passed,
+            total_count=opp_total,
+        ),
+    )
+
+
+@router.post("/{duel_id}/submit", response_model=DuelSubmitResponse)
+async def submit_duel_solution(
+    duel_id: int,
+    request: DuelSubmitRequest,
+    current_user=Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    try:
+        result = await submit_solution(db, duel_id, current_user.id, request.code)
+    except NotAParticipant:
+        raise HTTPException(status_code=403, detail="You're not a participant of this duel.")
+    except DuelNotActive:
+        raise HTTPException(status_code=409, detail="This duel is no longer active.")
+
+    # Push to the opponent, never the submitter's own code -- see
+    # duel_realtime's module docstring. The submitter gets their own full
+    # result back in this very response; they don't need the broadcast.
+    if result.won:
+        await connection_manager.broadcast_to_all(
+            duel_id,
+            {"type": "duel_ended", "winner_user_id": current_user.id, "reason": "solved"},
+        )
+    elif result.duel_status == DuelStatusEnum.active.value:
+        # Only push a progress update while the duel is still genuinely
+        # live -- a correct-but-too-late or post-timeout submission has
+        # nothing new to tell an opponent who already knows it's over.
+        await connection_manager.broadcast_to_opponent(
+            duel_id,
+            current_user.id,
+            {
+                "type": "opponent_progress",
+                "passed_count": result.passed_count,
+                "total_count": result.total_count,
+            },
+        )
+
+    return DuelSubmitResponse(
+        is_correct=result.is_correct,
+        passed_count=result.passed_count,
+        total_count=result.total_count,
+        won=result.won,
+        duel_status=result.duel_status,
+        winner_user_id=result.winner_user_id,
+    )
+
+
+@router.websocket("/ws/{duel_id}")
+async def duel_websocket(
+    websocket: WebSocket,
+    duel_id: int,
+    ticket: str,
+    db: AsyncSession = Depends(get_db),
+):
+    """The live channel: after connecting, a client only ever RECEIVES
+    application messages (opponent_progress / opponent_connected /
+    opponent_disconnected / duel_ended) -- submissions go through the
+    ordinary POST /duels/{id}/submit above, not this socket, so there's no
+    inbound message format to parse or validate here. The receive loop
+    below exists purely to detect the client closing the connection."""
+    user_id = consume_ticket(ticket, duel_id)
+    if user_id is None:
+        await websocket.close(code=4401)
+        return
+
+    participant = (
+        await db.execute(
+            select(DuelParticipant).where(
+                DuelParticipant.duel_id == duel_id, DuelParticipant.user_id == user_id
+            )
+        )
+    ).scalar_one_or_none()
+    if participant is None:
+        await websocket.close(code=4403)
+        return
+
+    await connection_manager.connect(duel_id, user_id, websocket)
+    participant.is_connected = True
+    participant.disconnected_at = None
+    await db.commit()
+    await connection_manager.broadcast_to_opponent(duel_id, user_id, {"type": "opponent_connected"})
+
+    try:
+        while True:
+            await websocket.receive_text()
+    except WebSocketDisconnect:
+        pass
+    finally:
+        connection_manager.disconnect(duel_id, user_id)
+        participant.is_connected = False
+        participant.disconnected_at = datetime.utcnow()
+        await db.commit()
+        await connection_manager.broadcast_to_opponent(duel_id, user_id, {"type": "opponent_disconnected"})

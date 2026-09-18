@@ -1,4 +1,7 @@
-"""Duel Arena domain logic: matchmaking (join_queue).
+"""Duel Arena domain logic: matchmaking (join_queue) and, below it,
+submission grading + winner resolution (submit_solution).
+
+== Matchmaking ==
 
 The core correctness requirement: two students joining the same difficulty
 pool at nearly the same moment must land in exactly one shared duel --
@@ -27,6 +30,18 @@ correctly with the next joiner in their pool. Closing this last sliver
 would need a Postgres-only serializing lock (e.g. pg_advisory_xact_lock)
 that has no SQLite equivalent, which would break local dev/test entirely
 for a race that's already both rare and self-healing. Not worth it for v1.
+
+== Winner resolution ==
+
+Same technique, same reason: submit_solution's "first correct submission
+wins" is a single atomic conditional UPDATE ("... WHERE status='active'"),
+verified by rowcount, not a read-then-write. Two students submitting
+correct solutions within milliseconds of each other both attempt this
+UPDATE; the database allows exactly one of them to actually change the
+row, and that request is the one that reports back "you won" -- the other
+reports "opponent won first" from the very same, single statement's
+outcome. No in-memory locking, no trusting whichever request the
+application happens to handle first.
 """
 
 from dataclasses import dataclass
@@ -44,7 +59,11 @@ from app.models import (
     DuelProblem,
     DuelQueueEntry,
     DuelQueueStatusEnum,
+    DuelStatusEnum,
+    DuelSubmissionAttempt,
+    Exercise,
 )
+from app.services.code_executor import ExecutionResult, execute_code, validate_python_code
 
 #: Fixed match length. Tunable later; not worth deliberating over now (see
 #: Step 4 approval).
@@ -173,3 +192,133 @@ async def join_queue(db: AsyncSession, user_id: int, difficulty: DifficultyEnum)
     await db.commit()
     await db.refresh(my_entry)
     return JoinQueueResult(status="matched", queue_entry_id=my_entry.id, duel_id=duel.id)
+
+
+class NotAParticipant(Exception):
+    """The requesting user isn't one of this duel's two participants."""
+
+
+class DuelNotActive(Exception):
+    """The duel doesn't accept submissions right now -- already completed
+    (someone won, or it timed out), or past its ends_at (finalized to
+    'completed' as a side effect of this exception being raised, so the
+    next person to touch it sees the already-settled state rather than
+    re-discovering the timeout)."""
+
+
+@dataclass
+class SubmitResult:
+    is_correct: bool
+    passed_count: int
+    total_count: int
+    #: True only for the exact submission whose atomic UPDATE actually won
+    #: the race -- see the module docstring. A correct-but-too-late
+    #: submission has is_correct=True, won=False.
+    won: bool
+    duel_status: str
+    winner_user_id: Optional[int]
+
+
+def _pass_counts(exec_result: ExecutionResult) -> tuple[int, int]:
+    """Uniform (passed, total) regardless of whether test_code decomposed
+    into a per-assertion checklist (Step 3) or fell back to a single
+    whole-block pass/fail -- the latter is just treated as one test case,
+    same as it reads to a student either way."""
+    if exec_result.test_results is not None:
+        total = len(exec_result.test_results)
+        passed = sum(1 for r in exec_result.test_results if r.passed)
+        return passed, total
+    return (1, 1) if exec_result.success else (0, 1)
+
+
+async def best_pass_counts(db: AsyncSession, duel_id: int, user_id: int) -> tuple[int, int]:
+    """The participant's best attempt so far in this duel, not their most
+    recent one -- a student experimenting with a worse version after a
+    better one shouldn't make their own (or their opponent's view of their)
+    displayed progress regress."""
+    result = await db.execute(
+        select(DuelSubmissionAttempt)
+        .where(DuelSubmissionAttempt.duel_id == duel_id, DuelSubmissionAttempt.user_id == user_id)
+        .order_by(DuelSubmissionAttempt.passed_count.desc(), DuelSubmissionAttempt.submitted_at.asc())
+        .limit(1)
+    )
+    best = result.scalar_one_or_none()
+    if best is None:
+        return 0, 0
+    return best.passed_count, best.total_count
+
+
+async def submit_solution(db: AsyncSession, duel_id: int, user_id: int, code: str) -> SubmitResult:
+    duel = await db.get(Duel, duel_id)
+    if duel is None:
+        raise DuelNotActive()
+
+    participant = (
+        await db.execute(
+            select(DuelParticipant).where(
+                DuelParticipant.duel_id == duel_id, DuelParticipant.user_id == user_id
+            )
+        )
+    ).scalar_one_or_none()
+    if participant is None:
+        raise NotAParticipant()
+
+    now = datetime.utcnow()
+    if duel.status != DuelStatusEnum.active or now >= duel.ends_at:
+        # Lazily finalize an expired-but-still-'active' duel the first time
+        # anyone touches it past ends_at -- atomically, so two late
+        # submitters racing each other can't both believe they're the one
+        # who closed it out (there's no winner either way here, but the
+        # same discipline applies: exactly one conditional UPDATE, not a
+        # read-then-write two players could both act on).
+        await db.execute(
+            update(Duel)
+            .where(Duel.id == duel_id, Duel.status == DuelStatusEnum.active)
+            .values(status=DuelStatusEnum.completed, ended_at=now)
+        )
+        await db.commit()
+        raise DuelNotActive()
+
+    duel_problem = await db.get(DuelProblem, duel.duel_problem_id)
+    exercise = await db.get(Exercise, duel_problem.exercise_id)
+
+    validation = validate_python_code(code)
+    if not validation.is_valid:
+        exec_result = ExecutionResult(success=False, output="", error="; ".join(validation.errors), execution_time=0.0)
+    else:
+        exec_result = execute_code(code, exercise.test_code)
+
+    passed_count, total_count = _pass_counts(exec_result)
+    is_correct = exec_result.success
+
+    db.add(
+        DuelSubmissionAttempt(
+            duel_id=duel_id,
+            user_id=user_id,
+            code=code,
+            passed_count=passed_count,
+            total_count=total_count,
+            is_correct=is_correct,
+        )
+    )
+    await db.commit()
+
+    won = False
+    if is_correct:
+        claim = await db.execute(
+            update(Duel)
+            .where(Duel.id == duel_id, Duel.status == DuelStatusEnum.active)
+            .values(status=DuelStatusEnum.completed, winner_user_id=user_id, ended_at=datetime.utcnow())
+        )
+        await db.commit()
+        won = claim.rowcount == 1
+
+    await db.refresh(duel)
+    return SubmitResult(
+        is_correct=is_correct,
+        passed_count=passed_count,
+        total_count=total_count,
+        won=won,
+        duel_status=duel.status.value,
+        winner_user_id=duel.winner_user_id,
+    )

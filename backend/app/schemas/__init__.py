@@ -629,5 +629,50 @@ class DuelQueueStatusResponse(BaseModel):
     duel_id: Optional[int] = None
 
 
+class DuelTicketResponse(BaseModel):
+    #: Single-use, ~20s-lived, duel-scoped -- see app.services.duel_tickets.
+    #: Not a reusable credential; safe to pass as a WebSocket query param in
+    #: a way the student's real access token wouldn't be.
+    ticket: str
+
+
+class DuelParticipantView(BaseModel):
+    user_id: int
+    username: str
+    is_connected: bool
+    #: This participant's own best attempt in the duel so far -- see
+    #: app.services.duels.best_pass_counts. On the OPPONENT's view, this is
+    #: the entire fairness boundary: never anything more specific than these
+    #: two numbers, never their code, never which assertions passed.
+    passed_count: int
+    total_count: int
+
+
+class DuelStateResponse(BaseModel):
+    id: int
+    status: str
+    started_at: datetime
+    ends_at: datetime
+    ended_at: Optional[datetime] = None
+    winner_user_id: Optional[int] = None
+    problem_prompt: str
+    problem_starter_code: Optional[str] = None
+    me: DuelParticipantView
+    opponent: DuelParticipantView
+
+
+class DuelSubmitRequest(BaseModel):
+    code: str
+
+
+class DuelSubmitResponse(BaseModel):
+    is_correct: bool
+    passed_count: int
+    total_count: int
+    won: bool
+    duel_status: str
+    winner_user_id: Optional[int] = None
+
+
 LessonResponse.model_rebuild()
 ModuleResponse.model_rebuild()

@@ -75,6 +75,53 @@ async def client():
     app.dependency_overrides.clear()
 
 
+@pytest.fixture
+def duel_ws():
+    """A WebSocket-capable client for the Duel Arena tests, over the same
+    in-process ASGI app + test DB as the `client` fixture.
+
+    starlette==0.35.1's own TestClient can't be used for this: its
+    WebSocket support hard-codes an httpx.Client(app=...) call that
+    httpx>=0.28 (pinned here) removed in favor of transport=. httpx-ws's
+    ASGIWebSocketTransport is the one already-compatible way to drive a
+    real WebSocket handshake against this app in-process without standing
+    up a real network server or touching either pinned version.
+
+    Returns a `connect(path)` async context manager -- `async with
+    connect(f"/duels/ws/{duel_id}?ticket={ticket}") as ws: ...` -- yielding
+    an httpx_ws WebSocket session with the usual send_json/receive_json
+    API. A rejected handshake (see app.api.duels.duel_websocket's
+    pre-accept `websocket.close(code=...)` calls) surfaces as
+    httpx_ws.WebSocketDisconnect(code, reason) from the `async with` itself.
+
+    Deliberately NOT an async fixture that holds one shared transport open
+    across the whole test (that shape hit `RuntimeError: Attempted to exit
+    cancel scope in a different task than it was entered in` at teardown --
+    an anyio task-group edge case in how pytest-asyncio drives async
+    fixture finalizers). Each connect() call owns a fully self-contained
+    transport/client/socket that opens and closes within one `async with`
+    in the *test's own task*, sidestepping that entirely.
+    """
+    from contextlib import asynccontextmanager
+
+    from httpx_ws import aconnect_ws
+    from httpx_ws.transport import ASGIWebSocketTransport
+
+    async def override_get_db():
+        async with TestAsyncSessionMaker() as session:
+            yield session
+
+    @asynccontextmanager
+    async def connect(path: str):
+        app.dependency_overrides[get_db] = override_get_db
+        async with ASGIWebSocketTransport(app=app) as transport:
+            async with AsyncClient(transport=transport, base_url="http://test") as ac:
+                async with aconnect_ws(path, client=ac) as ws:
+                    yield ws
+
+    return connect
+
+
 def _random_suffix():
     return uuid.uuid4().hex[:8]
 
