@@ -10,6 +10,13 @@ import { AuthProvider } from '../contexts/AuthContext';
 import { LessonDetail } from '../pages/LessonDetail';
 import { ProjectDetail } from '../pages/ProjectDetail';
 import { VisualProgrammingPage } from '../pages/VisualProgramming';
+// Lazy, unlike the eager imports above -- DuelArena statically imports
+// useDuelSocket, and per-test-file `vi.mock('.../useDuelSocket', ...)`
+// calls (hoisted to the top of each test file) register too late to affect
+// a module graph this setup file already forced eager at Vitest startup.
+// Deferring the import until a test actually renders the /duels/:duelId
+// route lets each test's own mock apply to it.
+const DuelArena = React.lazy(() => import('../pages/DuelArena').then((m) => ({ default: m.DuelArena })));
 
 vi.mock('../api/client', () => ({
   AUTH_NOTICE_KEY: 'atlas_auth_notice',
@@ -96,6 +103,14 @@ vi.mock('../api/services', () => ({
     markRead: vi.fn(),
     markAllRead: vi.fn(),
   },
+  duelsApi: {
+    joinQueue: vi.fn(),
+    queueStatus: vi.fn(),
+    cancelQueue: vi.fn(),
+    mintTicket: vi.fn(),
+    getState: vi.fn(),
+    submit: vi.fn(),
+  },
 }));
 
 export async function renderWithProviders(
@@ -108,6 +123,7 @@ export async function renderWithProviders(
     lessonId?: string;
     projectId?: string;
     exerciseId?: string;
+    duelId?: string;
   }
 ) {
   const queryClient = new QueryClient({
@@ -135,6 +151,8 @@ export async function renderWithProviders(
     initialPath = `/projects/${options.projectId}`;
   } else if (options?.exerciseId) {
     initialPath = `/exercises/${options.exerciseId}/visual`;
+  } else if (options?.duelId) {
+    initialPath = `/duels/${options.duelId}`;
   }
 
   const TestRoutes = () => (
@@ -142,6 +160,7 @@ export async function renderWithProviders(
       <Route path="/lessons/:lessonId" element={<LessonDetail />} />
       <Route path="/projects/:projectId" element={<ProjectDetail />} />
       <Route path="/exercises/:exerciseId/visual" element={<VisualProgrammingPage />} />
+      <Route path="/duels/:duelId" element={<React.Suspense fallback={null}><DuelArena /></React.Suspense>} />
       <Route path="*" element={ui} />
     </Routes>
   );

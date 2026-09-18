@@ -369,3 +369,52 @@ export interface CodeValidationResponse {
   is_valid: boolean;
   errors: string[];
 }
+
+export type DuelDifficulty = 'beginner' | 'intermediate' | 'advanced';
+
+export interface DuelQueueStatusResponse {
+  status: 'idle' | 'waiting' | 'matched';
+  duel_id: number | null;
+}
+
+export interface DuelTicketResponse {
+  ticket: string;
+}
+
+export interface DuelParticipantView {
+  user_id: number;
+  username: string;
+  is_connected: boolean;
+  passed_count: number;
+  total_count: number;
+}
+
+export interface DuelStateResponse {
+  id: number;
+  status: 'active' | 'completed' | 'abandoned';
+  started_at: string;
+  ends_at: string;
+  ended_at: string | null;
+  winner_user_id: number | null;
+  problem_prompt: string;
+  problem_starter_code: string | null;
+  me: DuelParticipantView;
+  opponent: DuelParticipantView;
+}
+
+export interface DuelSubmitResponse {
+  is_correct: boolean;
+  passed_count: number;
+  total_count: number;
+  won: boolean;
+  duel_status: 'active' | 'completed' | 'abandoned';
+  winner_user_id: number | null;
+}
+
+/** The only shapes ever pushed over the WebSocket -- never carries code,
+ * matching the backend's fairness guarantee (see duel_realtime.py). */
+export type DuelSocketMessage =
+  | { type: 'opponent_connected' }
+  | { type: 'opponent_disconnected' }
+  | { type: 'opponent_progress'; passed_count: number; total_count: number }
+  | { type: 'duel_ended'; winner_user_id: number; reason: string };

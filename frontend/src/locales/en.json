@@ -75,7 +75,8 @@
     "leaderboard": "Leaderboard",
     "settings": "Settings",
     "logout": "Logout",
-    "main": "Main navigation"
+    "main": "Main navigation",
+    "duels": "Duel Arena"
   },
   "dashboard": {
     "welcome_back": "Welcome back, {{username}}!",
@@ -869,5 +870,31 @@
     "check_bug": "Check Answer",
     "bug_incorrect": "That statement is actually true — look again.",
     "bug_correct": "Found it — that is the one that's wrong."
+  },
+  "duels": {
+    "lobby_title": "Duel Arena",
+    "lobby_subtitle": "Race another student to solve the same problem first.",
+    "waiting_for_opponent": "Finding a {{difficulty}} opponent...",
+    "join_failed": "Couldn't join the queue. Please try again.",
+    "difficulty_hint": {
+      "beginner": "Fundamentals -- variables, loops, conditionals.",
+      "intermediate": "Functions, data structures, string processing.",
+      "advanced": "Algorithms and trickier edge cases."
+    },
+    "exit": "Exit duel",
+    "live": "Live",
+    "reconnecting": "Reconnecting...",
+    "you_suffix": "(you)",
+    "connected": "Online",
+    "disconnected": "Offline",
+    "your_progress": "Your progress",
+    "opponent_progress": "Opponent's progress",
+    "problem": "Problem",
+    "submit": "Submit",
+    "passed_x_of_y": "{{passed}}/{{total}} tests passed",
+    "you_won": "You won!",
+    "opponent_won": "Your opponent solved it first",
+    "time_expired": "Time's up -- no winner",
+    "back_to_lobby": "Back to Duel Arena"
   }
 }

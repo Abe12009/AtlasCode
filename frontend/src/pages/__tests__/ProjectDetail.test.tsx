@@ -107,7 +107,12 @@ describe('ProjectDetail Page', () => {
     });
     
     await waitFor(() => {
-      expect(screen.getByText(/def add\(a, b\):/i)).toBeInTheDocument();
+      // The starter code renders inside a live CodeMirror editor, which wraps
+      // syntax-highlighted tokens in their own <span>s -- getByText only reads
+      // an element's direct text nodes, so it can never see text split across
+      // descendant elements like that. Read the editor's full text content instead.
+      const editors = screen.getAllByTestId('code-editor');
+      expect(editors.some((editor) => /def add\(a, b\):/i.test(editor.textContent ?? ''))).toBe(true);
       // There are multiple copy buttons (one per task), use the first task's copy button
       expect(screen.getByTestId('task-copy-btn-1')).toBeInTheDocument();
     });

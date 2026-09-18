@@ -24,6 +24,8 @@ const Profile = lazy(() => import('./pages/Profile').then(m => ({ default: m.Pro
 const Cody = lazy(() => import('./pages/Cody').then(m => ({ default: m.Cody })));
 const PublicProfile = lazy(() => import('./pages/PublicProfile').then(m => ({ default: m.PublicProfile })));
 const VisualProgrammingPage = lazy(() => import('./pages/VisualProgramming').then(m => ({ default: m.VisualProgrammingPage })));
+const DuelLobby = lazy(() => import('./pages/DuelLobby').then(m => ({ default: m.DuelLobby })));
+const DuelArena = lazy(() => import('./pages/DuelArena').then(m => ({ default: m.DuelArena })));
 
 const Layout = lazy(() => import('./components/Layout').then(m => ({ default: m.Layout })));
 
@@ -98,6 +100,8 @@ function AppRoutes() {
         <Route path="courses/:courseId" element={<Suspense fallback={<LoadingFallback />}><CourseDetail /></Suspense>} />
         <Route path="lessons/:lessonId" element={<Suspense fallback={<LoadingFallback />}><LessonDetail /></Suspense>} />
         <Route path="visual/:exerciseId" element={<Suspense fallback={<LoadingFallback />}><VisualProgrammingPage /></Suspense>} />
+        <Route path="duels" element={<Suspense fallback={<LoadingFallback />}><DuelLobby /></Suspense>} />
+        <Route path="duels/:duelId" element={<Suspense fallback={<LoadingFallback />}><DuelArena /></Suspense>} />
         <Route path="projects" element={<Suspense fallback={<LoadingFallback />}><Projects /></Suspense>} />
         <Route path="projects/:projectId" element={<Suspense fallback={<LoadingFallback />}><ProjectDetail /></Suspense>} />
         <Route path="profile" element={<Suspense fallback={<LoadingFallback />}><Profile /></Suspense>} />

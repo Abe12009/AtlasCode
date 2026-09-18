@@ -2,6 +2,21 @@ import axios, { AxiosError, type AxiosInstance, type InternalAxiosRequestConfig 
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
+/** Same base as API_BASE_URL, but as a ws(s):// URL for the Duel Arena
+ * socket -- http(s) doesn't apply to a WebSocket upgrade. When
+ * VITE_API_URL is unset (local dev), API_BASE_URL is the relative '/api'
+ * that Vite's dev server proxies (see vite.config.ts, which also needs
+ * `ws: true` on that proxy entry for this to actually reach the backend),
+ * so the socket has to be built from the current page's own origin
+ * instead of being resolvable as a URL on its own. */
+export function getWsBaseUrl(): string {
+  if (API_BASE_URL.startsWith('http')) {
+    return API_BASE_URL.replace(/^http/, 'ws');
+  }
+  const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+  return `${wsProtocol}//${window.location.host}${API_BASE_URL}`;
+}
+
 /** Read once by the Login page to show why the user landed there, instead of a silent redirect. */
 export const AUTH_NOTICE_KEY = 'atlas_auth_notice';
 const DISABLED_ACCOUNT_DETAIL = 'This account has been disabled';

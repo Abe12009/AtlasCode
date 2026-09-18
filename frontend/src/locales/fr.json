@@ -75,7 +75,8 @@
     "leaderboard": "Classement",
     "settings": "Paramètres",
     "logout": "Déconnexion",
-    "main": "Navigation principale"
+    "main": "Navigation principale",
+    "duels": "Arène de duels"
   },
   "dashboard": {
     "welcome_back": "Bienvenue, {{username}} !",
@@ -869,5 +870,31 @@
     "check_bug": "Vérifier la réponse",
     "bug_incorrect": "Cette affirmation est en fait vraie — regardez encore.",
     "bug_correct": "Trouvé — c'est bien celle-là qui est fausse."
+  },
+  "duels": {
+    "lobby_title": "Arène de duels",
+    "lobby_subtitle": "Affrontez un autre élève pour résoudre le même problème en premier.",
+    "waiting_for_opponent": "Recherche d'un adversaire {{difficulty}}...",
+    "join_failed": "Impossible de rejoindre la file d'attente. Veuillez réessayer.",
+    "difficulty_hint": {
+      "beginner": "Fondamentaux -- variables, boucles, conditions.",
+      "intermediate": "Fonctions, structures de données, traitement de chaînes.",
+      "advanced": "Algorithmes et cas particuliers plus délicats."
+    },
+    "exit": "Quitter le duel",
+    "live": "En direct",
+    "reconnecting": "Reconnexion...",
+    "you_suffix": "(vous)",
+    "connected": "En ligne",
+    "disconnected": "Hors ligne",
+    "your_progress": "Votre progression",
+    "opponent_progress": "Progression de l'adversaire",
+    "problem": "Problème",
+    "submit": "Soumettre",
+    "passed_x_of_y": "{{passed}}/{{total}} tests réussis",
+    "you_won": "Vous avez gagné !",
+    "opponent_won": "Votre adversaire a résolu le problème en premier",
+    "time_expired": "Temps écoulé -- aucun gagnant",
+    "back_to_lobby": "Retour à l'arène de duels"
   }
 }

@@ -20,6 +20,11 @@ import type {
   CodyMessage,
   CodyChatResponse,
   AchievementEarned,
+  DuelDifficulty,
+  DuelQueueStatusResponse,
+  DuelTicketResponse,
+  DuelStateResponse,
+  DuelSubmitResponse,
 } from '../types';
 
 export const authApi = {
@@ -72,6 +77,22 @@ export const usersApi = {
 export const feedbackApi = {
   submit: (data: { category: string; message: string; page_path?: string }) =>
     apiClient.post<void>('/feedback', data),
+};
+
+export const duelsApi = {
+  joinQueue: (difficulty: DuelDifficulty) =>
+    apiClient.post<DuelQueueStatusResponse>('/duels/queue', { difficulty }),
+
+  queueStatus: () => apiClient.get<DuelQueueStatusResponse>('/duels/queue/status'),
+
+  cancelQueue: () => apiClient.post<DuelQueueStatusResponse>('/duels/queue/cancel'),
+
+  mintTicket: (duelId: number) => apiClient.post<DuelTicketResponse>(`/duels/${duelId}/ticket`),
+
+  getState: (duelId: number) => apiClient.get<DuelStateResponse>(`/duels/${duelId}`),
+
+  submit: (duelId: number, code: string) =>
+    apiClient.post<DuelSubmitResponse>(`/duels/${duelId}/submit`, { code }),
 };
 
 export const coursesApi = {
