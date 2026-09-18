@@ -618,5 +618,16 @@ class CodySpendResponse(BaseModel):
     daily_cap_usd: float
 
 
+class DuelQueueJoinRequest(BaseModel):
+    difficulty: DifficultyEnum
+
+
+class DuelQueueStatusResponse(BaseModel):
+    #: "idle" (no active queue entry at all -- distinct from "waiting" so
+    #: the client knows there's nothing to poll), "waiting", or "matched".
+    status: str
+    duel_id: Optional[int] = None
+
+
 LessonResponse.model_rebuild()
 ModuleResponse.model_rebuild()

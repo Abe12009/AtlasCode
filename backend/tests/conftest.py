@@ -54,6 +54,15 @@ async def db_session():
 
 
 @pytest.fixture
+def db_session_factory():
+    """For tests that need several independent, concurrently-live sessions
+    (e.g. simulating N separate requests racing each other against the same
+    DB) rather than the single session db_session hands out -- each call
+    opens its own connection against the same test database."""
+    return TestAsyncSessionMaker
+
+
+@pytest.fixture
 async def client():
     """Override get_db to use a fresh session for each request."""
     async def override_get_db():
