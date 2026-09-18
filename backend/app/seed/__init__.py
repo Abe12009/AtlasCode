@@ -18,6 +18,7 @@ from app.db.session import init_db
 from app.models import Course
 
 from .achievements import seed_achievements
+from .duel_problems import seed_duel_problems
 from .block_translations import apply_block_translations
 from .cs_fundamentals import seed_cs_fundamentals
 from .expansions import seed_data_structures_algorithms, seed_networking, seed_database_design
@@ -98,6 +99,7 @@ async def seed_curriculum(db: AsyncSession, *, verbose: bool = True) -> None:
         await seeder(db, _order(slug))
 
     await seed_achievements(db)
+    await seed_duel_problems(db)
 
     changed = await apply_roadmap(db, verbose=verbose)
     sections_changed = await seed_sections(db)

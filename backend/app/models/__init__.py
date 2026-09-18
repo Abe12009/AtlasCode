@@ -1,6 +1,6 @@
 import enum
 from datetime import datetime
-from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey, Boolean, Enum, Float, UniqueConstraint
+from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey, Boolean, Enum, Float, UniqueConstraint, Index
 from sqlalchemy.orm import relationship
 from app.db.session import Base
 
@@ -715,3 +715,159 @@ class FeedbackSubmission(Base):
     user_agent = Column(String(500), nullable=True)
     ip_address = Column(String(64), nullable=True, index=True)
     created_at = Column(DateTime, default=datetime.utcnow, index=True)
+
+
+# ---------------------------------------------------------------------------
+# Duel Arena -- real-time 1v1 coding duels.
+#
+# Reuses the existing Exercise/grading infrastructure entirely (a duel
+# problem is just an existing code exercise, graded through the same
+# execute_code() sandbox and per-assertion checklist Step 3 added) rather
+# than building a parallel content or grading system. See app.services.duels
+# for the matchmaking/race-resolution logic that operates on these tables.
+# ---------------------------------------------------------------------------
+
+
+class DuelStatusEnum(str, enum.Enum):
+    active = "active"
+    completed = "completed"
+    abandoned = "abandoned"
+
+
+class DuelQueueStatusEnum(str, enum.Enum):
+    waiting = "waiting"
+    matched = "matched"
+    cancelled = "cancelled"
+
+
+class DuelProblem(Base):
+    """A curated, duel-appropriate exercise -- deliberately NOT every
+    code_writing exercise. Most exercises assume prior lesson context or
+    lean on tutorial-specific starter code; only ones explicitly vetted as a
+    clean, self-contained problem belong in the duel pool. Same
+    authored-allowlist pattern as Circuit Lab and Git Quest content: opted
+    in, not auto-included."""
+
+    __tablename__ = "duel_problems"
+
+    id = Column(Integer, primary_key=True, index=True)
+    exercise_id = Column(Integer, ForeignKey("exercises.id", ondelete="CASCADE"), nullable=False, index=True)
+    #: The duel's own difficulty tag, independent of the exercise's parent
+    #: lesson -- a problem can be curated into a harder/easier duel pool than
+    #: the lesson it originally came from without touching that lesson.
+    difficulty = Column(Enum(DifficultyEnum), nullable=False, index=True)
+    is_active = Column(Boolean, default=True, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    exercise = relationship("Exercise")
+
+
+class DuelQueueEntry(Base):
+    """One student waiting to be matched. Matching happens synchronously in
+    the join-queue request (see app.services.duels.join_queue): the second
+    student to join a given difficulty pool always finds the first one
+    already waiting, so there's no background worker or scheduler pairing
+    people up after the fact."""
+
+    __tablename__ = "duel_queue_entries"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    difficulty = Column(Enum(DifficultyEnum), nullable=False, index=True)
+    status = Column(Enum(DuelQueueStatusEnum), default=DuelQueueStatusEnum.waiting, nullable=False, index=True)
+    #: Set once matched; the waiting client's poll of queue/status reads this
+    #: to learn which duel it was paired into.
+    duel_id = Column(Integer, ForeignKey("duels.id", ondelete="SET NULL"), nullable=True)
+    joined_at = Column(DateTime, default=datetime.utcnow)
+
+    user = relationship("User")
+    duel = relationship("Duel")
+
+    __table_args__ = (
+        #: A real DB-level guarantee against the same user ending up with two
+        #: simultaneous 'waiting' rows (e.g. a double-submitted join-queue
+        #: request racing itself) -- app.services.duels.join_queue treats the
+        #: resulting IntegrityError as "you're already queued", not a crash.
+        #: Partial index: only 'waiting' rows are constrained, so a user's
+        #: past matched/cancelled entries never collide with a new one.
+        Index(
+            "uq_one_waiting_entry_per_user",
+            "user_id",
+            unique=True,
+            postgresql_where=(status == DuelQueueStatusEnum.waiting),
+            sqlite_where=(status == DuelQueueStatusEnum.waiting),
+        ),
+    )
+
+
+class Duel(Base):
+    """One live or finished match. `ends_at` is set once at match time and
+    is the server-authoritative countdown target -- clients render the
+    countdown locally from it and resync periodically, but only the server
+    decides a duel is actually over (see app.services.duels)."""
+
+    __tablename__ = "duels"
+
+    id = Column(Integer, primary_key=True, index=True)
+    duel_problem_id = Column(Integer, ForeignKey("duel_problems.id", ondelete="RESTRICT"), nullable=False)
+    status = Column(Enum(DuelStatusEnum), default=DuelStatusEnum.active, nullable=False, index=True)
+    started_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    ends_at = Column(DateTime, nullable=False)
+    ended_at = Column(DateTime, nullable=True)
+    #: Null until someone wins (or the duel times out with no winner).
+    #: Set via an atomic conditional UPDATE ("... WHERE status='active'") so
+    #: two near-simultaneous correct submissions resolve at the database
+    #: level -- exactly one UPDATE affects a row -- rather than trusting
+    #: whichever request the server happens to handle first in application
+    #: code.
+    winner_user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+
+    duel_problem = relationship("DuelProblem")
+    winner = relationship("User", foreign_keys=[winner_user_id])
+    participants = relationship("DuelParticipant", back_populates="duel", cascade="all, delete-orphan")
+    submissions = relationship("DuelSubmissionAttempt", back_populates="duel", cascade="all, delete-orphan")
+
+
+class DuelParticipant(Base):
+    """One side of a duel. A closed WebSocket sets is_connected=False but
+    does NOT end the duel by itself -- see the 30s grace-window/forfeit-claim
+    flow in app.services.duels. `forfeited` is set only via the opponent's
+    explicit forfeit claim after that window has visibly elapsed, never by
+    an automatic server-side timeout."""
+
+    __tablename__ = "duel_participants"
+
+    id = Column(Integer, primary_key=True, index=True)
+    duel_id = Column(Integer, ForeignKey("duels.id", ondelete="CASCADE"), nullable=False, index=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    is_connected = Column(Boolean, default=False, nullable=False)
+    disconnected_at = Column(DateTime, nullable=True)
+    forfeited = Column(Boolean, default=False, nullable=False)
+
+    duel = relationship("Duel", back_populates="participants")
+    user = relationship("User")
+
+    __table_args__ = (UniqueConstraint("duel_id", "user_id", name="uq_duel_participant"),)
+
+
+class DuelSubmissionAttempt(Base):
+    """A full grading record, kept server-side for audit purposes -- NEVER
+    serialized back to the opponent. The live opponent-progress broadcast
+    (see app.services.duels) only ever carries {user_id, passed_count,
+    total_count}; nothing in the API layer has a code path that can put this
+    row's `code` column in a response addressed to anyone but its own
+    submitter."""
+
+    __tablename__ = "duel_submission_attempts"
+
+    id = Column(Integer, primary_key=True, index=True)
+    duel_id = Column(Integer, ForeignKey("duels.id", ondelete="CASCADE"), nullable=False, index=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    code = Column(Text, nullable=False)
+    passed_count = Column(Integer, nullable=False)
+    total_count = Column(Integer, nullable=False)
+    is_correct = Column(Boolean, nullable=False)
+    submitted_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+
+    duel = relationship("Duel", back_populates="submissions")
+    user = relationship("User")
