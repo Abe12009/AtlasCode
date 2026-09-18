@@ -45,6 +45,34 @@ class TestDashboard:
         response = await client.get("/dashboard")
         assert response.status_code == 401
 
+    async def test_course_progress_carries_the_course_title(self, client: AsyncClient, test_user):
+        # GET .../progress lazily creates the CourseProgress row on first fetch.
+        progress_response = await client.get("/courses/1/progress", headers=test_user["headers"])
+        assert progress_response.status_code == 200
+
+        response = await client.get("/dashboard", headers=test_user["headers"])
+        dashboard = response.json()
+        row = next(cp for cp in dashboard["course_progress"] if cp["course_id"] == 1)
+        assert row["title"]  # resolved, not the bare numeric id the frontend used to show
+
+    async def test_current_mission_carries_its_course_and_module_titles(self, client: AsyncClient, test_user):
+        start_response = await client.post("/lessons/1/start", headers=test_user["headers"])
+        assert start_response.status_code == 200
+
+        response = await client.get("/dashboard", headers=test_user["headers"])
+        dashboard = response.json()
+        assert dashboard["current_mission"]["id"] == 1
+        assert dashboard["current_mission_course_title"]
+        assert dashboard["current_mission_module_title"]
+
+    async def test_no_current_mission_means_no_titles(self, client: AsyncClient, second_user):
+        # A fresh account that never started a lesson has no current_mission_id.
+        response = await client.get("/dashboard", headers=second_user["headers"])
+        dashboard = response.json()
+        assert dashboard["current_mission"] is None
+        assert dashboard["current_mission_course_title"] is None
+        assert dashboard["current_mission_module_title"] is None
+
 
 class TestVisualProgramming:
     async def test_compile_valid_graph(self, client: AsyncClient, test_user):

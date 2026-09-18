@@ -1,5 +1,5 @@
 import { cn } from '../lib/utils';
-import { CheckCircle, BookOpen, FolderKanban, Code, Trophy, Target, Clock, ChevronRight } from 'lucide-react';
+import { CheckCircle, BookOpen, FolderKanban, Code, Trophy, Target, Clock, ChevronRight, Lock } from 'lucide-react';
 import { StatusBadge, XPBadge } from './ui/StatusBadge';
 import { useTranslation } from '../hooks/useTranslation';
 
@@ -58,8 +58,15 @@ export function QuestNode({
   const isCurrent = node.status === 'current';
   const isCompleted = node.status === 'completed';
   const isLocked = node.status === 'locked';
+  // 'available' (not yet started, not blocked by a prerequisite) is real
+  // information distinct from 'locked' -- keep its own quiet styling rather
+  // than folding it into either state. See app.services dashboard proposal.
+  const isAvailable = node.status === 'available';
 
-  const nodeSize = variant === 'horizontal' ? 56 : 48;
+  const baseNodeSize = variant === 'horizontal' ? 56 : 48;
+  // The current node reads as "you are here": larger than its neighbors,
+  // per the target wireframe.
+  const nodeSize = isCurrent ? baseNodeSize + 12 : baseNodeSize;
   const connectorWidth = variant === 'horizontal' ? 'calc(100% - 56px)' : '4px';
   const connectorHeight = variant === 'horizontal' ? '4px' : 'calc(100% - 48px)';
 
@@ -85,11 +92,11 @@ export function QuestNode({
             'relative flex items-center justify-center rounded-full border-2 transition-all duration-300',
             'z-10',
             isCompleted
-              ? 'bg-success-500 border-success-500 text-white shadow-glow-success'
+              ? 'bg-primary-500 border-primary-500 text-white shadow-glow-primary'
               : isCurrent
-              ? 'bg-primary-500 border-primary-500 text-white shadow-glow-primary animate-pulse-glow'
+              ? 'bg-accent-500 border-accent-500 text-white shadow-glow-accent animate-pulse-glow ring-4 ring-accent-500/30'
               : isLocked
-              ? 'bg-bg-tertiary border-border-primary text-text-tertiary'
+              ? 'border-dashed bg-bg-tertiary border-border-secondary text-text-tertiary'
               : 'bg-bg-secondary border-border-secondary text-text-secondary hover:border-primary-500/50 hover:bg-bg-tertiary'
           )}
           style={{ width: nodeSize, height: nodeSize }}
@@ -99,9 +106,9 @@ export function QuestNode({
           ) : isCurrent ? (
             <span className="font-bold text-lg" aria-hidden="true">{index + 1}</span>
           ) : isLocked ? (
-            <span className="text-lg" aria-hidden="true">🔒</span>
+            <Lock className="h-5 w-5" aria-hidden="true" />
           ) : (
-            <TypeIcon className={cn('h-7 w-7', isLocked ? 'text-text-tertiary' : 'text-text-secondary')} aria-hidden="true" />
+            <TypeIcon className={cn('h-7 w-7', isAvailable ? 'text-text-secondary' : 'text-text-tertiary')} aria-hidden="true" />
           )}
         </div>
 
@@ -146,12 +153,17 @@ export function QuestNode({
           className={cn(
             'absolute transition-colors duration-300',
             variant === 'horizontal'
-              ? 'left-1/2 top-[calc(56px+8px)] w-[calc(100%-56px)] h-0.5 -translate-x-1/2'
-              : 'top-[calc(48px+8px)] left-[calc(50%-2px)] w-0.5 h-[calc(100%-48px-16px)] -translate-x-1/2'
+              ? 'left-1/2 w-[calc(100%-56px)] h-0.5 -translate-x-1/2'
+              : 'left-[calc(50%-2px)] w-0.5 h-[calc(100%-48px-16px)] -translate-x-1/2'
           )}
           style={{
+            // Offset from this node's own (possibly enlarged, for 'current')
+            // circle rather than a size hardcoded for the common case --
+            // the current node is bigger, so its outgoing connector needs
+            // to start further down/right or it clips into the circle.
+            top: variant === 'horizontal' ? nodeSize + 8 : baseNodeSize + 8,
             background: isCompleted
-              ? 'linear-gradient(90deg, #10B981, #10B981)'
+              ? 'linear-gradient(90deg, var(--color-primary-500), var(--color-primary-500))'
               : 'linear-gradient(90deg, var(--color-border-primary), var(--color-border-primary))',
           }}
           aria-hidden="true"

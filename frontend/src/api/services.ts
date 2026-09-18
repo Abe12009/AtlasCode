@@ -157,6 +157,10 @@ export const projectsApi = {
 };
 
 export const dashboardApi = {
+  // Title translations on current_mission_course_title / course_progress[].title
+  // follow the user's *stored* preferred_language server-side (see
+  // app/api/dashboard.py), same as the rest of this endpoint -- there is
+  // deliberately no language param to pass here, unlike /courses or /lessons.
   get: () => apiClient.get<DashboardData>('/dashboard'),
 };
 

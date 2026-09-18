@@ -198,6 +198,7 @@ export interface CourseProgress {
   completed_lessons: number;
   total_lessons: number;
   progress_percent: number;
+  title: string | null;
 }
 
 export interface ProjectTaskTranslation {
@@ -281,6 +282,8 @@ export interface DashboardData {
   profile: StudentProfile;
   weekly: WeeklyStats;
   current_mission: Lesson | null;
+  current_mission_course_title: string | null;
+  current_mission_module_title: string | null;
   course_progress: CourseProgress[];
   recent_achievements: UserAchievement[];
   current_project: ProjectProgress | null;

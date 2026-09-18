@@ -1,7 +1,8 @@
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { dashboardApi } from '../api/services';
-import { BookOpen, FolderKanban, Trophy, Flame, Code, ArrowRight, Target, CheckCircle, TrendingUp, Sparkles, Flag, MapPin } from 'lucide-react';
+import { BookOpen, FolderKanban, Trophy, Flame, Zap, Code, ArrowRight, TrendingUp, Sparkles, Flag, MapPin, ChevronDown, ChevronUp } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { Card, Badge, Progress, Button, cn, Skeleton, StatusBadge, XPBadge, StreakBadge, QuestRoadmap } from '../components/ui';
 import type { QuestNodeData } from '../components/ui';
@@ -9,6 +10,7 @@ import { useTranslation } from '../hooks/useTranslation';
 
 export function Dashboard() {
   const { t } = useTranslation();
+  const [storyExpanded, setStoryExpanded] = useState(false);
   const { data: dashboard, isLoading, error } = useQuery({
     queryKey: ['dashboard'],
     queryFn: dashboardApi.get,
@@ -46,6 +48,8 @@ export function Dashboard() {
   const profile = dashboard?.profile;
   const weekly = dashboard?.weekly;
   const currentMission = dashboard?.current_mission;
+  const currentMissionCourseTitle = dashboard?.current_mission_course_title;
+  const currentMissionModuleTitle = dashboard?.current_mission_module_title;
   const courseProgress = dashboard?.course_progress || [];
   const recentAchievements = dashboard?.recent_achievements || [];
   const currentProject = dashboard?.current_project;
@@ -53,33 +57,29 @@ export function Dashboard() {
   /** A weekly delta only shows for values that actually happened — see backend/app/services/stats.py. */
   const trendFor = (amount: number): string | null => (amount > 0 ? `+${amount}` : null);
 
+  const coursesInProgress = courseProgress.filter(
+    (p) => p.progress_percent > 0 && p.progress_percent < 100
+  ).length;
+
   const stats = [
     {
-      label: t('dashboard.level'),
-      value: profile?.level || 1,
-      icon: Trophy,
-      color: 'text-yellow-500 bg-yellow-900/30 border-yellow-500/30',
-      trend: trendFor(weekly?.levels_gained ?? 0),
-      note: null as string | null,
-    },
-    {
-      label: t('dashboard.xp'),
-      value: profile?.xp || 0,
-      icon: Target,
+      label: t('dashboard.courses_in_progress'),
+      value: coursesInProgress,
+      icon: BookOpen,
       color: 'text-blue-500 bg-blue-900/30 border-blue-500/30',
-      trend: trendFor(weekly?.xp ?? 0),
+      trend: null,
       note: null as string | null,
     },
     {
-      label: t('dashboard.lessons_completed'),
-      value: profile?.completed_lessons || 0,
-      icon: CheckCircle,
+      label: t('dashboard.projects_completed'),
+      value: profile?.completed_projects || 0,
+      icon: FolderKanban,
       color: 'text-green-500 bg-green-900/30 border-green-500/30',
-      trend: trendFor(weekly?.lessons_completed ?? 0),
+      trend: trendFor(weekly?.projects_completed ?? 0),
       note: null as string | null,
     },
     {
-      label: t('dashboard.streak'),
+      label: t('dashboard.day_streak'),
       value: `${profile?.streak || 0} ${t('dashboard.days')}`,
       icon: Flame,
       color: 'text-orange-500 bg-orange-900/30 border-orange-500/30',
@@ -89,7 +89,33 @@ export function Dashboard() {
           ? t('dashboard.active_days_this_week', { count: weekly!.active_days })
           : null,
     },
+    {
+      label: t('dashboard.total_xp'),
+      value: profile?.xp || 0,
+      icon: Zap,
+      color: 'text-yellow-500 bg-yellow-900/30 border-yellow-500/30',
+      trend: trendFor(weekly?.xp ?? 0),
+      note: null as string | null,
+    },
   ];
+
+  /** The course the welcome subtitle refers to: the one tied to the
+   * student's actual current lesson if they have one (matched against
+   * course_progress by title for a percent -- current_mission carries no
+   * course_id, and a course_progress row for it may not exist yet, since
+   * that row is only created lazily on first visit to the course page),
+   * else whichever in-progress course is furthest along, else none
+   * (brand-new account, no dynamic subtitle). */
+  const subtitleCourse = (() => {
+    if (currentMissionCourseTitle) {
+      const matched = courseProgress.find((p) => p.title === currentMissionCourseTitle);
+      return { title: currentMissionCourseTitle, percent: matched ? matched.progress_percent : null };
+    }
+    const furthest = [...courseProgress]
+      .filter((p) => p.progress_percent > 0 && p.progress_percent < 100 && p.title)
+      .sort((a, b) => b.progress_percent - a.progress_percent)[0];
+    return furthest ? { title: furthest.title as string, percent: furthest.progress_percent } : null;
+  })();
 
   const buildQuestNodes = (): QuestNodeData[] => {
     const nodes: QuestNodeData[] = [];
@@ -155,7 +181,14 @@ export function Dashboard() {
             {t('dashboard.welcome_back', { username: user?.username || '' })}
           </h1>
           <p className="text-text-secondary mt-1">
-            {t('dashboard.continue_journey')}
+            {subtitleCourse?.percent != null
+              ? t('dashboard.welcome_subtitle_progress', {
+                  percent: Math.round(subtitleCourse.percent),
+                  course: subtitleCourse.title,
+                })
+              : subtitleCourse
+              ? t('dashboard.welcome_subtitle_course', { course: subtitleCourse.title })
+              : t('dashboard.continue_journey')}
           </p>
         </div>
         <Link
@@ -226,45 +259,95 @@ export function Dashboard() {
 
       <div className="grid lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
-          {currentMission && (
-            <Card variant="interactive" padding="lg" className="border-primary-500/20 bg-primary-500/5">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-3">
-                  <div className="p-3 bg-primary-500/10 rounded-xl">
-                    <Code className="h-6 w-6 text-primary-400" />
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2 mb-1">
-                      <h2 className="text-lg font-semibold text-text-primary">
-                        {t('dashboard.current_mission')}
-                      </h2>
-                      <StatusBadge status="in_progress" size="sm" />
+          {currentMission && (() => {
+            const matchedProgress = currentMissionCourseTitle
+              ? courseProgress.find((p) => p.title === currentMissionCourseTitle)
+              : undefined;
+            const courseTitle = currentMissionCourseTitle || currentMission.translations[0]?.title;
+            const percent = matchedProgress?.progress_percent ?? 0;
+            const story = currentMission.translations[0]?.story;
+            const skills = currentMission.translations[0]?.skills?.split(', ').filter(Boolean) ?? [];
+            const hasExtra = Boolean(story) || skills.length > 0;
+
+            return (
+              <Card variant="interactive" padding="lg" className="border-primary-500/20 bg-primary-500/5">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="p-3 bg-primary-500/10 rounded-xl flex-shrink-0">
+                      <Code className="h-6 w-6 text-primary-400" />
                     </div>
-                    <p className="text-sm text-text-secondary">
-                      {currentMission.translations[0]?.title}
-                    </p>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2 mb-1 flex-wrap">
+                        <h2 className="text-lg font-semibold text-text-primary truncate">
+                          {courseTitle}
+                        </h2>
+                        <StatusBadge status="in_progress" size="sm" />
+                      </div>
+                      {currentMissionModuleTitle && (
+                        <p className="text-sm text-text-secondary truncate">
+                          {currentMissionModuleTitle}
+                        </p>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
-              <p className="text-text-secondary mb-4">
-                {currentMission.translations[0]?.story}
-              </p>
-              <div className="flex flex-wrap gap-2 mb-4">
-                {currentMission.translations[0]?.skills?.split(', ').map((skill) => (
-                  <Badge key={skill} variant="outline" size="sm" className="border-primary-500/30 text-primary-400">
-                    {skill}
-                  </Badge>
-                ))}
-              </div>
-              <Link
-                to={`/app/lessons/${currentMission.id}`}
-                className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white font-semibold rounded-xl transition-all shadow-lg hover:shadow-glow-primary"
-              >
-                <span>{t('dashboard.continue_learning')}</span>
-                <ArrowRight className="h-4 w-4" />
-              </Link>
-            </Card>
-          )}
+
+                <Progress
+                  value={percent}
+                  size="md"
+                  variant="primary"
+                  showLabel
+                  className="mb-4"
+                />
+
+                <Link
+                  to={`/app/lessons/${currentMission.id}`}
+                  className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white font-semibold rounded-xl transition-all shadow-lg hover:shadow-glow-primary"
+                >
+                  <span>{t('dashboard.continue_lesson')}</span>
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+
+                {hasExtra && (
+                  <div className="mt-4 pt-4 border-t border-border-primary/50">
+                    <button
+                      type="button"
+                      onClick={() => setStoryExpanded((v) => !v)}
+                      className="flex items-center gap-1.5 text-sm font-medium text-primary-400 hover:text-primary-300"
+                      aria-expanded={storyExpanded}
+                      data-testid="dashboard-story-toggle"
+                    >
+                      {storyExpanded ? (
+                        <>
+                          <ChevronUp className="h-4 w-4" />
+                          {t('dashboard.hide_story')}
+                        </>
+                      ) : (
+                        <>
+                          <ChevronDown className="h-4 w-4" />
+                          {t('dashboard.show_story')}
+                        </>
+                      )}
+                    </button>
+                    {storyExpanded && (
+                      <div className="mt-3 animate-slide-down">
+                        {story && <p className="text-text-secondary mb-3">{story}</p>}
+                        {skills.length > 0 && (
+                          <div className="flex flex-wrap gap-2">
+                            {skills.map((skill) => (
+                              <Badge key={skill} variant="outline" size="sm" className="border-primary-500/30 text-primary-400">
+                                {skill}
+                              </Badge>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </Card>
+            );
+          })()}
 
           <Card variant="default" padding="lg">
             <div className="flex items-center justify-between mb-4">
@@ -283,7 +366,7 @@ export function Dashboard() {
                   <div key={progress.course_id}>
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-sm font-medium text-text-primary">
-                        {t('dashboard.course')} {progress.course_id}
+                        {progress.title || `${t('dashboard.course')} ${progress.course_id}`}
                       </span>
                       <span className="text-sm font-semibold text-primary-400">
                         {progress.progress_percent.toFixed(0)}%

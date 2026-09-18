@@ -324,6 +324,10 @@ class CourseProgressResponse(BaseModel):
     completed_lessons: int
     total_lessons: int
     progress_percent: float
+    #: Set by the dashboard endpoint from the course's own translations --
+    #: not a stored column, so it's absent (None) anywhere else this schema
+    #: might theoretically be reused.
+    title: Optional[str] = None
 
     class Config:
         from_attributes = True
@@ -418,6 +422,11 @@ class DashboardResponse(BaseModel):
     profile: StudentProfileResponse
     weekly: WeeklyStatsResponse
     current_mission: Optional[LessonResponse] = None
+    #: current_mission's own course/module title -- LessonResponse carries
+    #: neither (not even module_id), so the dashboard endpoint resolves these
+    #: separately from the ORM object's .module.course relationship.
+    current_mission_course_title: Optional[str] = None
+    current_mission_module_title: Optional[str] = None
     course_progress: List[CourseProgressResponse] = []
     recent_achievements: List[UserAchievementResponse] = []
     current_project: Optional[ProjectProgressResponse] = None

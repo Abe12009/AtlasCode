@@ -76,6 +76,8 @@ async def get_dashboard(
     weekly = await compute_weekly_stats(db, current_user, profile, now_utc=now)
 
     current_mission = None
+    current_mission_course_title = None
+    current_mission_module_title = None
     if profile.current_mission_id:
         mission_result = await db.execute(
             select(Lesson).options(
@@ -83,6 +85,8 @@ async def get_dashboard(
                 selectinload(Lesson.blocks).selectinload(LessonBlock.translations),
                 selectinload(Lesson.exercises).selectinload(Exercise.translations),
                 selectinload(Lesson.exercises).selectinload(Exercise.options).selectinload(ExerciseOption.translations),
+                selectinload(Lesson.module).selectinload(Module.translations),
+                selectinload(Lesson.module).selectinload(Module.course).selectinload(Course.translations),
             ).where(Lesson.id == profile.current_mission_id)
         )
         current_mission = mission_result.scalars().unique().first()
@@ -99,10 +103,25 @@ async def get_dashboard(
                 exercise.test_code = None
                 exercise.validation_config = None
 
+            module = current_mission.module
+            if module:
+                module_translation = next((t for t in module.translations if t.language == current_user.preferred_language), None)
+                current_mission_module_title = module_translation.title if module_translation else None
+                if module.course:
+                    course_translation = next((t for t in module.course.translations if t.language == current_user.preferred_language), None)
+                    current_mission_course_title = course_translation.title if course_translation else None
+
     course_progress_result = await db.execute(
-        select(CourseProgress).where(CourseProgress.user_id == current_user.id)
+        select(CourseProgress).options(
+            selectinload(CourseProgress.course).selectinload(Course.translations)
+        ).where(CourseProgress.user_id == current_user.id)
     )
     course_progress = course_progress_result.scalars().all()
+    for progress in course_progress:
+        course_translation = None
+        if progress.course:
+            course_translation = next((t for t in progress.course.translations if t.language == current_user.preferred_language), None)
+        progress.title = course_translation.title if course_translation else None
 
     recent_achievements_result = await db.execute(
         select(UserAchievement).options(
@@ -142,6 +161,8 @@ async def get_dashboard(
         "profile": profile,
         "weekly": weekly.as_dict(),
         "current_mission": current_mission,
+        "current_mission_course_title": current_mission_course_title,
+        "current_mission_module_title": current_mission_module_title,
         "course_progress": course_progress,
         "recent_achievements": recent_achievements,
         "current_project": current_project
