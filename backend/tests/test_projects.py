@@ -197,6 +197,23 @@ class TestProjectTaskProgression:
         assert result["success"] is False
         assert "error" in result or "output" in result
 
+    async def test_task_submission_rejects_forbidden_imports(self, client: AsyncClient, user_with_calculator_unlocked):
+        """Task submission must run the same AST validator every other code-
+        execution surface runs before execute_code() -- without it, the
+        subclass-walk sandbox escape is reachable here even though every
+        other endpoint blocks it (see app.services.code_executor)."""
+        start_response = await client.post("/projects/1/start", headers=user_with_calculator_unlocked["headers"])
+        assert start_response.status_code == 200
+
+        response = await client.post("/projects/1/submit-task", headers=user_with_calculator_unlocked["headers"], json={
+            "task_id": 1,
+            "code": "import os\ndef add(a, b):\n    return a + b"
+        })
+        assert response.status_code == 200
+        result = response.json()
+        assert result["success"] is False
+        assert "validation failed" in result["error"].lower()
+
     async def test_task_validation_passes_with_correct_code(self, client: AsyncClient, user_with_calculator_unlocked):
         start_response = await client.post("/projects/1/start", headers=user_with_calculator_unlocked["headers"])
         assert start_response.status_code == 200

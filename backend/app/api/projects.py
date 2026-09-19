@@ -178,7 +178,12 @@ async def submit_project_task(
         raise HTTPException(status_code=404, detail="Task not found")
 
     if task.validation_code:
-        from app.services.code_executor import execute_code
+        from app.services.code_executor import execute_code, validate_python_code
+
+        validation = validate_python_code(code)
+        if not validation.is_valid:
+            return {"success": False, "error": "Code validation failed: " + "; ".join(validation.errors), "output": ""}
+
         # Combine user code and validation code so validation can access user-defined functions
         combined_code = code + "\n\n" + task.validation_code
         result = execute_code(combined_code, None)
