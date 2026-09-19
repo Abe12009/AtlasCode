@@ -274,6 +274,14 @@ class ExerciseTranslationResponse(BaseModel):
     hint: Optional[str] = None
     explanation: Optional[str] = None
 
+    class Config:
+        from_attributes = True
+
+
+class TraceStepResponse(BaseModel):
+    line: int
+    locals: Dict[str, Any]
+
 
 class ExerciseResponse(BaseModel):
     id: int
@@ -283,6 +291,13 @@ class ExerciseResponse(BaseModel):
     starter_code: Optional[str] = None
     translations: List[ExerciseTranslationResponse] = []
     options: List[ExerciseOptionResponse] = []
+    #: Break-the-Code's step-through trace of the *buggy* starter_code,
+    #: recorded once at seed time (see app.services.trace_recorder). Set only
+    #: for a `debugging` exercise authored with one -- never derived from
+    #: validation_config generically, since that field holds the answer key
+    #: for other exercise types and must never reach this response (see
+    #: app.api.lessons.get_lesson, which nulls it out).
+    trace: Optional[List[TraceStepResponse]] = None
 
     class Config:
         from_attributes = True

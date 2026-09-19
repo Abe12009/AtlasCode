@@ -1,5 +1,7 @@
+import json
 from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi.responses import JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
 from sqlalchemy.orm import selectinload
@@ -8,10 +10,23 @@ from app.db.session import get_db
 from app.core.dependencies import get_current_user
 from app.models import (
     Lesson, LessonBlock, LessonBlockTranslation, Exercise, ExerciseTranslation,
-    ExerciseOption, ExerciseOptionTranslation, LessonProgress, StudentProfile,
+    ExerciseOption, ExerciseOptionTranslation, ExerciseTypeEnum, LessonProgress, StudentProfile,
     MissionStatusEnum, LanguageEnum, Module, Course
 )
 from app.schemas import LessonResponse, LessonProgressResponse, ExerciseResponse, LanguageEnum as SchemaLanguageEnum
+
+
+def _extract_trace(exercise: Exercise) -> Optional[list]:
+    """Break-the-Code's step-through trace, pulled off validation_config
+    before that field is nulled out below -- see ExerciseResponse.trace."""
+    if exercise.exercise_type != ExerciseTypeEnum.debugging or not exercise.validation_config:
+        return None
+    try:
+        config = json.loads(exercise.validation_config)
+    except (ValueError, TypeError):
+        return None
+    trace = config.get("trace") if isinstance(config, dict) else None
+    return trace if isinstance(trace, list) else None
 
 router = APIRouter(prefix="/lessons", tags=["lessons"])
 
@@ -77,6 +92,7 @@ async def get_lesson(
         exercise.options = [o for o in exercise.options]
         for option in exercise.options:
             option.translations = [t for t in option.translations if t.language == language]
+        exercise.trace = _extract_trace(exercise)
         exercise.solution_code = None
         exercise.test_code = None
         exercise.validation_config = None
@@ -111,7 +127,21 @@ async def get_lesson(
         progress.status = MissionStatusEnum.ready
         await db.commit()
 
-    return lesson
+    payload = LessonResponse.model_validate(lesson, from_attributes=True).model_dump(mode="json")
+    for exercise_payload in payload["exercises"]:
+        # `trace` is Break-the-Code-only: for every exercise type except a
+        # `debugging` one authored with a trace, the key must be absent from
+        # the response entirely, not merely present-and-null -- a present
+        # key still advertises the field's existence to every exercise type,
+        # which is more than "debugging only" should expose. model_dump()
+        # always includes Optional fields (as null) with no per-field
+        # exclude_none, so this is stripped by hand rather than by widening
+        # exclude_none across the whole payload (which would also swallow
+        # every other legitimately-null field, e.g. block content/config).
+        if exercise_payload.get("trace") is None:
+            exercise_payload.pop("trace", None)
+
+    return JSONResponse(payload)
 
 
 @router.get("/{lesson_id}/progress", response_model=LessonProgressResponse)
