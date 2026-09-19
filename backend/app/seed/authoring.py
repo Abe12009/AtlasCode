@@ -294,6 +294,45 @@ def CodeWriting(
     )
 
 
+def BreakTheCode(
+    prompt: T,
+    hint: T,
+    explanation: T,
+    buggy_code: str,
+    fix_code: str,
+    entry_call: str,
+    test_code: str,
+    xp: int = 20,
+) -> Exercise:
+    """A `debugging` exercise (same type, same grading as an ordinary one --
+    see app.services.exercise_grading) with a step-through trace attached.
+
+    `entry_call` is a Python expression that invokes the buggy code (e.g.
+    ``"binary_search([1, 3, 5, 7, 9], 5)"``) -- it's run once, at seed time,
+    to record a real line-by-line execution trace (see
+    app.services.trace_recorder), stored under
+    ``validation_config["trace"]``. Pick an entry_call whose bug actually
+    terminates: recording asserts on this, so a buggy_code+entry_call
+    combination that infinite-loops fails the seed build loudly instead of
+    shipping a broken trace."""
+    assert test_code.strip(), f"BreakTheCode needs test_code: {prompt.en!r}"
+    from app.services.trace_recorder import record_trace, trace_to_json
+
+    trace = record_trace(buggy_code, entry_call)
+    assert trace.is_valid, f"BreakTheCode trace recording failed: {prompt.en!r}: {trace.error}"
+    return Exercise(
+        ExerciseTypeEnum.debugging,
+        prompt,
+        hint,
+        explanation,
+        xp,
+        starter_code=buggy_code,
+        solution_code=fix_code,
+        test_code=test_code,
+        validation={"trace": trace_to_json(trace)},
+    )
+
+
 def GitQuest(
     prompt: T,
     hint: T,
