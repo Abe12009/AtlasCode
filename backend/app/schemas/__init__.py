@@ -578,6 +578,24 @@ class CircuitEvaluateResponse(BaseModel):
     errors: List[str] = []
 
 
+class GitQuestActionRequest(BaseModel):
+    kind: str  # "command" | "edit"
+    value: Optional[str] = None
+    file: Optional[str] = None
+    content: Optional[str] = None
+
+
+class GitQuestExecuteRequest(BaseModel):
+    state: Dict[str, Any]
+    action: GitQuestActionRequest
+
+
+class GitQuestExecuteResponse(BaseModel):
+    state: Dict[str, Any]
+    output: str = ""
+    error: Optional[str] = None
+
+
 class NotificationResponse(BaseModel):
     id: int
     type: NotificationTypeEnum
