@@ -23,6 +23,7 @@ from .block_translations import apply_block_translations
 from .cs_fundamentals import seed_cs_fundamentals
 from .expansions import seed_data_structures_algorithms, seed_networking, seed_database_design
 from .git_github import seed_git_github
+from .git_open_source_quests import seed_git_open_source_quests
 from .orientini import seed_orientini
 from .projects import seed_projects
 from .python_foundations import seed_python_foundations
@@ -77,6 +78,7 @@ NEW_COURSE_SEEDERS = (
     (seed_networking, "networking"),
     (seed_database_design, "database-design"),
     (seed_software_engineering, "software-engineering"),
+    (seed_git_open_source_quests, "git-open-source-quests"),
     (seed_cybersecurity_foundations, "cybersecurity-foundations"),
     (seed_network_security, "network-security-fundamentals"),
     (seed_secure_development, "secure-software-development"),

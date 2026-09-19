@@ -17,6 +17,7 @@ from typing import Any, Optional, Sequence
 
 from app.models import ExerciseTypeEnum
 from app.services.code_executor import execute_code, validate_python_code
+from app.services.git_simulator import evaluate_checklist, replay
 
 # Strategy identifiers, also used by the audit script.
 STRATEGY_SANDBOX = "sandbox"
@@ -25,6 +26,7 @@ STRATEGY_ORDERING = "ordering"
 STRATEGY_EXPECTED_OUTPUT = "expected_output"
 STRATEGY_EXPECTED_KEYWORDS = "expected_keywords"
 STRATEGY_BLANKS = "blanks"
+STRATEGY_GIT_QUEST = "git_quest"
 UNGRADABLE = "ungradable"
 
 #: Types whose answer is free text (a prediction) rather than runnable code.
@@ -80,8 +82,17 @@ def resolve_strategy(exercise, options: Sequence[Any] = ()) -> str:
             return STRATEGY_EXPECTED_KEYWORDS
         return UNGRADABLE
 
-    # code_writing, debugging, visual_programming: the existing sandbox stays
-    # the source of truth wherever real tests exist.
+    if etype == ExerciseTypeEnum.git_quest:
+        mission = config.get("mission")
+        has_checklist = isinstance(mission, dict) and isinstance(mission.get("checklist"), list) and mission["checklist"]
+        return STRATEGY_GIT_QUEST if has_checklist else UNGRADABLE
+
+    # code_writing, debugging, visual_programming, circuit_lab: the existing
+    # sandbox stays the source of truth wherever real tests exist. Circuit Lab
+    # compiles its gate graph to a `def circuit(**inputs): ...` Python
+    # function (see app.services.circuit_evaluator.compile_circuit) and
+    # submits that as `code`, so test_code asserts against it exactly like a
+    # code_writing exercise's test_code asserts against student code.
     if has_test:
         return STRATEGY_SANDBOX
     if config.get("expected_keywords"):
@@ -269,6 +280,48 @@ def _grade_sandbox(exercise, request) -> GradingResult:
     )
 
 
+def _grade_git_quest(config, request) -> GradingResult:
+    """Never trusts a client-reported final repo state: the student submits
+    their action transcript (typed commands + file edits, see
+    app.services.git_simulator.apply_action) as JSON in `answer`, and this
+    replays it server-side from the mission's own authored starting state --
+    the same engine call the live interactive terminal makes one action at a
+    time (see app.api.git_quest) -- before checking the checklist against
+    whatever state that replay actually produced."""
+    mission = config["mission"]
+    try:
+        actions = json.loads(request.answer) if request.answer else []
+    except (ValueError, TypeError):
+        return GradingResult(
+            is_correct=False, strategy=STRATEGY_GIT_QUEST,
+            error="Malformed submission",
+            feedback="Your quest transcript could not be read. Try replaying your steps.",
+        )
+    if not isinstance(actions, list):
+        return GradingResult(
+            is_correct=False, strategy=STRATEGY_GIT_QUEST,
+            error="Malformed submission",
+            feedback="Your quest transcript could not be read. Try replaying your steps.",
+        )
+
+    result = replay(mission["initial_state"], actions)
+    if result.error and result.error != "conflict":
+        return GradingResult(
+            is_correct=False, strategy=STRATEGY_GIT_QUEST,
+            error=result.error,
+            feedback=f"Your commands hit an error partway through: {result.error}",
+        )
+
+    failures = evaluate_checklist(result.state, mission["checklist"])
+    is_correct = not failures
+    return GradingResult(
+        is_correct=is_correct, strategy=STRATEGY_GIT_QUEST,
+        error=None if is_correct else "Quest objectives not met",
+        feedback="Quest complete!" if is_correct else "Not quite there yet: " + "; ".join(failures),
+        details={"failures": failures},
+    )
+
+
 def grade_exercise(exercise, options: Sequence[Any], request) -> GradingResult:
     """Grade one submission. Never returns correct for an ungradable exercise."""
     strategy = resolve_strategy(exercise, options)
@@ -286,6 +339,8 @@ def grade_exercise(exercise, options: Sequence[Any], request) -> GradingResult:
         return _grade_expected_keywords(config, request)
     if strategy == STRATEGY_BLANKS:
         return _grade_blanks(config, request)
+    if strategy == STRATEGY_GIT_QUEST:
+        return _grade_git_quest(config, request)
 
     return GradingResult(
         is_correct=False, strategy=UNGRADABLE,

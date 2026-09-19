@@ -70,6 +70,7 @@ ROADMAP: tuple[RoadmapEntry, ...] = (
     # --- Stage 5 · Software and Web Engineering ----------------------------
     RoadmapEntry("web-basics", 5, "engineering", "📄", "beginner", 6, "python-basics"),
     RoadmapEntry("software-engineering", 5, "engineering", "🏗️", "intermediate", 12, "git-github"),
+    RoadmapEntry("git-open-source-quests", 5, "engineering", "🗺️", "intermediate", 6, "git-github"),
     # --- Stage 6 · Cybersecurity -------------------------------------------
     RoadmapEntry("cybersecurity-foundations", 6, "security", "🛡️", "intermediate", 10, "networking"),
     RoadmapEntry("network-security-fundamentals", 6, "security", "🔐", "intermediate", 10, "cybersecurity-foundations"),

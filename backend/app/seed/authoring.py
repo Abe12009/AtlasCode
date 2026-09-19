@@ -294,6 +294,49 @@ def CodeWriting(
     )
 
 
+def GitQuest(
+    prompt: T,
+    hint: T,
+    explanation: T,
+    initial_state: dict,
+    checklist: list,
+    solution_actions: list,
+    xp: int = 25,
+) -> Exercise:
+    """A Git & Open-Source Quests mission. `initial_state` is a
+    app.services.git_simulator state dict (an NPC's conflicting commit, if
+    the mission has one, is simply already present in it -- see the Feature 4
+    proposal on why conflicts are authored, not generated). `checklist` is
+    the list of app.services.git_simulator.evaluate_checklist criteria the
+    student's final replayed state must satisfy. `solution_actions` is a
+    known-correct action transcript (the same {"kind": "command"|"edit", ...}
+    shape the frontend terminal submits) -- replayed against `checklist` here,
+    at seed time, so an author's own mistake in either the mission or its
+    solution fails the build instead of shipping an unsolvable quest (the
+    same safety net CircuitLab's solution_graph and BreakTheCode's
+    solution_graph/trace already use)."""
+    assert checklist, f"GitQuest needs a non-empty checklist: {prompt.en!r}"
+    from app.services.git_simulator import evaluate_checklist, replay
+
+    replayed = replay(initial_state, solution_actions)
+    assert replayed.error in (None, "conflict"), (
+        f"GitQuest solution_actions failed to replay: {prompt.en!r}: {replayed.error}"
+    )
+    failures = evaluate_checklist(replayed.state, checklist)
+    assert not failures, f"GitQuest solution_actions does not satisfy its own checklist: {prompt.en!r}: {failures}"
+
+    return Exercise(
+        ExerciseTypeEnum.git_quest,
+        prompt,
+        hint,
+        explanation,
+        xp,
+        starter_code=json.dumps(initial_state, ensure_ascii=False),
+        solution_code=json.dumps(solution_actions, ensure_ascii=False),
+        validation={"mission": {"initial_state": initial_state, "checklist": checklist}},
+    )
+
+
 def CircuitLab(
     prompt: T,
     hint: T,

@@ -101,7 +101,7 @@ SECTIONS: tuple[SectionSpec, ...] = (
             "Les pratiques qui transforment du code qui fonctionne en logiciel sur lequel une équipe peut s'appuyer : contrôle de version, architecture et processus.",
             "الممارسات التي تحوّل الكود العامل إلى برمجيات يمكن لفريق البناء عليها: التحكّم بالإصدارات، والمعمارية، والمنهجية.",
         ),
-        ("git-github", "software-engineering"),
+        ("git-github", "software-engineering", "git-open-source-quests"),
     ),
     SectionSpec(
         "ai-machine-learning",
