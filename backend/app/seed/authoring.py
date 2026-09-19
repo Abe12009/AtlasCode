@@ -294,6 +294,44 @@ def CodeWriting(
     )
 
 
+def CircuitLab(
+    prompt: T,
+    hint: T,
+    explanation: T,
+    starter_graph: dict,
+    solution_graph: dict,
+    test_code: str,
+    xp: int = 20,
+) -> Exercise:
+    """Build a logic-gate circuit, graded like CodeWriting: the student's
+    graph compiles to a `def circuit(**inputs): ...` Python function (see
+    app.services.circuit_evaluator.compile_circuit) and `test_code` -- almost
+    always built with `asserts()` -- calls it by name. `starter_graph` is a
+    plain ``{"nodes": [...], "edges": [...]}`` dict (input/output pins with no
+    gates wired yet is the usual starting point). `solution_graph` is a
+    correct, fully-wired circuit in the same shape -- compiled here (not
+    hand-written) so the stored `solution_code` can never drift from what the
+    live compiler actually produces, and asserted valid at seed time so a
+    broken reference solution fails the build instead of shipping silently
+    (see tests/test_exercise_solvability.py, which submits it as the
+    reference answer every exercise must accept)."""
+    assert test_code.strip(), f"CircuitLab needs test_code: {prompt.en!r}"
+    from app.services.circuit_evaluator import compile_circuit
+
+    compiled = compile_circuit(solution_graph["nodes"], solution_graph["edges"])
+    assert compiled.is_valid, f"CircuitLab solution_graph does not compile: {prompt.en!r}: {compiled.errors}"
+    return Exercise(
+        ExerciseTypeEnum.circuit_lab,
+        prompt,
+        hint,
+        explanation,
+        xp,
+        starter_code=json.dumps(starter_graph, ensure_ascii=False),
+        solution_code=compiled.python_code,
+        test_code=test_code,
+    )
+
+
 def SQLWriting(
     prompt: T,
     hint: T,

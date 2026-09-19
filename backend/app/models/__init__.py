@@ -53,6 +53,7 @@ class ExerciseTypeEnum(str, enum.Enum):
     debugging = "debugging"
     code_writing = "code_writing"
     visual_programming = "visual_programming"
+    circuit_lab = "circuit_lab"
 
 
 class NotificationTypeEnum(str, enum.Enum):

@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import get_settings
 from app.db.session import init_db
-from app.api import auth, courses, lessons, exercises, projects, dashboard, visual, notifications, users, cody, admin, feedback, duels, orientini
+from app.api import auth, courses, lessons, exercises, projects, dashboard, visual, notifications, users, cody, admin, feedback, duels, orientini, circuits
 
 settings = get_settings()
 
@@ -52,6 +52,7 @@ app.include_router(admin.router)
 app.include_router(feedback.router)
 app.include_router(duels.router)
 app.include_router(orientini.router)
+app.include_router(circuits.router)
 
 
 @app.on_event("startup")

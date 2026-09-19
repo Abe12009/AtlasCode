@@ -13,6 +13,7 @@ from .authoring import (
     EN,
     FR,
     Code,
+    CircuitLab,
     CourseSpec,
     ExamTip,
     FillBlank,
@@ -26,6 +27,7 @@ from .authoring import (
     ShortAnswer,
     T,
     Text,
+    asserts,
     seed_course,
 )
 
@@ -919,6 +921,62 @@ CS_FOUNDATIONS = CourseSpec(
                             ),
                             keywords=[["differ", "different", "diffèrent", "différentes", "مختلف", "تختلف"]],
                             reference_answer="A XOR B is true when the two inputs differ, that is when exactly one of them is true.",
+                        ),
+                        CircuitLab(
+                            prompt=T(
+                                "Build a half adder: wire the two input pins ('a', 'b') through gates to the two "
+                                "output pins ('sum', 'carry') so that 'sum' is A XOR B and 'carry' is A AND B.",
+                                "Construisez un demi-additionneur : reliez les deux broches d'entrée (« a », « b ») "
+                                "via des portes aux deux broches de sortie (« sum », « carry ») de sorte que "
+                                "« sum » soit A XOR B et « carry » soit A AND B.",
+                                "ابنِ نصف جامع: صِل طرفي الإدخال ('a', 'b') عبر البوّابات بطرفي الإخراج "
+                                "('sum', 'carry') بحيث يكون 'sum' هو A XOR B و'carry' هو A AND B.",
+                            ),
+                            hint=T(
+                                "You need exactly two gates: one XOR feeding 'sum', one AND feeding 'carry' — both fed by the same two inputs.",
+                                "Il vous faut exactement deux portes : un XOR alimentant « sum », un AND alimentant « carry » — toutes deux reliées aux mêmes deux entrées.",
+                                "تحتاج إلى بوّابتين بالضبط: XOR يغذّي 'sum'، وAND يغذّي 'carry' — وكلتاهما تُغذّيان من نفس المدخلين.",
+                            ),
+                            explanation=T(
+                                "This is exactly the half adder from the lesson text: XOR computes the digit, AND computes the carry-out.",
+                                "C'est exactement le demi-additionneur du texte de la leçon : XOR calcule le chiffre, AND calcule la retenue.",
+                                "هذا هو بالضبط نصف الجامع من نص الدرس: XOR يحسب الرقم، وAND يحسب الحمل الخارج.",
+                            ),
+                            starter_graph={
+                                "nodes": [
+                                    {"id": "in-a", "type": "input", "position": {"x": 40, "y": 60}, "config": {"name": "a"}},
+                                    {"id": "in-b", "type": "input", "position": {"x": 40, "y": 180}, "config": {"name": "b"}},
+                                    {"id": "out-sum", "type": "output", "position": {"x": 420, "y": 60}, "config": {"name": "sum"}},
+                                    {"id": "out-carry", "type": "output", "position": {"x": 420, "y": 180}, "config": {"name": "carry"}},
+                                ],
+                                "edges": [],
+                            },
+                            solution_graph={
+                                "nodes": [
+                                    {"id": "in-a", "type": "input", "position": {"x": 40, "y": 60}, "config": {"name": "a"}},
+                                    {"id": "in-b", "type": "input", "position": {"x": 40, "y": 180}, "config": {"name": "b"}},
+                                    {"id": "gate-xor", "type": "xor", "position": {"x": 220, "y": 60}, "config": {}},
+                                    {"id": "gate-and", "type": "and", "position": {"x": 220, "y": 180}, "config": {}},
+                                    {"id": "out-sum", "type": "output", "position": {"x": 420, "y": 60}, "config": {"name": "sum"}},
+                                    {"id": "out-carry", "type": "output", "position": {"x": 420, "y": 180}, "config": {"name": "carry"}},
+                                ],
+                                "edges": [
+                                    {"id": "e1", "source": "in-a", "target": "gate-xor", "targetHandle": "in0"},
+                                    {"id": "e2", "source": "in-b", "target": "gate-xor", "targetHandle": "in1"},
+                                    {"id": "e3", "source": "in-a", "target": "gate-and", "targetHandle": "in0"},
+                                    {"id": "e4", "source": "in-b", "target": "gate-and", "targetHandle": "in1"},
+                                    {"id": "e5", "source": "gate-xor", "target": "out-sum"},
+                                    {"id": "e6", "source": "gate-and", "target": "out-carry"},
+                                ],
+                            },
+                            test_code=asserts(
+                                "assert circuit(a=False, b=False) == {'sum': False, 'carry': False}",
+                                "assert circuit(a=True, b=False) == {'sum': True, 'carry': False}",
+                                "assert circuit(a=False, b=True) == {'sum': True, 'carry': False}",
+                                "assert circuit(a=True, b=True) == {'sum': False, 'carry': True}",
+                                "print('Half adder correct!')",
+                            ),
+                            xp=30,
                         ),
                     ],
                 ),

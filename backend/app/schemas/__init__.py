@@ -552,6 +552,32 @@ class VisualProgramResponse(BaseModel):
     errors: List[str] = []
 
 
+class CircuitCompileRequest(BaseModel):
+    nodes: List[dict]
+    edges: List[dict]
+
+
+class CircuitCompileResponse(BaseModel):
+    python_code: str
+    is_valid: bool
+    errors: List[str] = []
+
+
+class CircuitEvaluateRequest(BaseModel):
+    nodes: List[dict]
+    edges: List[dict]
+    #: input pin name -> boolean value.
+    input_values: Dict[str, bool] = {}
+
+
+class CircuitEvaluateResponse(BaseModel):
+    #: node id -> propagated boolean value, for every node in the graph.
+    values: Dict[str, bool] = {}
+    #: output pin name -> boolean value.
+    outputs: Dict[str, bool] = {}
+    errors: List[str] = []
+
+
 class NotificationResponse(BaseModel):
     id: int
     type: NotificationTypeEnum
