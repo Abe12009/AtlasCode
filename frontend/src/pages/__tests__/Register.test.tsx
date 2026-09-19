@@ -110,21 +110,51 @@ describe('Register Page', () => {
     authApi.register.mockResolvedValue({ access_token: 'test-token', token_type: 'bearer' });
     authApi.getMe.mockResolvedValue(mockUser);
     authApi.getProfile.mockResolvedValue({ user_id: 1, xp: 0, streak: 0, preferred_language: 'en' });
-    
+
     await renderWithProviders(<Register />);
-    
+
     await userEvent.type(screen.getByLabelText(/username/i), 'newuser');
     await userEvent.type(screen.getByLabelText(/email/i), 'new@example.com');
     await userEvent.type(document.getElementById('password')!, 'Password123!');
     await userEvent.type(document.getElementById('confirmPassword')!, 'Password123!');
-    
+
     await userEvent.selectOptions(screen.getByLabelText(/preferred language/i), 'en');
-    
+    await userEvent.click(screen.getByRole('checkbox'));
+
     await userEvent.click(screen.getByRole('button', { name: /create account/i }));
-    
+
     await waitFor(() => {
       expect(localStorage.getItem('access_token')).toBe('test-token');
     });
+  });
+
+  it('requires agreeing to Terms and Privacy Policy before submitting', async () => {
+    await renderWithProviders(<Register />);
+
+    await userEvent.type(screen.getByLabelText(/username/i), 'newuser');
+    await userEvent.type(screen.getByLabelText(/email/i), 'new@example.com');
+    await userEvent.type(document.getElementById('password')!, 'Password123!');
+    await userEvent.type(document.getElementById('confirmPassword')!, 'Password123!');
+
+    // Checkbox deliberately left unchecked.
+    await userEvent.click(screen.getByRole('button', { name: /create account/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText(/must agree to the terms/i)).toBeInTheDocument();
+    });
+    expect(authApi.register).not.toHaveBeenCalled();
+  });
+
+  it('terms checkbox is unchecked by default', async () => {
+    await renderWithProviders(<Register />);
+    expect(screen.getByRole('checkbox')).not.toBeChecked();
+  });
+
+  it('links the terms checkbox label to the real Terms and Privacy pages', async () => {
+    await renderWithProviders(<Register />);
+
+    expect(screen.getByRole('link', { name: /terms of service/i })).toHaveAttribute('href', '/terms');
+    expect(screen.getByRole('link', { name: /privacy policy/i })).toHaveAttribute('href', '/privacy');
   });
 
   it('shows error when registration fails', async () => {
@@ -138,9 +168,10 @@ describe('Register Page', () => {
     await userEvent.type(screen.getByLabelText(/email/i), 'existing@example.com');
     await userEvent.type(document.getElementById('password')!, 'Password123!');
     await userEvent.type(document.getElementById('confirmPassword')!, 'Password123!');
-    
+    await userEvent.click(screen.getByRole('checkbox'));
+
     await userEvent.click(screen.getByRole('button', { name: /create account/i }));
-    
+
     await waitFor(() => {
       expect(screen.getByText(/email already registered/i)).toBeInTheDocument();
     });
@@ -165,11 +196,12 @@ describe('Register Page', () => {
     await userEvent.type(screen.getByLabelText(/email/i), 'new@example.com');
     await userEvent.type(document.getElementById('password')!, 'Password123!');
     await userEvent.type(document.getElementById('confirmPassword')!, 'Password123!');
-    
+
     await userEvent.selectOptions(screen.getByLabelText(/preferred language/i), 'en');
-    
+    await userEvent.click(screen.getByRole('checkbox'));
+
     await userEvent.click(screen.getByRole('button', { name: /create account/i }));
-    
+
     // During loading, the button shows "Create Account" with a spinner and is disabled
     expect(screen.getByRole('button', { name: /create account/i })).toBeDisabled();
     expect(screen.getByText(/create account/i)).toBeInTheDocument();

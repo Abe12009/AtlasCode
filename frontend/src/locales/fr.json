@@ -456,6 +456,9 @@
     "password_min_length": "Le mot de passe doit contenir au moins 8 caractères",
     "password_max_length": "Le mot de passe doit contenir moins de 100 caractères",
     "passwords_dont_match": "Les mots de passe ne correspondent pas",
+    "terms_required": "Vous devez accepter les Conditions d'utilisation et la Politique de confidentialité pour créer un compte",
+    "terms_agreement_prefix": "J'accepte les",
+    "terms_agreement_and": "et la",
     "password_strength": "Force du Mot de Passe",
     "very_weak": "Très Faible",
     "weak": "Faible",
@@ -684,30 +687,42 @@
   "legal": {
     "last_updated": "Dernière mise à jour : {{date}}",
     "back_home": "Retour à l'accueil",
-    "placeholder_notice": "Cette page est un texte provisoire professionnel. Elle sera revue et finalisée par l'équipe juridique d'AtlasCode avant le lancement.",
+    "placeholder_notice": "Cette politique a été rédigée avec l'assistance de l'IA, sur la base d'un audit de ce qu'AtlasCode collecte réellement et de la façon dont c'est utilisé. Elle n'a pas encore été examinée par un juriste.",
     "privacy": {
       "title": "Politique de Confidentialité",
       "intro": "Cette politique de confidentialité décrit, en termes simples, les catégories d'informations qu'AtlasCode collecte et la façon dont elles sont utilisées pendant votre apprentissage sur la plateforme.",
       "sections": [
         {
           "title": "Informations que nous collectons",
-          "body": "Les informations de compte que vous fournissez (nom, adresse e-mail), les données d'authentification liées à la méthode de connexion choisie, et les données d'activité générées par votre utilisation de la plateforme (progression des leçons, réponses aux exercices, XP et séries)."
+          "body": "Les informations de compte que vous fournissez (nom d'utilisateur, adresse e-mail) ; les données d'authentification liées à la méthode de connexion choisie ; une photo de profil si vous en téléversez une ; les données d'activité générées par votre utilisation de la plateforme (progression des leçons, réponses aux exercices et projets, XP et séries) ; le code que vous soumettez lors des duels de l'Arène de Duel, conservé pour chaque tentative ; les messages que vous envoyez à Cody, notre compagnon d'apprentissage IA ; et les retours ou signalements que vous soumettez via l'application. Nous enregistrons également les adresses IP à des fins de sécurité, telles que la limitation du taux de requêtes de connexion, d'inscription et de réinitialisation de mot de passe."
         },
         {
           "title": "Comment nous utilisons ces informations",
-          "body": "Pour gérer votre compte, suivre votre progression, personnaliser votre tableau de bord et vos recommandations, sécuriser la plateforme contre les abus, et vous communiquer les informations importantes concernant votre compte."
+          "body": "Pour gérer votre compte, suivre votre progression, personnaliser votre tableau de bord et vos recommandations, sécuriser la plateforme contre les abus (y compris les attaques automatisées sur la connexion, l'inscription et la réinitialisation de mot de passe), et vous communiquer les informations importantes concernant votre compte."
         },
         {
           "title": "Fournisseurs d'authentification",
-          "body": "Si vous vous connectez avec Google ou GitHub, nous recevons les informations de profil de base que ces fournisseurs partagent (nom, e-mail, avatar) afin de créer ou relier votre compte AtlasCode. Nous ne recevons jamais votre mot de passe de la part de ces fournisseurs."
+          "body": "Si vous vous connectez avec Google ou GitHub, nous recevons les informations de profil de base que ces fournisseurs partagent (nom, e-mail, avatar) afin de créer ou relier votre compte AtlasCode. Nous utilisons Firebase pour vérifier ces connexions sur nos serveurs. Nous ne recevons jamais votre mot de passe, ni de Google, ni de GitHub, ni de Firebase."
+        },
+        {
+          "title": "Cody, notre compagnon IA",
+          "body": "Les messages que vous envoyez à Cody sont transmis à OpenRouter, notre fournisseur d'IA tiers, afin de générer une réponse. L'historique de vos conversations est conservé jusqu'à la suppression de votre compte, et n'est jamais utilisé à d'autres fins que la génération de vos réponses."
+        },
+        {
+          "title": "Envoi d'e-mails",
+          "body": "Lorsque vous demandez une réinitialisation de mot de passe, votre adresse e-mail et un lien de réinitialisation à usage unique sont envoyés via Resend, notre fournisseur de messagerie, uniquement pour la livraison de cet e-mail."
         },
         {
           "title": "Conservation des données",
-          "body": "Les données de compte et de progression sont conservées tant que votre compte est actif. Vous pouvez demander la suppression de votre compte et des données associées à tout moment via la page de contact."
+          "body": "Les données de compte et de progression sont conservées tant que votre compte est actif. Les retours et signalements que vous soumettez (ou qui sont soumis à propos de votre compte) sont conservés même après la suppression du compte, en tant que trace de ce qui a été signalé — de la même façon qu'un ticket d'assistance ou un rapport d'incident est habituellement conservé. Vous pouvez demander la suppression de votre compte et des données associées à tout moment via la page de contact ou les paramètres de votre compte."
         },
         {
           "title": "Vos choix",
           "body": "Vous pouvez consulter et mettre à jour vos informations de compte depuis votre profil, changer votre mot de passe, et contrôler vos préférences de langue et de thème à tout moment."
+        },
+        {
+          "title": "Qui est responsable de ces données",
+          "body": "AtlasCode est conçu et exploité par l'équipe AtlasCode. Pour toute question ou préoccupation concernant vos données ou cette politique, vous pouvez nous contacter à atlascode20@gmail.com."
         }
       ]
     },

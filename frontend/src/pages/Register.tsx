@@ -17,6 +17,7 @@ export function Register() {
     confirmPassword: '',
     preferred_language: 'en',
   });
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
   const [oauthLoading, setOauthLoading] = useState<'google' | 'github' | null>(null);
@@ -71,6 +72,10 @@ export function Register() {
 
     if (formData.password !== formData.confirmPassword) {
       newErrors.confirmPassword = t('auth.passwords_dont_match');
+    }
+
+    if (!agreedToTerms) {
+      newErrors.terms = t('auth.terms_required');
     }
 
     setErrors(newErrors);
@@ -257,6 +262,40 @@ export function Register() {
                 placeholder={t('common.preferred_language')}
                 disabled={loading}
               />
+
+              <div>
+                <label className="flex items-start gap-2.5 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    id="agreedToTerms"
+                    name="agreedToTerms"
+                    checked={agreedToTerms}
+                    onChange={(e) => {
+                      setAgreedToTerms(e.target.checked);
+                      if (errors.terms) {
+                        setErrors((prev) => ({ ...prev, terms: '' }));
+                      }
+                    }}
+                    disabled={loading}
+                    aria-invalid={!!errors.terms}
+                    aria-describedby={errors.terms ? 'terms-error' : undefined}
+                    className="mt-0.5 h-4 w-4 shrink-0 rounded border-border-secondary text-primary-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-border-focus focus-visible:ring-offset-2 focus-visible:ring-offset-bg-secondary disabled:cursor-not-allowed disabled:opacity-70"
+                  />
+                  <span className="text-sm text-text-secondary">
+                    {t('auth.terms_agreement_prefix')}{' '}
+                    <Link to="/terms" target="_blank" rel="noopener noreferrer" className="text-primary-400 hover:text-primary-300 font-medium underline">
+                      {t('footer.terms_of_service')}
+                    </Link>{' '}
+                    {t('auth.terms_agreement_and')}{' '}
+                    <Link to="/privacy" target="_blank" rel="noopener noreferrer" className="text-primary-400 hover:text-primary-300 font-medium underline">
+                      {t('footer.privacy_policy')}
+                    </Link>
+                  </span>
+                </label>
+                {errors.terms && (
+                  <p id="terms-error" className="mt-1.5 text-sm text-error-500">{errors.terms}</p>
+                )}
+              </div>
 
               <Button
                 type="submit"
