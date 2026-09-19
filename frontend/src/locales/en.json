@@ -908,6 +908,14 @@
     "reset": "Reset",
     "load_error": "Couldn't load this quest. Please refresh the page."
   },
+  "break_the_code": {
+    "title": "Step through the buggy code",
+    "variables": "Variables",
+    "no_variables_yet": "No variables yet at this step.",
+    "prev_step": "Previous step",
+    "next_step": "Next step",
+    "step_counter": "Step {{current}} of {{total}}"
+  },
   "orientini": {
     "nav_label": "Orientini",
     "intro_title": "Find your path",

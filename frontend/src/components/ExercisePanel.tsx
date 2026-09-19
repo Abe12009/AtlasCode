@@ -6,6 +6,7 @@ import { useTranslation } from '../hooks/useTranslation';
 import { ExerciseAnswerPanel, ExerciseResult } from './ExerciseAnswer';
 import { isCodeExercise } from './exerciseTypes';
 import { CircuitLabPanel } from './circuitLab/CircuitLabPanel';
+import { DebugTracePanel } from './breakTheCode/DebugTracePanel';
 import { GitQuestPanel } from './gitQuest/GitQuestPanel';
 import type { Exercise, ExerciseSubmitResponse } from '../types';
 import type { SubmitVars } from './exerciseTypes';
@@ -146,6 +147,9 @@ export function ExercisePanel({
     <div className="flex-1 min-h-0 flex flex-col lg:flex-row gap-4 lg:gap-6">
       <div className="lg:w-[380px] lg:flex-shrink-0 flex flex-col min-h-0 overflow-y-auto">
         <ExercisePrompt exercise={exercise} />
+        {exercise.exercise_type === 'debugging' && exercise.trace && exercise.trace.length > 0 && (
+          <DebugTracePanel code={exercise.starter_code || ''} trace={exercise.trace} />
+        )}
         <div className="flex-1" />
         {stepNav}
       </div>

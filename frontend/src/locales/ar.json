@@ -913,6 +913,14 @@
     "reset": "إعادة التعيين",
     "load_error": "تعذّر تحميل هذه المهمة. يرجى تحديث الصفحة."
   },
+  "break_the_code": {
+    "title": "تتبّع الكود المعطوب خطوة بخطوة",
+    "variables": "المتغيرات",
+    "no_variables_yet": "لا متغيرات بعد في هذه الخطوة.",
+    "prev_step": "الخطوة السابقة",
+    "next_step": "الخطوة التالية",
+    "step_counter": "الخطوة {{current}} من {{total}}"
+  },
   "orientini": {
     "nav_label": "أورينتيني",
     "intro_title": "اعثر على مسارك",

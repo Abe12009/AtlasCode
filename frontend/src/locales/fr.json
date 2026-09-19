@@ -908,6 +908,14 @@
     "reset": "Réinitialiser",
     "load_error": "Impossible de charger cette quête. Veuillez actualiser la page."
   },
+  "break_the_code": {
+    "title": "Parcourez le code buggé étape par étape",
+    "variables": "Variables",
+    "no_variables_yet": "Aucune variable à cette étape.",
+    "prev_step": "Étape précédente",
+    "next_step": "Étape suivante",
+    "step_counter": "Étape {{current}} sur {{total}}"
+  },
   "orientini": {
     "nav_label": "Orientini",
     "intro_title": "Trouvez votre voie",
