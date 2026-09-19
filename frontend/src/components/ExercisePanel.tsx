@@ -5,6 +5,7 @@ import { Button, CodeEditor, TerminalPanel } from './ui';
 import { useTranslation } from '../hooks/useTranslation';
 import { ExerciseAnswerPanel, ExerciseResult } from './ExerciseAnswer';
 import { isCodeExercise } from './exerciseTypes';
+import { CircuitLabPanel } from './circuitLab/CircuitLabPanel';
 import type { Exercise, ExerciseSubmitResponse } from '../types';
 import type { SubmitVars } from './exerciseTypes';
 
@@ -86,6 +87,25 @@ export function ExercisePanel({
       )}
     </div>
   );
+
+  if (exercise.exercise_type === 'circuit_lab') {
+    return (
+      <div className="space-y-6">
+        <ExercisePrompt exercise={exercise} />
+        <div className="space-y-4">
+          <CircuitLabPanel
+            exercise={exercise}
+            onSubmit={onSubmit}
+            onRun={onRun}
+            isSubmitting={isSubmitting}
+            isRunning={isRunning}
+          />
+          {result && <ExerciseResult result={result} />}
+        </div>
+        {stepNav}
+      </div>
+    );
+  }
 
   if (!isCodeExercise(exercise)) {
     return (

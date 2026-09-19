@@ -401,6 +401,42 @@ export interface CodeValidationResponse {
   errors: string[];
 }
 
+// --- Circuit Lab ---------------------------------------------------------
+
+export type GateType = 'and' | 'or' | 'not' | 'nand' | 'nor' | 'xor' | 'xnor';
+export type CircuitNodeType = GateType | 'input' | 'output';
+
+export interface CircuitNode {
+  id: string;
+  type: CircuitNodeType;
+  position: { x: number; y: number };
+  config: { name?: string };
+}
+
+export interface CircuitEdge {
+  id: string;
+  source: string;
+  target: string;
+  targetHandle?: string;
+}
+
+export interface CircuitGraph {
+  nodes: CircuitNode[];
+  edges: CircuitEdge[];
+}
+
+export interface CircuitCompileResponse {
+  python_code: string;
+  is_valid: boolean;
+  errors: string[];
+}
+
+export interface CircuitEvaluateResponse {
+  values: Record<string, boolean>;
+  outputs: Record<string, boolean>;
+  errors: string[];
+}
+
 // --- Orientini ---------------------------------------------------------
 
 export type BacTrack = 'sciences_math_a' | 'sciences_math_b' | 'pc' | 'svt' | 'ste' | 'stm';

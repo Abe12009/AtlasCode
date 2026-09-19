@@ -108,6 +108,10 @@ vi.mock('../api/services', () => ({
     submit: vi.fn(),
     getStarter: vi.fn(),
   },
+  circuitsApi: {
+    compile: vi.fn(),
+    evaluate: vi.fn(),
+  },
   orientiniApi: {
     getQuestions: vi.fn(),
     getInstitutions: vi.fn(),

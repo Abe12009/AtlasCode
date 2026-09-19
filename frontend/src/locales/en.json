@@ -883,6 +883,16 @@
     "bug_incorrect": "That statement is actually true — look again.",
     "bug_correct": "Found it — that is the one that's wrong."
   },
+  "circuit_lab": {
+    "drag_to_add": "Drag onto the canvas to add",
+    "input_pin": "INPUT",
+    "output_pin": "OUTPUT",
+    "empty_canvas": "Drag input pins, gates, and output pins here to build your circuit.",
+    "canvas_help": "Click an output port, then an input port, to wire them together. Click a wire to delete it.",
+    "reset": "Reset",
+    "show_code": "Show equivalent Python",
+    "hide_code": "Hide equivalent Python"
+  },
   "orientini": {
     "nav_label": "Orientini",
     "intro_title": "Find your path",

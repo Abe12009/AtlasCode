@@ -24,6 +24,9 @@ import type {
   OrientiniQuestion,
   OrientiniSubmitRequest,
   OrientiniResult,
+  CircuitGraph,
+  CircuitCompileResponse,
+  CircuitEvaluateResponse,
   DuelDifficulty,
   DuelQueueStatusResponse,
   DuelTicketResponse,
@@ -81,6 +84,14 @@ export const usersApi = {
 export const feedbackApi = {
   submit: (data: { category: string; message: string; page_path?: string }) =>
     apiClient.post<void>('/feedback', data),
+};
+
+export const circuitsApi = {
+  compile: (graph: CircuitGraph) =>
+    apiClient.post<CircuitCompileResponse>('/circuits/compile', graph),
+
+  evaluate: (graph: CircuitGraph, inputValues: Record<string, boolean>) =>
+    apiClient.post<CircuitEvaluateResponse>('/circuits/evaluate', { ...graph, input_values: inputValues }),
 };
 
 export const orientiniApi = {

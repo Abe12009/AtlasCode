@@ -883,6 +883,16 @@
     "bug_incorrect": "Cette affirmation est en fait vraie — regardez encore.",
     "bug_correct": "Trouvé — c'est bien celle-là qui est fausse."
   },
+  "circuit_lab": {
+    "drag_to_add": "Glissez sur le canevas pour ajouter",
+    "input_pin": "ENTRÉE",
+    "output_pin": "SORTIE",
+    "empty_canvas": "Glissez des broches d'entrée, des portes et des broches de sortie ici pour construire votre circuit.",
+    "canvas_help": "Cliquez sur un port de sortie, puis sur un port d'entrée, pour les relier. Cliquez sur un fil pour le supprimer.",
+    "reset": "Réinitialiser",
+    "show_code": "Afficher le code Python équivalent",
+    "hide_code": "Masquer le code Python équivalent"
+  },
   "orientini": {
     "nav_label": "Orientini",
     "intro_title": "Trouvez votre voie",
