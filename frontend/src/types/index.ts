@@ -515,6 +515,41 @@ export interface OrientiniResult {
   created_at: string;
 }
 
+// --- Git & Open-Source Quests ---------------------------------------------
+
+export interface GitCommit {
+  parents: string[];
+  message: string;
+  files: Record<string, string>;
+}
+
+export interface GitMergeInProgress {
+  other_branch: string;
+  other_commit: string;
+  conflicted_files: string[];
+}
+
+export interface GitQuestState {
+  commits: Record<string, GitCommit>;
+  branches: Record<string, string | null>;
+  remote_branches: Record<string, string>;
+  head: { branch: string } | { commit: string } | null;
+  working_files: Record<string, string>;
+  staged_files: Record<string, string>;
+  merge_in_progress: GitMergeInProgress | null;
+  initialized: boolean;
+}
+
+export type GitQuestAction =
+  | { kind: 'command'; value: string }
+  | { kind: 'edit'; file: string; content: string };
+
+export interface GitQuestExecuteResponse {
+  state: GitQuestState;
+  output: string;
+  error: string | null;
+}
+
 export type DuelDifficulty = 'beginner' | 'intermediate' | 'advanced';
 
 export interface DuelQueueStatusResponse {

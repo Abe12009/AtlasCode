@@ -898,6 +898,21 @@
     "show_code": "إظهار كود بايثون المكافئ",
     "hide_code": "إخفاء كود بايثون المكافئ"
   },
+  "git_quest": {
+    "terminal_empty": "اكتب أمر git أدناه للبدء.",
+    "terminal_placeholder": "git status",
+    "working_directory": "دليل العمل",
+    "new_file": "ملف جديد",
+    "new_file_placeholder": "ملف.py",
+    "create": "إنشاء",
+    "no_files_yet": "لا توجد ملفات بعد -- أنشئ واحدًا للبدء.",
+    "save_file": "حفظ الملف",
+    "current_branch": "الفرع",
+    "not_initialized": "غير مهيأ",
+    "conflict_banner": "تعارض دمج في: {{files}} -- قم بحله في المحرر، ثم نفّذ git add و git commit.",
+    "reset": "إعادة التعيين",
+    "load_error": "تعذّر تحميل هذه المهمة. يرجى تحديث الصفحة."
+  },
   "orientini": {
     "nav_label": "أورينتيني",
     "intro_title": "اعثر على مسارك",

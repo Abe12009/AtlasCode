@@ -112,6 +112,9 @@ vi.mock('../api/services', () => ({
     compile: vi.fn(),
     evaluate: vi.fn(),
   },
+  gitQuestApi: {
+    execute: vi.fn(),
+  },
   orientiniApi: {
     getQuestions: vi.fn(),
     getInstitutions: vi.fn(),

@@ -893,6 +893,21 @@
     "show_code": "Afficher le code Python équivalent",
     "hide_code": "Masquer le code Python équivalent"
   },
+  "git_quest": {
+    "terminal_empty": "Tapez une commande git ci-dessous pour commencer.",
+    "terminal_placeholder": "git status",
+    "working_directory": "Répertoire de travail",
+    "new_file": "Nouveau fichier",
+    "new_file_placeholder": "fichier.py",
+    "create": "Créer",
+    "no_files_yet": "Aucun fichier pour l'instant -- créez-en un pour commencer.",
+    "save_file": "Enregistrer le fichier",
+    "current_branch": "Branche",
+    "not_initialized": "non initialisé",
+    "conflict_banner": "Conflit de fusion dans : {{files}} -- résolvez-le dans l'éditeur, puis git add et git commit.",
+    "reset": "Réinitialiser",
+    "load_error": "Impossible de charger cette quête. Veuillez actualiser la page."
+  },
   "orientini": {
     "nav_label": "Orientini",
     "intro_title": "Trouvez votre voie",

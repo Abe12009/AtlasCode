@@ -6,6 +6,7 @@ import { useTranslation } from '../hooks/useTranslation';
 import { ExerciseAnswerPanel, ExerciseResult } from './ExerciseAnswer';
 import { isCodeExercise } from './exerciseTypes';
 import { CircuitLabPanel } from './circuitLab/CircuitLabPanel';
+import { GitQuestPanel } from './gitQuest/GitQuestPanel';
 import type { Exercise, ExerciseSubmitResponse } from '../types';
 import type { SubmitVars } from './exerciseTypes';
 
@@ -100,6 +101,19 @@ export function ExercisePanel({
             isSubmitting={isSubmitting}
             isRunning={isRunning}
           />
+          {result && <ExerciseResult result={result} />}
+        </div>
+        {stepNav}
+      </div>
+    );
+  }
+
+  if (exercise.exercise_type === 'git_quest') {
+    return (
+      <div className="space-y-6">
+        <ExercisePrompt exercise={exercise} />
+        <div className="space-y-4">
+          <GitQuestPanel exercise={exercise} onSubmit={onSubmit} isSubmitting={isSubmitting} />
           {result && <ExerciseResult result={result} />}
         </div>
         {stepNav}

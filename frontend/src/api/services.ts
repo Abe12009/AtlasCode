@@ -27,6 +27,9 @@ import type {
   CircuitGraph,
   CircuitCompileResponse,
   CircuitEvaluateResponse,
+  GitQuestState,
+  GitQuestAction,
+  GitQuestExecuteResponse,
   DuelDifficulty,
   DuelQueueStatusResponse,
   DuelTicketResponse,
@@ -92,6 +95,11 @@ export const circuitsApi = {
 
   evaluate: (graph: CircuitGraph, inputValues: Record<string, boolean>) =>
     apiClient.post<CircuitEvaluateResponse>('/circuits/evaluate', { ...graph, input_values: inputValues }),
+};
+
+export const gitQuestApi = {
+  execute: (state: GitQuestState, action: GitQuestAction) =>
+    apiClient.post<GitQuestExecuteResponse>('/git-quest/execute', { state, action }),
 };
 
 export const orientiniApi = {

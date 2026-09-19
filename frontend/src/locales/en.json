@@ -893,6 +893,21 @@
     "show_code": "Show equivalent Python",
     "hide_code": "Hide equivalent Python"
   },
+  "git_quest": {
+    "terminal_empty": "Type a git command below to get started.",
+    "terminal_placeholder": "git status",
+    "working_directory": "Working Directory",
+    "new_file": "New file",
+    "new_file_placeholder": "filename.py",
+    "create": "Create",
+    "no_files_yet": "No files yet -- create one to get started.",
+    "save_file": "Save file",
+    "current_branch": "Branch",
+    "not_initialized": "not initialized",
+    "conflict_banner": "Merge conflict in: {{files}} -- resolve it in the editor, then git add and git commit.",
+    "reset": "Reset",
+    "load_error": "Couldn't load this quest. Please refresh the page."
+  },
   "orientini": {
     "nav_label": "Orientini",
     "intro_title": "Find your path",
