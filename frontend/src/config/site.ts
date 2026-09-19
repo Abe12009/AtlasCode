@@ -17,12 +17,12 @@ function env(key: string): string | undefined {
 /**
  * Social destinations shown in the landing footer.
  *
- * These are placeholders until the real AtlasCode accounts exist. Point them at
- * the real profiles either by editing this object or, preferably, by setting
- * `VITE_SOCIAL_INSTAGRAM` / `VITE_SOCIAL_X` / `VITE_SOCIAL_GITHUB` at build time.
+ * X and GitHub are still placeholders until those real AtlasCode accounts
+ * exist. Point them at the real profiles either by editing this object or,
+ * preferably, by setting `VITE_SOCIAL_X` / `VITE_SOCIAL_GITHUB` at build time.
  */
 export const SOCIAL_LINKS = {
-  instagram: env('VITE_SOCIAL_INSTAGRAM') ?? 'https://instagram.com/',
+  instagram: env('VITE_SOCIAL_INSTAGRAM') ?? 'https://www.instagram.com/atlascode26/',
   x: env('VITE_SOCIAL_X') ?? 'https://x.com/',
   github: env('VITE_SOCIAL_GITHUB') ?? 'https://github.com/',
 } as const;
