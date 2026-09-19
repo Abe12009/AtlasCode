@@ -37,6 +37,11 @@ from typing import Any, Dict, List, Optional
 #: Safety cap on commands accepted in one replay -- generous for any
 #: authored mission, a firm backstop against a pathological submission.
 MAX_COMMANDS = 200
+#: A file edit has no natural size limit otherwise -- unlike a command
+#: string, `content` is free-form text a student can type or paste directly,
+#: so this caps how much any single edit action (live or replayed) can grow
+#: the in-memory state by, independent of MAX_COMMANDS' cap on action *count*.
+MAX_FILE_CONTENT_BYTES = 100_000
 
 
 def initial_state() -> Dict[str, Any]:
@@ -432,8 +437,11 @@ def apply_action(state: Dict[str, Any], action: Dict[str, Any]) -> ExecuteResult
         file_name = action.get("file")
         if not file_name:
             return _error(state, "Malformed edit action: missing 'file'.")
+        content = action.get("content", "")
+        if len(content.encode("utf-8", errors="ignore")) > MAX_FILE_CONTENT_BYTES:
+            return _error(state, f"File content too large (max {MAX_FILE_CONTENT_BYTES} bytes).")
         state = copy.deepcopy(state)
-        state["working_files"][file_name] = action.get("content", "")
+        state["working_files"][file_name] = content
         return ExecuteResult(state=state, output=f"Edited {file_name}.")
     if kind == "command":
         return execute(state, action.get("value", ""))

@@ -1,6 +1,6 @@
 import pytest
 
-from app.services.git_simulator import execute, initial_state, replay
+from app.services.git_simulator import MAX_FILE_CONTENT_BYTES, apply_action, execute, initial_state, replay
 
 
 def run(state, commands):
@@ -212,6 +212,18 @@ class TestUnsupportedAndReplay:
         assert result.error is None
         commit = next(iter(result.state["commits"].values()))
         assert commit["files"] == {"x.py": "1"}
+
+    def test_edit_action_rejects_oversized_content(self):
+        state = run(initial_state(), ["git init"])
+        result = apply_action(state, edit("huge.py", "x" * (MAX_FILE_CONTENT_BYTES + 1)))
+        assert result.error is not None
+        assert "too large" in result.error
+
+    def test_edit_action_accepts_content_at_the_limit(self):
+        state = run(initial_state(), ["git init"])
+        result = apply_action(state, edit("ok.py", "x" * MAX_FILE_CONTENT_BYTES))
+        assert result.error is None
+        assert result.state["working_files"]["ok.py"] == "x" * MAX_FILE_CONTENT_BYTES
 
     def test_replay_resolves_a_conflict_via_edit_action(self):
         actions = [
