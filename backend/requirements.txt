@@ -30,7 +30,7 @@ openrouter==1.1.137
 pytest==7.4.4
 pytest-asyncio==0.21.1
 httpx==0.28.1
-pytest-cov==4.1.0
+pytest-cov==7.1.0
 # Test-only: exercises the Duel Arena WebSocket endpoints over the same
 # in-process ASGI transport the rest of the suite already uses (see
 # tests/conftest.py's `client` fixture) -- starlette's own TestClient can't
