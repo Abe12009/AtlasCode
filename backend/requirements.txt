@@ -15,7 +15,7 @@ pydantic-settings==2.0.0
 # Not reachable here regardless: this app only verifies HS256/RS256 tokens
 # (see app.core.security and app.services.firebase_auth, both of which pin
 # `algorithms=[...]` explicitly), so `ecdsa`'s EC sign/verify code never runs.
-python-jose[cryptography]==3.4.0
+python-jose[cryptography]==3.5.0
 passlib[bcrypt]==1.7.4
 python-multipart==0.0.32
 python-dotenv==1.2.2
