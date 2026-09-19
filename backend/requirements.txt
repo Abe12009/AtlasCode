@@ -3,7 +3,7 @@ fastapi==0.141.1
 # requirement, so `pip install` always resolves to the version that actually
 # has every known CVE fixed rather than whatever satisfies the floor.
 starlette==1.6.0
-uvicorn[standard]==0.27.0
+uvicorn[standard]==0.53.0
 # 2.0.23 doesn't import under Python 3.13+/3.14 (fails a TypingOnly assertion
 # in sqlalchemy.sql.elements -- a class-namespace shape check that trips on
 # __static_attributes__/__firstlineno__, attributes newer CPython adds to
