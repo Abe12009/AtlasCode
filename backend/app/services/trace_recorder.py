@@ -7,8 +7,8 @@ This is deliberately NOT part of the student-facing sandbox
 access the sandbox explicitly forbids submitted code from touching (see
 FORBIDDEN_BUILTINS/dangerous_modules there) -- and it never needs to be
 sandboxed, because it only ever runs code an author wrote into a seed file,
-the same trust boundary CircuitLab's `compile_circuit` output and Orientini's
-institution data already sit behind. The trace it produces is a static
+the same trust boundary CircuitLab's `compile_circuit` output already sits
+behind. The trace it produces is a static
 artifact stored in the exercise's `validation_config`; nothing at request
 time re-runs the author's code.
 """

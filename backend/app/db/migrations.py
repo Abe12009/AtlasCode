@@ -141,10 +141,11 @@ MIGRATIONS: tuple[AddColumn, ...] = (
     AddColumn("cody_messages", "prompt_tokens", "INTEGER"),
     AddColumn("cody_messages", "completion_tokens", "INTEGER"),
     AddColumn("cody_messages", "estimated_cost_usd", "FLOAT"),
-    # --- Orientini -------------------------------------------------------------
-    # Every other Orientini table is new, so create_all handles them. Only
-    # this column, added to the pre-existing `student_profiles` table, needs
-    # an additive migration.
+    # --- Orientini (feature removed) --------------------------------------
+    # This column was added for the Orientini feature, since removed. Left
+    # here, unused, rather than dropped: this list is append-only (see module
+    # docstring), and a database that already ran this migration keeps the
+    # column regardless of whether the entry below still exists.
     AddColumn("student_profiles", "bac_track", "VARCHAR(20)"),
 )
 

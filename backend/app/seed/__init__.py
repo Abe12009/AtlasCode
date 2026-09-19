@@ -24,7 +24,6 @@ from .cs_fundamentals import seed_cs_fundamentals
 from .expansions import seed_data_structures_algorithms, seed_networking, seed_database_design
 from .git_github import seed_git_github
 from .git_open_source_quests import seed_git_open_source_quests
-from .orientini import seed_orientini
 from .projects import seed_projects
 from .python_foundations import seed_python_foundations
 from .roadmap import apply_roadmap
@@ -106,7 +105,6 @@ async def seed_curriculum(db: AsyncSession, *, verbose: bool = True) -> None:
 
     changed = await apply_roadmap(db, verbose=verbose)
     sections_changed = await seed_sections(db)
-    await seed_orientini(db)
     await db.commit()
     if verbose:
         print(f"Roadmap applied ({changed} course rows aligned).")

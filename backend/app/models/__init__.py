@@ -25,9 +25,9 @@ class MissionStatusEnum(str, enum.Enum):
 
 
 class BacTrackEnum(str, enum.Enum):
-    """Moroccan Bac (2ème Bac) subject tracks relevant to Orientini's matching.
-    Not exhaustive of every track offered nationally -- limited to the
-    science/technology tracks Orientini targets."""
+    """Moroccan Bac (2ème Bac) subject tracks. Kept only because
+    StudentProfile.bac_track (an inert, unused column -- see its own comment)
+    still references it; not exhaustive of every track offered nationally."""
 
     sciences_math_a = "sciences_math_a"
     sciences_math_b = "sciences_math_b"
@@ -35,14 +35,6 @@ class BacTrackEnum(str, enum.Enum):
     svt = "svt"
     ste = "ste"
     stm = "stm"
-
-
-class InstitutionTypeEnum(str, enum.Enum):
-    code_school = "code_school"
-    est = "est"
-    fst = "fst"
-    cpge = "cpge"
-    engineering_school = "engineering_school"
 
 
 class ExerciseTypeEnum(str, enum.Enum):
@@ -184,9 +176,9 @@ class StudentProfile(Base):
     completed_lessons = Column(Integer, default=0)
     completed_projects = Column(Integer, default=0)
     current_mission_id = Column(Integer, ForeignKey("lessons.id", ondelete="SET NULL"), nullable=True)
-    #: Set from the student's most recent Orientini quiz. Advisory only --
-    #: not re-derived automatically if they retake the quiz with a different
-    #: answer, since a student could genuinely be unsure/between tracks.
+    #: Unused -- was set by the Orientini feature, since removed (see
+    #: db/migrations.py, which never drops a shipped column). Left in place
+    #: rather than migrated away.
     bac_track = Column(Enum(BacTrackEnum), nullable=True)
 
     user = relationship("User", back_populates="profile")
@@ -741,144 +733,6 @@ class FeedbackSubmission(Base):
     page_path = Column(String(500), nullable=True)
     user_agent = Column(String(500), nullable=True)
     ip_address = Column(String(64), nullable=True, index=True)
-    created_at = Column(DateTime, default=datetime.utcnow, index=True)
-
-
-# ---------------------------------------------------------------------------
-# Orientini -- Morocco-specific post-Bac career/institution matching.
-#
-# Institution "requirement" facts (min average, exam name/format) are
-# consequential to a real student's decision, so `data_verified=False` is the
-# default and the API/frontend must surface that flag instead of presenting
-# unverified numbers as fact. Only flip it once Abdessamad has confirmed the
-# figures for that row.
-# ---------------------------------------------------------------------------
-
-
-class Institution(Base):
-    __tablename__ = "institutions"
-
-    id = Column(Integer, primary_key=True, index=True)
-    slug = Column(String(100), unique=True, index=True, nullable=False)
-    type = Column(Enum(InstitutionTypeEnum), nullable=False, index=True)
-    order = Column(Integer, default=0)
-    icon = Column(String(50), nullable=True)
-    #: JSON object of trait_key -> weight (e.g. {"hands_on": 2, "theory": -1}),
-    #: the target vector Orientini's matching compares a student's quiz
-    #: vector against. Keys must be a subset of app.services.orientini.TRAIT_KEYS.
-    trait_weights = Column(Text, nullable=False)
-    created_at = Column(DateTime, default=datetime.utcnow)
-
-    translations = relationship("InstitutionTranslation", back_populates="institution", cascade="all, delete-orphan")
-    requirement = relationship("InstitutionRequirement", back_populates="institution", uselist=False, cascade="all, delete-orphan")
-
-
-class InstitutionTranslation(Base):
-    __tablename__ = "institution_translations"
-
-    id = Column(Integer, primary_key=True, index=True)
-    institution_id = Column(Integer, ForeignKey("institutions.id", ondelete="CASCADE"), nullable=False)
-    language = Column(Enum(LanguageEnum), nullable=False)
-    name = Column(String(200), nullable=False)
-    description = Column(Text, nullable=True)
-    career_outcomes = Column(Text, nullable=True)
-
-    institution = relationship("Institution", back_populates="translations")
-
-    __table_args__ = (UniqueConstraint("institution_id", "language", name="uq_institution_language"),)
-
-
-class InstitutionRequirement(Base):
-    """Structured admission facts for one institution. See module note above
-    on `data_verified`."""
-
-    __tablename__ = "institution_requirements"
-
-    id = Column(Integer, primary_key=True, index=True)
-    institution_id = Column(Integer, ForeignKey("institutions.id", ondelete="CASCADE"), unique=True, nullable=False)
-    #: JSON list of BacTrackEnum values eligible for this institution, or
-    #: null meaning "any track" (e.g. most code schools admit any Bac holder).
-    eligible_bac_tracks = Column(Text, nullable=True)
-    min_bac_average = Column(Float, nullable=True)
-    entrance_exam_name = Column(String(200), nullable=True)
-    entrance_exam_format = Column(Text, nullable=True)
-    application_window = Column(String(200), nullable=True)
-    #: False until a human has confirmed the figures above against an
-    #: authoritative source. The UI must show an unverified badge, not the
-    #: raw fields, while this is False.
-    data_verified = Column(Boolean, default=False, nullable=False)
-    verification_notes = Column(Text, nullable=True)
-
-    institution = relationship("Institution", back_populates="requirement")
-
-
-class OrientiniQuestion(Base):
-    __tablename__ = "orientini_questions"
-
-    id = Column(Integer, primary_key=True, index=True)
-    order = Column(Integer, default=0)
-    created_at = Column(DateTime, default=datetime.utcnow)
-
-    translations = relationship("OrientiniQuestionTranslation", back_populates="question", cascade="all, delete-orphan")
-    options = relationship("OrientiniOption", back_populates="question", cascade="all, delete-orphan", order_by="OrientiniOption.order")
-
-
-class OrientiniQuestionTranslation(Base):
-    __tablename__ = "orientini_question_translations"
-
-    id = Column(Integer, primary_key=True, index=True)
-    question_id = Column(Integer, ForeignKey("orientini_questions.id", ondelete="CASCADE"), nullable=False)
-    language = Column(Enum(LanguageEnum), nullable=False)
-    text = Column(Text, nullable=False)
-
-    question = relationship("OrientiniQuestion", back_populates="translations")
-
-    __table_args__ = (UniqueConstraint("question_id", "language", name="uq_orientini_question_language"),)
-
-
-class OrientiniOption(Base):
-    __tablename__ = "orientini_options"
-
-    id = Column(Integer, primary_key=True, index=True)
-    question_id = Column(Integer, ForeignKey("orientini_questions.id", ondelete="CASCADE"), nullable=False)
-    order = Column(Integer, default=0)
-    #: JSON object of trait_key -> weight this answer contributes to the
-    #: student's vector (same trait space as Institution.trait_weights).
-    trait_weights = Column(Text, nullable=False)
-
-    question = relationship("OrientiniQuestion", back_populates="options")
-    translations = relationship("OrientiniOptionTranslation", back_populates="option", cascade="all, delete-orphan")
-
-
-class OrientiniOptionTranslation(Base):
-    __tablename__ = "orientini_option_translations"
-
-    id = Column(Integer, primary_key=True, index=True)
-    option_id = Column(Integer, ForeignKey("orientini_options.id", ondelete="CASCADE"), nullable=False)
-    language = Column(Enum(LanguageEnum), nullable=False)
-    text = Column(Text, nullable=False)
-
-    option = relationship("OrientiniOption", back_populates="translations")
-
-    __table_args__ = (UniqueConstraint("option_id", "language", name="uq_orientini_option_language"),)
-
-
-class OrientiniResult(Base):
-    """One completed quiz attempt. Attempts are kept (not upserted) so a
-    student can see how their answers/results changed if they retake it."""
-
-    __tablename__ = "orientini_results"
-
-    id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
-    bac_track = Column(Enum(BacTrackEnum), nullable=True)
-    #: JSON object of {question_id: option_id}.
-    answers = Column(Text, nullable=False)
-    #: JSON list of {institution_id, score, trait_breakdown}, ranked descending.
-    scores = Column(Text, nullable=False)
-    created_at = Column(DateTime, default=datetime.utcnow)
-
-    user = relationship("User")
     created_at = Column(DateTime, default=datetime.utcnow, index=True)
 
 

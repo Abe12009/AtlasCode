@@ -1,7 +1,7 @@
 from pydantic import BaseModel, EmailStr, Field, field_serializer
 from typing import Optional, List, Dict, Any
 from datetime import datetime, timezone
-from app.models import LanguageEnum, DifficultyEnum, MissionStatusEnum, ExerciseTypeEnum, NotificationTypeEnum, CodyRoleEnum, ReportReasonEnum, ReportStatusEnum, FeedbackCategoryEnum, BacTrackEnum, InstitutionTypeEnum
+from app.models import LanguageEnum, DifficultyEnum, MissionStatusEnum, ExerciseTypeEnum, NotificationTypeEnum, CodyRoleEnum, ReportReasonEnum, ReportStatusEnum, FeedbackCategoryEnum
 
 
 class Token(BaseModel):
@@ -710,100 +710,6 @@ class CodySpendResponse(BaseModel):
     spend_usd_last_7d: float
     spend_usd_last_30d: float
     daily_cap_usd: float
-
-
-# ---------------------------------------------------------------------------
-# Orientini
-# ---------------------------------------------------------------------------
-
-
-class InstitutionRequirementResponse(BaseModel):
-    eligible_bac_tracks: Optional[List[BacTrackEnum]] = None
-    min_bac_average: Optional[float] = None
-    entrance_exam_name: Optional[str] = None
-    entrance_exam_format: Optional[str] = None
-    application_window: Optional[str] = None
-    #: When False, the fields above are placeholders/estimates, not confirmed
-    #: facts -- the frontend must show a "needs verification" indicator and
-    #: must not present them as reliable admission requirements.
-    data_verified: bool = False
-    verification_notes: Optional[str] = None
-
-    class Config:
-        from_attributes = True
-
-
-class InstitutionTranslationResponse(BaseModel):
-    language: LanguageEnum
-    name: str
-    description: Optional[str] = None
-    career_outcomes: Optional[str] = None
-
-
-class InstitutionResponse(BaseModel):
-    id: int
-    slug: str
-    type: InstitutionTypeEnum
-    order: int
-    icon: Optional[str] = None
-    translations: List[InstitutionTranslationResponse]
-    requirement: Optional[InstitutionRequirementResponse] = None
-
-    class Config:
-        from_attributes = True
-
-
-class OrientiniOptionTranslationResponse(BaseModel):
-    language: LanguageEnum
-    text: str
-
-
-class OrientiniOptionResponse(BaseModel):
-    id: int
-    order: int
-    translations: List[OrientiniOptionTranslationResponse]
-
-    class Config:
-        from_attributes = True
-
-
-class OrientiniQuestionTranslationResponse(BaseModel):
-    language: LanguageEnum
-    text: str
-
-
-class OrientiniQuestionResponse(BaseModel):
-    id: int
-    order: int
-    translations: List[OrientiniQuestionTranslationResponse]
-    options: List[OrientiniOptionResponse]
-
-    class Config:
-        from_attributes = True
-
-
-class OrientiniSubmitRequest(BaseModel):
-    #: {question_id: option_id}, one entry per answered question. Unanswered
-    #: questions are simply omitted rather than sent with a null option.
-    answers: Dict[int, int]
-    bac_track: Optional[BacTrackEnum] = None
-
-
-class OrientiniScoreResponse(BaseModel):
-    institution_id: int
-    score: float
-    eligible: bool
-    trait_breakdown: Dict[str, float]
-
-
-class OrientiniResultResponse(BaseModel):
-    id: int
-    bac_track: Optional[BacTrackEnum] = None
-    scores: List[OrientiniScoreResponse]
-    created_at: datetime
-
-    class Config:
-        from_attributes = True
 
 
 class DuelQueueJoinRequest(BaseModel):

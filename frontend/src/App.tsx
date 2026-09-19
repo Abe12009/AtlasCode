@@ -24,8 +24,6 @@ const Profile = lazy(() => import('./pages/Profile').then(m => ({ default: m.Pro
 const Cody = lazy(() => import('./pages/Cody').then(m => ({ default: m.Cody })));
 const PublicProfile = lazy(() => import('./pages/PublicProfile').then(m => ({ default: m.PublicProfile })));
 const VisualProgrammingPage = lazy(() => import('./pages/VisualProgramming').then(m => ({ default: m.VisualProgrammingPage })));
-const Orientini = lazy(() => import('./pages/Orientini').then(m => ({ default: m.Orientini })));
-const OrientiniExplorer = lazy(() => import('./pages/OrientiniExplorer').then(m => ({ default: m.OrientiniExplorer })));
 const DuelLobby = lazy(() => import('./pages/DuelLobby').then(m => ({ default: m.DuelLobby })));
 const DuelArena = lazy(() => import('./pages/DuelArena').then(m => ({ default: m.DuelArena })));
 
@@ -102,8 +100,6 @@ function AppRoutes() {
         <Route path="courses/:courseId" element={<Suspense fallback={<LoadingFallback />}><CourseDetail /></Suspense>} />
         <Route path="lessons/:lessonId" element={<Suspense fallback={<LoadingFallback />}><LessonDetail /></Suspense>} />
         <Route path="visual/:exerciseId" element={<Suspense fallback={<LoadingFallback />}><VisualProgrammingPage /></Suspense>} />
-        <Route path="orientini" element={<Suspense fallback={<LoadingFallback />}><Orientini /></Suspense>} />
-        <Route path="orientini/explorer" element={<Suspense fallback={<LoadingFallback />}><OrientiniExplorer /></Suspense>} />
         <Route path="duels" element={<Suspense fallback={<LoadingFallback />}><DuelLobby /></Suspense>} />
         <Route path="duels/:duelId" element={<Suspense fallback={<LoadingFallback />}><DuelArena /></Suspense>} />
         <Route path="projects" element={<Suspense fallback={<LoadingFallback />}><Projects /></Suspense>} />

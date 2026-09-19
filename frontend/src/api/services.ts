@@ -20,10 +20,6 @@ import type {
   CodyMessage,
   CodyChatResponse,
   AchievementEarned,
-  Institution,
-  OrientiniQuestion,
-  OrientiniSubmitRequest,
-  OrientiniResult,
   CircuitGraph,
   CircuitCompileResponse,
   CircuitEvaluateResponse,
@@ -100,19 +96,6 @@ export const circuitsApi = {
 export const gitQuestApi = {
   execute: (state: GitQuestState, action: GitQuestAction) =>
     apiClient.post<GitQuestExecuteResponse>('/git-quest/execute', { state, action }),
-};
-
-export const orientiniApi = {
-  getQuestions: (language: string = 'en') =>
-    apiClient.get<OrientiniQuestion[]>('/orientini/questions', { language }),
-
-  getInstitutions: (language: string = 'en') =>
-    apiClient.get<Institution[]>('/orientini/institutions', { language }),
-
-  submit: (data: OrientiniSubmitRequest) =>
-    apiClient.post<OrientiniResult>('/orientini/submit', data),
-
-  getLatestResult: () => apiClient.get<OrientiniResult>('/orientini/results/latest'),
 };
 
 export const duelsApi = {

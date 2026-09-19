@@ -3,7 +3,7 @@ import { Outlet, NavLink, Link, useNavigate, useLocation } from 'react-router-do
 import { AnimatePresence, motion } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
 import { useTranslation } from '../hooks/useTranslation';
-import { LayoutDashboard, BookOpen, FolderKanban, User, LogOut, Menu, X, ChevronDown, Trophy, Code, Zap, Star, Compass, Swords } from 'lucide-react';
+import { LayoutDashboard, BookOpen, FolderKanban, User, LogOut, Menu, X, ChevronDown, Trophy, Code, Zap, Star, Swords } from 'lucide-react';
 import { CodyBubble, pulseCodyBubble } from './CodyBubble';
 import { CodyCharacter } from './CodyCharacter';
 import { OnboardingTour } from './OnboardingTour';
@@ -62,7 +62,6 @@ export function Layout() {
     { path: '/app/dashboard', label: t('navigation.dashboard'), icon: LayoutDashboard },
     { path: '/app/courses', label: t('navigation.courses'), icon: BookOpen, tourId: 'tour-nav-courses' },
     { path: '/app/projects', label: t('navigation.projects'), icon: FolderKanban },
-    { path: '/app/orientini', label: t('navigation.orientini'), icon: Compass },
     { path: '/app/duels', label: t('navigation.duels'), icon: Swords },
     { path: '/app/cody', label: t('navigation.cody'), icon: CodyCharacter },
     { path: '/app/profile', label: t('navigation.profile'), icon: User },
