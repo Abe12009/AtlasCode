@@ -80,7 +80,7 @@ export function ExercisePanel({
       ) : (
         <Link
           to="/app/dashboard"
-          className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-accent-500 to-accent-600 hover:from-accent-600 hover:to-accent-700 text-white font-semibold rounded-xl transition-all shadow-lg hover:shadow-glow-accent"
+          className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-accent-700 to-accent-800 hover:from-accent-800 hover:to-accent-900 text-white font-semibold rounded-xl transition-all shadow-lg hover:shadow-glow-accent"
           data-testid="exercise-nav-finish"
         >
           <span>{t('lessons.finish_lesson')}</span>
@@ -185,7 +185,7 @@ export function ExercisePanel({
             onClick={() => onSubmit({ exerciseId: exercise.id, code })}
             disabled={isSubmitting}
             leftIcon={<Check className="h-4 w-4" />}
-            className="flex-1 bg-gradient-to-r from-accent-500 to-accent-600 hover:from-accent-600 hover:to-accent-700 shadow-lg hover:shadow-glow-accent"
+            className="flex-1 bg-gradient-to-r from-accent-700 to-accent-800 hover:from-accent-800 hover:to-accent-900 shadow-lg hover:shadow-glow-accent"
           >
             {isSubmitting ? t('lessons.submitting') : t('lessons.submit_solution')}
           </Button>

@@ -303,7 +303,7 @@ export function Register() {
                 loading={loading}
                 leftIcon={loading ? <Loader2 className="h-5 w-5 animate-spin" aria-hidden="true" /> : <CheckCircle className="h-5 w-5" />}
                 size="lg"
-                className="bg-gradient-to-r from-accent-500 to-accent-600 hover:from-accent-600 hover:to-accent-700 shadow-lg hover:shadow-glow-accent"
+                className="bg-gradient-to-r from-accent-700 to-accent-800 hover:from-accent-800 hover:to-accent-900 shadow-lg hover:shadow-glow-accent"
               >
                 {t('auth.create_account')}
               </Button>

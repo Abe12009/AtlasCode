@@ -521,7 +521,7 @@ export function VisualProgrammingPage() {
                   <Button
                     onClick={handleSubmit}
                     disabled={!compileResult?.is_valid}
-                    className="w-full bg-gradient-to-r from-accent-500 to-accent-600 hover:from-accent-600 hover:to-accent-700 shadow-lg hover:shadow-glow-accent"
+                    className="w-full bg-gradient-to-r from-accent-700 to-accent-800 hover:from-accent-800 hover:to-accent-900 shadow-lg hover:shadow-glow-accent"
                     leftIcon={<CheckCircle className="h-4 w-4" />}
                   >
                     {t('visual_programming.submit_solution')}

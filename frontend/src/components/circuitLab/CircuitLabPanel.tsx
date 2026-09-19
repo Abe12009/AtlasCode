@@ -124,7 +124,7 @@ export function CircuitLabPanel({ exercise, onSubmit, onRun, isSubmitting, isRun
           disabled={isSubmitting || compileMutation.isPending}
           loading={isSubmitting}
           leftIcon={<Check className="h-4 w-4" />}
-          className="bg-gradient-to-r from-accent-500 to-accent-600 hover:from-accent-600 hover:to-accent-700 shadow-lg hover:shadow-glow-accent"
+          className="bg-gradient-to-r from-accent-700 to-accent-800 hover:from-accent-800 hover:to-accent-900 shadow-lg hover:shadow-glow-accent"
         >
           {t('lessons.submit_solution')}
         </Button>

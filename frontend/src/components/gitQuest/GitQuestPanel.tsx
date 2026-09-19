@@ -103,7 +103,7 @@ export function GitQuestPanel({ exercise, onSubmit, isSubmitting }: GitQuestPane
           disabled={isSubmitting || actions.length === 0}
           loading={isSubmitting}
           leftIcon={<Check className="h-4 w-4" />}
-          className="bg-gradient-to-r from-accent-500 to-accent-600 hover:from-accent-600 hover:to-accent-700 shadow-lg hover:shadow-glow-accent"
+          className="bg-gradient-to-r from-accent-700 to-accent-800 hover:from-accent-800 hover:to-accent-900 shadow-lg hover:shadow-glow-accent"
           data-testid="git-quest-submit"
         >
           {t('lessons.submit_solution')}

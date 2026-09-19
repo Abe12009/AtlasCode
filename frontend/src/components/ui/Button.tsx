@@ -34,7 +34,7 @@ const variantStyles: Record<ButtonVariant, string> = {
   primary:
     'bg-primary-600 text-white shadow-sm hover:bg-primary-700 hover:shadow-md active:bg-primary-800 focus-visible:ring-primary-500',
   accent:
-    'bg-accent-600 text-white shadow-sm hover:bg-accent-700 hover:shadow-md active:bg-accent-800 focus-visible:ring-accent-500',
+    'bg-accent-700 text-white shadow-sm hover:bg-accent-800 hover:shadow-md active:bg-accent-900 focus-visible:ring-accent-500',
   secondary:
     'bg-bg-tertiary text-text-primary border border-border-primary hover:bg-bg-quaternary hover:border-border-secondary active:bg-bg-tertiary focus-visible:ring-border-focus',
   outline:

@@ -279,7 +279,7 @@ export function ExerciseAnswerPanel({
         onClick={handleSubmit}
         disabled={isSubmitting || isLocked || !canSubmit}
         leftIcon={<Check className="h-4 w-4" />}
-        className="w-full sm:w-auto bg-gradient-to-r from-accent-500 to-accent-600 hover:from-accent-600 hover:to-accent-700 shadow-lg hover:shadow-glow-accent"
+        className="w-full sm:w-auto bg-gradient-to-r from-accent-700 to-accent-800 hover:from-accent-800 hover:to-accent-900 shadow-lg hover:shadow-glow-accent"
         data-testid="submit-answer"
       >
         {isSubmitting ? t('lessons.submitting') : t('lessons.submit_answer')}

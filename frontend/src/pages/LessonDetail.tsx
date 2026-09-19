@@ -372,7 +372,7 @@ export function LessonDetail() {
                 ) : (
                   <Link
                     to="/app/dashboard"
-                    className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-accent-500 to-accent-600 hover:from-accent-600 hover:to-accent-700 text-white font-semibold rounded-xl transition-all shadow-lg hover:shadow-glow-accent"
+                    className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-accent-700 to-accent-800 hover:from-accent-800 hover:to-accent-900 text-white font-semibold rounded-xl transition-all shadow-lg hover:shadow-glow-accent"
                     data-testid="lesson-nav-finish"
                   >
                     <span>{t('lessons.finish_lesson')}</span>

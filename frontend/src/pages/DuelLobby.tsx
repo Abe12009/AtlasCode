@@ -65,7 +65,7 @@ export function DuelLobby() {
   return (
     <div className="max-w-3xl mx-auto px-4 py-10" dir={isRTL ? 'rtl' : 'ltr'}>
       <div className="text-center mb-10">
-        <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-accent-500 to-accent-600 shadow-glow-accent mb-4">
+        <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-accent-700 to-accent-800 shadow-glow-accent mb-4">
           <Swords className="h-8 w-8 text-white" />
         </div>
         <h1 className="text-2xl font-bold text-text-primary">{t('duels.lobby_title')}</h1>

@@ -139,7 +139,7 @@ export function Landing() {
                 <Link to="/login" className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-text-secondary hover:text-text-primary transition-colors rounded-xl">
                   {t('auth.sign_in')}
                 </Link>
-                <Link to="/register" className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-accent-500 to-accent-600 hover:from-accent-600 hover:to-accent-700 active:scale-[0.97] transition-all rounded-xl shadow-lg hover:shadow-glow-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-500 focus-visible:ring-offset-2 focus-visible:ring-offset-bg-primary">
+                <Link to="/register" className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-accent-700 to-accent-800 hover:from-accent-800 hover:to-accent-900 active:scale-[0.97] transition-all rounded-xl shadow-lg hover:shadow-glow-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-500 focus-visible:ring-offset-2 focus-visible:ring-offset-bg-primary">
                   {t('auth.sign_up')}
                 </Link>
               </div>
@@ -192,7 +192,7 @@ export function Landing() {
                 </Link>
                 <Link
                   to="/register"
-                  className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-accent-500 to-accent-600 px-4 py-2 text-sm font-semibold text-white shadow-lg transition-all hover:from-accent-600 hover:to-accent-700"
+                  className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-accent-700 to-accent-800 px-4 py-2 text-sm font-semibold text-white shadow-lg transition-all hover:from-accent-800 hover:to-accent-900"
                 >
                   {t('auth.sign_up')}
                 </Link>
@@ -230,7 +230,7 @@ export function Landing() {
                 </p>
                 <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 mb-12">
                   <Link to="/register" className="w-full sm:w-auto">
-                    <Button size="lg" fullWidth leftIcon={<ArrowRight className="h-5 w-5" />} className="bg-gradient-to-r from-accent-500 to-accent-600 hover:from-accent-600 hover:to-accent-700 shadow-lg hover:shadow-glow-accent">
+                    <Button size="lg" fullWidth leftIcon={<ArrowRight className="h-5 w-5" />} className="bg-gradient-to-r from-accent-700 to-accent-800 hover:from-accent-800 hover:to-accent-900 shadow-lg hover:shadow-glow-accent">
                       {t('landing.hero.cta_primary')}
                     </Button>
                   </Link>
@@ -469,7 +469,7 @@ learn_programming()`}</code></pre>
                 </p>
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                   <Link to="/register" className="w-full sm:w-auto">
-                    <Button size="lg" fullWidth variant="secondary" leftIcon={<ArrowRight className="h-5 w-5" />} className="bg-gradient-to-r from-accent-500 to-accent-600 hover:from-accent-600 hover:to-accent-700 shadow-lg hover:shadow-glow-accent">
+                    <Button size="lg" fullWidth variant="secondary" leftIcon={<ArrowRight className="h-5 w-5" />} className="bg-gradient-to-r from-accent-700 to-accent-800 hover:from-accent-800 hover:to-accent-900 shadow-lg hover:shadow-glow-accent">
                       {t('landing.cta.button')}
                     </Button>
                   </Link>
