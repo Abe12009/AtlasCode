@@ -22,6 +22,24 @@ async def override_get_db():
         yield session
 
 
+@pytest.fixture(autouse=True)
+def _generous_auth_rate_limits(monkeypatch):
+    """httpx's ASGITransport reports every test request as coming from the
+    same fixed IP (127.0.0.1) -- see its default `client` tuple -- and the
+    widely-shared `test_user`/`second_user` fixtures call /auth/register on
+    nearly every test in this session-scoped-DB suite, so the *real*
+    per-IP register/login limits would trip from ordinary test-suite volume
+    alone, not from anything an individual test is doing wrong. Raise them
+    here so only a test that explicitly wants to exercise the 429 path
+    monkeypatches its own limit back down (see test_auth.py), the same
+    pattern password-reset's per-email limit test already uses.
+    """
+    monkeypatch.setattr(settings, "auth_login_rate_limit_per_email_per_hour", 100_000)
+    monkeypatch.setattr(settings, "auth_login_rate_limit_per_ip_per_hour", 100_000)
+    monkeypatch.setattr(settings, "auth_register_rate_limit_per_ip_per_hour", 100_000)
+    monkeypatch.setattr(settings, "password_reset_rate_limit_per_ip_per_hour", 100_000)
+
+
 @pytest.fixture(scope="session")
 def event_loop():
     loop = asyncio.new_event_loop()

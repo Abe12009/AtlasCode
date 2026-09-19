@@ -51,6 +51,10 @@ from app.services.firebase_auth import (
     is_firebase_configured,
     verify_firebase_id_token,
 )
+from app.services.auth_rate_limit import (
+    check_and_log_login_rate_limit,
+    check_and_log_register_rate_limit,
+)
 from app.services.notifications import create_notification
 from app.services.password_reset import (
     check_and_log_reset_rate_limit,
@@ -89,8 +93,20 @@ async def get_auth_config():
 
 
 @router.post("/register", response_model=Token)
-async def register(user_data: UserCreate, db: AsyncSession = Depends(get_db)):
+async def register(user_data: UserCreate, request: Request, db: AsyncSession = Depends(get_db)):
     email = user_data.email.lower().strip()
+    ip_address = request.client.host if request.client else None
+    if not await check_and_log_register_rate_limit(db, email, ip_address):
+        await db.commit()
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="Too many registration attempts. Please try again later.",
+        )
+    # Committed unconditionally, before the duplicate-email/username check
+    # that follows can raise: a failed attempt must still count toward the
+    # rate limit, or the limit never actually throttles automated signup spam.
+    await db.commit()
+
     result = await db.execute(
         select(User).where((User.email == email) | (User.username == user_data.username))
     )
@@ -121,10 +137,21 @@ async def register(user_data: UserCreate, db: AsyncSession = Depends(get_db)):
 
 
 @router.post("/login", response_model=Token)
-async def login(credentials: UserLogin, db: AsyncSession = Depends(get_db)):
-    result = await db.execute(
-        select(User).where(User.email == credentials.email.lower().strip())
-    )
+async def login(credentials: UserLogin, request: Request, db: AsyncSession = Depends(get_db)):
+    email = credentials.email.lower().strip()
+    ip_address = request.client.host if request.client else None
+    if not await check_and_log_login_rate_limit(db, email, ip_address):
+        await db.commit()
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="Too many login attempts. Please try again later.",
+        )
+    # Committed unconditionally, before the credential check that follows can
+    # raise: a failed attempt must still count toward the rate limit, or the
+    # limit never actually throttles the thing it exists to throttle.
+    await db.commit()
+
+    result = await db.execute(select(User).where(User.email == email))
     user = result.scalar_one_or_none()
     if not user or not user.hashed_password:
         # No account, or an account that only signs in through a provider.

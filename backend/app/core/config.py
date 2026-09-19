@@ -66,6 +66,16 @@ class Settings(BaseSettings):
     #: in a window" style as Cody's and password-reset's rate limits above.
     feedback_rate_limit_per_hour: int = 5
 
+    # --- Login / registration (pre-auth, reachable with no account) --------
+    #: Enforced in app.services.auth_rate_limit by counting AuthAttempt rows
+    #: in the trailing hour, same style as password-reset's limits. Per-email
+    #: blocks targeted credential-stuffing against one account; per-IP blocks
+    #: both broad credential-stuffing across many emails and mass automated
+    #: account creation.
+    auth_login_rate_limit_per_email_per_hour: int = 10
+    auth_login_rate_limit_per_ip_per_hour: int = 30
+    auth_register_rate_limit_per_ip_per_hour: int = 10
+
     class Config:
         env_file = ".env"
 

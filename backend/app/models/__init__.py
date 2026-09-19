@@ -162,6 +162,28 @@ class PasswordResetAttempt(Base):
     created_at = Column(DateTime, default=datetime.utcnow, index=True)
 
 
+class AuthAttempt(Base):
+    """One row per /auth/login or /auth/register call, logged unconditionally
+    -- same "count rows in a trailing window" rate-limit style as
+    PasswordResetAttempt, and for the same reason: both endpoints are
+    reachable pre-auth, so there is no user row yet to attach a per-account
+    counter to.
+
+    Logging every attempt regardless of outcome (wrong password, unknown
+    email, successful login) means the counters look identical whether or
+    not an account exists, so the rate limit itself can never become an
+    account-enumeration oracle.
+    """
+
+    __tablename__ = "auth_attempts"
+
+    id = Column(Integer, primary_key=True, index=True)
+    kind = Column(String(20), nullable=False, index=True)  # "login" | "register"
+    email = Column(String(255), index=True, nullable=False)
+    ip_address = Column(String(64), nullable=True, index=True)
+    created_at = Column(DateTime, default=datetime.utcnow, index=True)
+
+
 class StudentProfile(Base):
     __tablename__ = "student_profiles"
 
