@@ -6,7 +6,23 @@ from app.core.config import get_settings
 
 settings = get_settings()
 
-engine = create_async_engine(settings.database_url, echo=settings.debug)
+#: Explicit pool sizing, applied only for Postgres -- SQLite's aiosqlite
+#: dialect uses NullPool by default and rejects pool_size/max_overflow
+#: outright (there's nothing to pool against a single local file). Kept
+#: conservative for Postgres -- pool_size + max_overflow=10 total
+#: connections -- because production currently runs on Render's free-tier
+#: Postgres, which has its own low max_connections ceiling this app must
+#: share with nothing else guaranteed. pool_recycle=300 recycles idle
+#: connections before a managed Postgres provider silently drops them
+#: itself, which otherwise surfaces as an "SSL connection closed
+#: unexpectedly" error on the next checkout. Revisit both numbers if/when
+#: the hosting tier changes -- a paid Postgres plan's higher connection
+#: ceiling would make a larger pool worth having.
+_engine_kwargs = {"echo": settings.debug}
+if not settings.database_url.startswith("sqlite"):
+    _engine_kwargs.update(pool_size=5, max_overflow=5, pool_recycle=300)
+
+engine = create_async_engine(settings.database_url, **_engine_kwargs)
 async_session_maker = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 Base = declarative_base()
 
