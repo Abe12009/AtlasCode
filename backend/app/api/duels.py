@@ -9,6 +9,7 @@ reasoning behind both, and app.services.duel_tickets / duel_realtime for
 the WebSocket-specific auth and connection-registry pieces.
 """
 
+from contextlib import asynccontextmanager
 from datetime import datetime
 
 from fastapi import APIRouter, Depends, HTTPException, WebSocket, WebSocketDisconnect
@@ -50,6 +51,33 @@ from app.services.duels import (
 )
 
 router = APIRouter(prefix="/duels", tags=["duels"])
+
+
+@asynccontextmanager
+async def _short_lived_db_session(websocket: WebSocket):
+    """A fresh session for one DB operation inside the WebSocket handler,
+    closed immediately after.
+
+    `Depends(get_db)` is wrong here: FastAPI resolves a WebSocket route's
+    dependencies once at connect time and holds them for the connection's
+    entire lifetime, so a `db: AsyncSession = Depends(get_db)` parameter
+    would tie up one pooled connection for the whole duel even though the
+    receive loop between connect and disconnect does no DB work at all --
+    with the pool's default size, on the order of a few dozen concurrent
+    open duels would exhaust it and start starving every other request.
+
+    Looks up the app's current `get_db` override (falling back to the real
+    one) so tests that override `get_db` still get the isolated test
+    session -- this mirrors what `Depends(get_db)` itself does under the
+    hood, just invoked by hand, and repeatably, instead of once.
+    """
+    db_dependency = websocket.app.dependency_overrides.get(get_db, get_db)
+    agen = db_dependency()
+    session = await agen.__anext__()
+    try:
+        yield session
+    finally:
+        await agen.aclose()
 
 
 @router.post("/queue", response_model=DuelQueueStatusResponse)
@@ -257,34 +285,39 @@ async def duel_websocket(
     websocket: WebSocket,
     duel_id: int,
     ticket: str,
-    db: AsyncSession = Depends(get_db),
 ):
     """The live channel: after connecting, a client only ever RECEIVES
     application messages (opponent_progress / opponent_connected /
     opponent_disconnected / duel_ended) -- submissions go through the
     ordinary POST /duels/{id}/submit above, not this socket, so there's no
     inbound message format to parse or validate here. The receive loop
-    below exists purely to detect the client closing the connection."""
+    below exists purely to detect the client closing the connection.
+
+    No `db: AsyncSession = Depends(get_db)` parameter here on purpose --
+    see _short_lived_db_session's docstring. Each of the two DB operations
+    below (connect, disconnect) opens and closes its own session instead of
+    holding one pooled connection for the whole duel."""
     user_id = consume_ticket(ticket, duel_id)
     if user_id is None:
         await websocket.close(code=4401)
         return
 
-    participant = (
-        await db.execute(
-            select(DuelParticipant).where(
-                DuelParticipant.duel_id == duel_id, DuelParticipant.user_id == user_id
+    async with _short_lived_db_session(websocket) as db:
+        participant = (
+            await db.execute(
+                select(DuelParticipant).where(
+                    DuelParticipant.duel_id == duel_id, DuelParticipant.user_id == user_id
+                )
             )
-        )
-    ).scalar_one_or_none()
-    if participant is None:
-        await websocket.close(code=4403)
-        return
+        ).scalar_one_or_none()
+        if participant is None:
+            await websocket.close(code=4403)
+            return
 
-    await connection_manager.connect(duel_id, user_id, websocket)
-    participant.is_connected = True
-    participant.disconnected_at = None
-    await db.commit()
+        await connection_manager.connect(duel_id, user_id, websocket)
+        participant.is_connected = True
+        participant.disconnected_at = None
+        await db.commit()
     await connection_manager.broadcast_to_opponent(duel_id, user_id, {"type": "opponent_connected"})
 
     try:
@@ -294,7 +327,19 @@ async def duel_websocket(
         pass
     finally:
         connection_manager.disconnect(duel_id, user_id)
-        participant.is_connected = False
-        participant.disconnected_at = datetime.utcnow()
-        await db.commit()
+        # A fresh session again: the `participant` object above belongs to
+        # a session that's already been closed, so it can't be reused to
+        # persist a change here -- re-fetch it in this session instead.
+        async with _short_lived_db_session(websocket) as db:
+            participant = (
+                await db.execute(
+                    select(DuelParticipant).where(
+                        DuelParticipant.duel_id == duel_id, DuelParticipant.user_id == user_id
+                    )
+                )
+            ).scalar_one_or_none()
+            if participant is not None:
+                participant.is_connected = False
+                participant.disconnected_at = datetime.utcnow()
+                await db.commit()
         await connection_manager.broadcast_to_opponent(duel_id, user_id, {"type": "opponent_disconnected"})
