@@ -1,3 +1,4 @@
+import asyncio
 from datetime import datetime
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -186,7 +187,9 @@ async def submit_project_task(
 
         # Combine user code and validation code so validation can access user-defined functions
         combined_code = code + "\n\n" + task.validation_code
-        result = execute_code(combined_code, None)
+        # Offloaded to a thread -- see exercises.py's /run endpoint for why
+        # execute_code() can't run inline on the event loop.
+        result = await asyncio.to_thread(execute_code, combined_code, None)
         if not result.success:
             return {"success": False, "error": result.error, "output": result.output}
 

@@ -1,3 +1,4 @@
+import asyncio
 from datetime import datetime
 from typing import List
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -101,7 +102,11 @@ async def run_exercise(
             error="Validation error"
         )
 
-    exec_result = execute_code(request.code, exercise.test_code)
+    # Offloaded to a thread: execute_code() blocks on a synchronous
+    # subprocess.run() call -- run inline, it would freeze the entire
+    # single-worker event loop (every other request, and every Duel Arena
+    # WebSocket message) for the duration of one submission.
+    exec_result = await asyncio.to_thread(execute_code, request.code, exercise.test_code)
 
     return ExerciseSubmitResponse(
         is_correct=exec_result.success,
@@ -135,8 +140,12 @@ async def submit_exercise(
         raise HTTPException(status_code=404, detail="Exercise not found")
 
     # Every type is graded against its own stored expected answer. Code
-    # exercises still go through the sandbox unchanged.
-    grading = grade_exercise(exercise, exercise.options, request)
+    # exercises still go through the sandbox unchanged. Offloaded to a
+    # thread: for a code exercise, grade_exercise() blocks on execute_code()
+    # (see the /run endpoint above for why that matters) -- every other
+    # grading strategy is cheap enough that running it in a thread too is
+    # negligible overhead, so the whole call is wrapped uniformly.
+    grading = await asyncio.to_thread(grade_exercise, exercise, exercise.options, request)
     is_correct = grading.is_correct
 
     existing_attempt = await db.execute(

@@ -44,6 +44,7 @@ outcome. No in-memory locking, no trusting whichever request the
 application happens to handle first.
 """
 
+import asyncio
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import Optional
@@ -286,7 +287,11 @@ async def submit_solution(db: AsyncSession, duel_id: int, user_id: int, code: st
     if not validation.is_valid:
         exec_result = ExecutionResult(success=False, output="", error="; ".join(validation.errors), execution_time=0.0)
     else:
-        exec_result = execute_code(code, exercise.test_code)
+        # Offloaded to a thread -- see exercises.py's /run endpoint for why
+        # execute_code() can't run inline on the event loop. Especially
+        # important here: this is the same event loop the Duel Arena
+        # WebSocket's opponent-progress broadcasts depend on.
+        exec_result = await asyncio.to_thread(execute_code, code, exercise.test_code)
 
     passed_count, total_count = _pass_counts(exec_result)
     is_correct = exec_result.success

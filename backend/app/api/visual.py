@@ -1,3 +1,4 @@
+import asyncio
 from typing import List, Dict, Any
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -43,7 +44,9 @@ async def run_visual_exercise(
             error="Validation error"
         )
 
-    exec_result = execute_code(request.code, exercise.test_code)
+    # Offloaded to a thread -- see exercises.py's /run endpoint for why
+    # execute_code() can't run inline on the event loop.
+    exec_result = await asyncio.to_thread(execute_code, request.code, exercise.test_code)
 
     return ExerciseSubmitResponse(
         is_correct=exec_result.success,
