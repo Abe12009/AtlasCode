@@ -78,6 +78,17 @@ services:
       # above.
       - key: FEEDBACK_RATE_LIMIT_PER_HOUR
         value: "5"
+      # Enforced in app.services.auth_rate_limit, same "count rows in a
+      # window" style as the limits above. Per-email blocks targeted
+      # credential-stuffing against one account; per-IP blocks both broad
+      # credential-stuffing across many emails and mass automated account
+      # creation.
+      - key: AUTH_LOGIN_RATE_LIMIT_PER_EMAIL_PER_HOUR
+        value: "10"
+      - key: AUTH_LOGIN_RATE_LIMIT_PER_IP_PER_HOUR
+        value: "30"
+      - key: AUTH_REGISTER_RATE_LIMIT_PER_IP_PER_HOUR
+        value: "10"
 
 databases:
   - name: atlascode-db

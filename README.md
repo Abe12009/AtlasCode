@@ -98,6 +98,9 @@ provisions an `atlascode-db` instance and injects its connection string as
 | `PASSWORD_RESET_RATE_LIMIT_PER_EMAIL_PER_HOUR` | no | Defaults to 3 |
 | `PASSWORD_RESET_RATE_LIMIT_PER_IP_PER_HOUR` | no | Defaults to 10 |
 | `FEEDBACK_RATE_LIMIT_PER_HOUR` | no | Per-user (or per-IP, for an anonymous submitter) cap on the in-app feedback form. Defaults to 5 |
+| `AUTH_LOGIN_RATE_LIMIT_PER_EMAIL_PER_HOUR` | no | Login attempts per email address. Blocks credential-stuffing against one account. Defaults to 10 |
+| `AUTH_LOGIN_RATE_LIMIT_PER_IP_PER_HOUR` | no | Login attempts per IP. Blocks broad credential-stuffing across many emails. Defaults to 30 |
+| `AUTH_REGISTER_RATE_LIMIT_PER_IP_PER_HOUR` | no | Registrations per IP. Blocks mass automated account creation. Defaults to 10 |
 
 ### Frontend (`frontend/.env.example`)
 
@@ -273,3 +276,24 @@ go live:
 7. If using Firebase: complete the console configuration in [§6](#6-configure-firebase-optional--only-for-googlegithub-sign-in).
 8. Verify: load the Vercel URL, register an account, browse a course, confirm
    `https://your-backend.onrender.com/health` returns `{"status":"ok"}`.
+
+---
+
+## 11. Bootstrap the first staff account (optional)
+
+Staff accounts unlock the moderation endpoints in `backend/app/api/admin.py`
+(feedback triage, report resolution, Cody spend dashboard). There is no
+signup flow for this — becoming staff is a direct database update, the same
+"first admin" pattern used anywhere else in this project that has no
+dedicated onboarding:
+
+```sql
+UPDATE users SET is_staff = TRUE WHERE id = <your user id>;
+```
+
+Register your account normally first, find its id (via the `/auth/me`
+response or a `SELECT id FROM users WHERE email = '...'` on the same
+connection), then run the `UPDATE` above against the production database —
+Render's **Shell** tab, or any Postgres client pointed at the connection
+string. Every admin route 404s (not 403) for a non-staff account, so nothing
+about the admin surface is discoverable until this is done.
