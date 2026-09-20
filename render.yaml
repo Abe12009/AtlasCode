@@ -5,6 +5,16 @@ services:
     rootDir: backend
     plan: free
     buildCommand: pip install -r requirements.txt
+    # No --workers flag here on purpose -- do not add one (or any other
+    # multi-process/multi-instance change) without first reading
+    # backend/app/services/duel_realtime.py's module docstring. Duel
+    # Arena's WebSocket connection registry is in-process/in-memory, not
+    # backed by Redis or any cross-process pub/sub: it only works because
+    # every connection for a given duel is guaranteed to land on this same
+    # single process. Moving to multiple workers or instances without
+    # addressing that first breaks duels silently -- two players on
+    # different processes would simply stop seeing each other's updates,
+    # no error, no crash.
     startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
     healthCheckPath: /health
     envVars:
