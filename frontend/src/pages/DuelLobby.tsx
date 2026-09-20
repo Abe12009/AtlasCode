@@ -41,12 +41,14 @@ export function DuelLobby() {
   });
 
   // Polled while waiting -- queue-wait latency doesn't need to feel instant
-  // (see the Step 4 architecture), only the live duel itself does.
+  // (see the Step 4 architecture), only the live duel itself does. 5s
+  // rather than 2s: at real concurrent-user volume, every second shaved off
+  // this interval multiplies by however many people are queued at once.
   const { data: queueStatus } = useQuery({
     queryKey: ['duel-queue-status'],
     queryFn: () => duelsApi.queueStatus(),
     enabled: waiting,
-    refetchInterval: 2000,
+    refetchInterval: 5000,
   });
 
   useEffect(() => {
