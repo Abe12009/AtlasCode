@@ -457,13 +457,17 @@ class ExerciseAttempt(Base):
     __tablename__ = "exercise_attempts"
 
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    #: Indexed: app.services.stats.compute_weekly_stats filters on both
+    #: user_id and created_at every dashboard load. Postgres never indexes
+    #: a foreign key automatically -- without this, that's a full table
+    #: scan, worsening as attempts (logged forever) accumulate.
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
     exercise_id = Column(Integer, ForeignKey("exercises.id", ondelete="CASCADE"), nullable=False)
     submitted_code = Column(Text)
     is_correct = Column(Boolean, default=False)
     xp_earned = Column(Integer, default=0)
     feedback = Column(Text)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=datetime.utcnow, index=True)
 
     user = relationship("User", back_populates="exercise_attempts")
     exercise = relationship("Exercise", back_populates="attempts")
@@ -473,10 +477,13 @@ class LessonProgress(Base):
     __tablename__ = "lesson_progress"
 
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    #: Indexed: app.services.stats.compute_weekly_stats filters on both
+    #: user_id and completed_at every dashboard load -- see the same note
+    #: on ExerciseAttempt.user_id.
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
     lesson_id = Column(Integer, ForeignKey("lessons.id", ondelete="CASCADE"), nullable=False)
     status = Column(Enum(MissionStatusEnum), default=MissionStatusEnum.locked)
-    completed_at = Column(DateTime)
+    completed_at = Column(DateTime, index=True)
     xp_earned = Column(Integer, default=0)
     current_block = Column(Integer, default=0)
     created_at = Column(DateTime, default=datetime.utcnow)
@@ -572,11 +579,14 @@ class ProjectProgress(Base):
     __tablename__ = "project_progress"
 
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    #: Indexed: app.services.stats.compute_weekly_stats filters on both
+    #: user_id and completed_at every dashboard load -- see the same note
+    #: on ExerciseAttempt.user_id.
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
     project_id = Column(Integer, ForeignKey("projects.id", ondelete="CASCADE"), nullable=False)
     status = Column(Enum(MissionStatusEnum), default=MissionStatusEnum.locked)
     current_task = Column(Integer, default=0)
-    completed_at = Column(DateTime)
+    completed_at = Column(DateTime, index=True)
     xp_earned = Column(Integer, default=0)
     code_snapshot = Column(Text)
     created_at = Column(DateTime, default=datetime.utcnow)

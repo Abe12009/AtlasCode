@@ -155,6 +155,16 @@ INDEXES: tuple[tuple[str, str], ...] = (
     ("ix_users_firebase_uid", "CREATE UNIQUE INDEX IF NOT EXISTS ix_users_firebase_uid ON users (firebase_uid)"),
     ("ix_courses_stage", "CREATE INDEX IF NOT EXISTS ix_courses_stage ON courses (stage)"),
     ("ix_courses_section_id", "CREATE INDEX IF NOT EXISTS ix_courses_section_id ON courses (section_id)"),
+    # app.services.stats.compute_weekly_stats filters each of these three
+    # tables on user_id + a date column on every dashboard load -- Postgres
+    # never indexes a foreign key automatically, so this was a full table
+    # scan, worsening as these tables (rows kept forever) accumulate.
+    ("ix_exercise_attempts_user_id", "CREATE INDEX IF NOT EXISTS ix_exercise_attempts_user_id ON exercise_attempts (user_id)"),
+    ("ix_exercise_attempts_created_at", "CREATE INDEX IF NOT EXISTS ix_exercise_attempts_created_at ON exercise_attempts (created_at)"),
+    ("ix_lesson_progress_user_id", "CREATE INDEX IF NOT EXISTS ix_lesson_progress_user_id ON lesson_progress (user_id)"),
+    ("ix_lesson_progress_completed_at", "CREATE INDEX IF NOT EXISTS ix_lesson_progress_completed_at ON lesson_progress (completed_at)"),
+    ("ix_project_progress_user_id", "CREATE INDEX IF NOT EXISTS ix_project_progress_user_id ON project_progress (user_id)"),
+    ("ix_project_progress_completed_at", "CREATE INDEX IF NOT EXISTS ix_project_progress_completed_at ON project_progress (completed_at)"),
 )
 
 
