@@ -5,7 +5,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useTranslation } from '../hooks/useTranslation';
 import { Code, Loader2, CheckCircle, Mail, Lock, User } from 'lucide-react';
 import { Button, Input, PasswordInput, Card, Alert, Select, cn } from '../components/ui';
-import { GoogleIcon, GithubIcon } from '../components/icons/BrandIcons';
+import { GoogleIcon } from '../components/icons/BrandIcons';
 import { describeFirebaseAuthError } from '../lib/firebase';
 import { authApi } from '../api/services';
 
@@ -20,8 +20,8 @@ export function Register() {
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
-  const [oauthLoading, setOauthLoading] = useState<'google' | 'github' | null>(null);
-  const { register, loginWithGoogle, loginWithGithub } = useAuth();
+  const [oauthLoading, setOauthLoading] = useState<'google' | null>(null);
+  const { register, loginWithGoogle } = useAuth();
   const { t, isRTL } = useTranslation();
   const navigate = useNavigate();
   const { data: authConfig } = useQuery({
@@ -32,11 +32,11 @@ export function Register() {
   });
   const oauthAvailable = authConfig?.firebase_enabled ?? true;
 
-  const handleOAuth = async (provider: 'google' | 'github') => {
+  const handleOAuth = async () => {
     setErrors({});
-    setOauthLoading(provider);
+    setOauthLoading('google');
     try {
-      await (provider === 'google' ? loginWithGoogle() : loginWithGithub());
+      await loginWithGoogle();
       navigate('/app/dashboard');
     } catch (err: unknown) {
       setErrors({ form: describeFirebaseAuthError(err) });
@@ -320,32 +320,18 @@ export function Register() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    fullWidth
-                    loading={oauthLoading === 'google'}
-                    disabled={oauthLoading !== null}
-                    onClick={() => handleOAuth('google')}
-                    className="border-border-primary/50 hover:border-primary-500/50 hover:bg-primary-500/5"
-                  >
-                    {oauthLoading !== 'google' && <GoogleIcon className="h-5 w-5" />}
-                    <span>Google</span>
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    fullWidth
-                    loading={oauthLoading === 'github'}
-                    disabled={oauthLoading !== null}
-                    onClick={() => handleOAuth('github')}
-                    className="border-border-primary/50 hover:border-primary-500/50 hover:bg-primary-500/5"
-                  >
-                    {oauthLoading !== 'github' && <GithubIcon className="h-5 w-5" />}
-                    <span>GitHub</span>
-                  </Button>
-                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  fullWidth
+                  loading={oauthLoading === 'google'}
+                  disabled={oauthLoading !== null}
+                  onClick={() => handleOAuth()}
+                  className="border-border-primary/50 hover:border-primary-500/50 hover:bg-primary-500/5"
+                >
+                  {oauthLoading !== 'google' && <GoogleIcon className="h-5 w-5" />}
+                  <span>Google</span>
+                </Button>
               </>
             )}
 

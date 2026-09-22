@@ -2,7 +2,7 @@ import { createContext, useContext, useState, useEffect, type ReactNode } from '
 import { authApi } from '../api/services';
 import type { User, StudentProfile } from '../types';
 import { apiClient, AUTH_NOTICE_KEY } from '../api/client';
-import { signInWithGoogle, signInWithGithub, sendPasswordResetEmail } from '../lib/firebase';
+import { signInWithGoogle, sendPasswordResetEmail } from '../lib/firebase';
 
 interface AuthContextType {
   user: User | null;
@@ -11,14 +11,13 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   register: (data: { email: string; username: string; password: string; preferred_language: string }) => Promise<void>;
   loginWithGoogle: () => Promise<void>;
-  loginWithGithub: () => Promise<void>;
   sendPasswordReset: (email: string) => Promise<void>;
   logout: () => void;
   refreshProfile: () => Promise<void>;
   refreshUser: () => Promise<void>;
 }
 
-/** Shared by both OAuth providers: exchange the Firebase ID token for an AtlasCode session. */
+/** Exchange a Firebase ID token for an AtlasCode session. */
 async function loginWithFirebaseCredential(idToken: string): Promise<void> {
   const preferred_language = (localStorage.getItem('i18nextLng') || 'en').split('-')[0];
   const timezone_offset_minutes = -new Date().getTimezoneOffset();
@@ -81,13 +80,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await loadUser();
   };
 
-  const loginWithGithub = async () => {
-    const credential = await signInWithGithub();
-    const idToken = await credential.user.getIdToken();
-    await loginWithFirebaseCredential(idToken);
-    await loadUser();
-  };
-
   const sendPasswordReset = async (email: string) => {
     await sendPasswordResetEmail(email);
   };
@@ -121,7 +113,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         login,
         register,
         loginWithGoogle,
-        loginWithGithub,
         sendPasswordReset,
         logout,
         refreshProfile,

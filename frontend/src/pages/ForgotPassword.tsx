@@ -21,7 +21,7 @@ export function ForgotPassword() {
 
     // Covers both account types: the backend resets AtlasCode's own
     // local-password accounts, Firebase resets its own federated accounts
-    // (Google/GitHub/Firebase email+password). Both are fired and both
+    // (Google/Firebase email+password). Both are fired and both
     // swallow their own errors so the UI never reveals which emails are
     // registered, or which sign-in method a given address actually uses.
     const [backendResult] = await Promise.allSettled([

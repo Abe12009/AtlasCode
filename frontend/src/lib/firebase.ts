@@ -4,8 +4,8 @@ import { firebaseConfig, isFirebaseConfigured } from '../config/firebase';
  * Firebase Auth is only initialised when the deployment actually configured
  * it (see `config/firebase.ts`), and the SDK itself is dynamically imported
  * on first use rather than bundled into the main chunk — most visitors never
- * touch Google/GitHub sign-in or password reset, so there is no reason to
- * ship ~110KB of Firebase to every landing-page load.
+ * touch Google sign-in or password reset, so there is no reason to ship
+ * ~110KB of Firebase to every landing-page load.
  *
  * Everything here is a thin wrapper so callers never touch the SDK directly
  * and never need to null-check anything themselves — they just get a
@@ -32,11 +32,6 @@ async function getAuthInstance() {
 export async function signInWithGoogle() {
   const { auth, authModule } = await getAuthInstance();
   return authModule.signInWithPopup(auth, new authModule.GoogleAuthProvider());
-}
-
-export async function signInWithGithub() {
-  const { auth, authModule } = await getAuthInstance();
-  return authModule.signInWithPopup(auth, new authModule.GithubAuthProvider());
 }
 
 /**

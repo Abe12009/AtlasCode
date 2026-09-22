@@ -5,7 +5,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useTranslation } from '../hooks/useTranslation';
 import { Code, Loader2, Mail, Lock } from 'lucide-react';
 import { Button, Input, PasswordInput, Card, Alert, cn } from '../components/ui';
-import { GoogleIcon, GithubIcon } from '../components/icons/BrandIcons';
+import { GoogleIcon } from '../components/icons/BrandIcons';
 import { describeFirebaseAuthError } from '../lib/firebase';
 import { authApi } from '../api/services';
 import { AUTH_NOTICE_KEY } from '../api/client';
@@ -23,8 +23,8 @@ export function Login() {
     }
   }, []);
   const [loading, setLoading] = useState(false);
-  const [oauthLoading, setOauthLoading] = useState<'google' | 'github' | null>(null);
-  const { login, loginWithGoogle, loginWithGithub } = useAuth();
+  const [oauthLoading, setOauthLoading] = useState<'google' | null>(null);
+  const { login, loginWithGoogle } = useAuth();
   const { t, isRTL } = useTranslation();
   const navigate = useNavigate();
   const { data: authConfig } = useQuery({
@@ -52,11 +52,11 @@ export function Login() {
     }
   };
 
-  const handleOAuth = async (provider: 'google' | 'github') => {
+  const handleOAuth = async () => {
     setError('');
-    setOauthLoading(provider);
+    setOauthLoading('google');
     try {
-      await (provider === 'google' ? loginWithGoogle() : loginWithGithub());
+      await loginWithGoogle();
       navigate('/app/dashboard');
     } catch (err: unknown) {
       setError(describeFirebaseAuthError(err));
@@ -156,32 +156,18 @@ export function Login() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    fullWidth
-                    loading={oauthLoading === 'google'}
-                    disabled={oauthLoading !== null}
-                    onClick={() => handleOAuth('google')}
-                    className="border-border-primary/50 hover:border-primary-500/50 hover:bg-primary-500/5"
-                  >
-                    {oauthLoading !== 'google' && <GoogleIcon className="h-5 w-5" />}
-                    <span>Google</span>
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    fullWidth
-                    loading={oauthLoading === 'github'}
-                    disabled={oauthLoading !== null}
-                    onClick={() => handleOAuth('github')}
-                    className="border-border-primary/50 hover:border-primary-500/50 hover:bg-primary-500/5"
-                  >
-                    {oauthLoading !== 'github' && <GithubIcon className="h-5 w-5" />}
-                    <span>GitHub</span>
-                  </Button>
-                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  fullWidth
+                  loading={oauthLoading === 'google'}
+                  disabled={oauthLoading !== null}
+                  onClick={() => handleOAuth()}
+                  className="border-border-primary/50 hover:border-primary-500/50 hover:bg-primary-500/5"
+                >
+                  {oauthLoading !== 'google' && <GoogleIcon className="h-5 w-5" />}
+                  <span>Google</span>
+                </Button>
               </>
             )}
 

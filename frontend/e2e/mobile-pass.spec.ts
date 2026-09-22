@@ -68,11 +68,11 @@ test.describe('Mobile pass: registration page', () => {
       await expect(page.getByRole('button', { name: /create account/i })).toBeVisible();
       await assertNoHorizontalOverflow(page, `/register at ${vp.name}`);
 
-      // The submit button and both OAuth buttons are the primary tap targets
+      // The submit button and the OAuth button are the primary tap targets
       // on this page; they must be comfortably tappable, not just visible.
       await assertTapTargetsReachable(
         page,
-        page.getByRole('button', { name: /create account|google|github/i }),
+        page.getByRole('button', { name: /create account|google/i }),
         `/register at ${vp.name}`,
       );
     });
