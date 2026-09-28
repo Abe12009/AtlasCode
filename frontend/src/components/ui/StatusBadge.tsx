@@ -161,8 +161,10 @@ export function AchievementBadge({
     <div
       className={cn(
         'flex items-start gap-3 p-4 rounded-2xl border transition-all duration-normal',
+        // Only an unlocked badge gets the raised treatment: a locked one is
+        // meant to read as inert, and lifting it would say the opposite.
         earned
-          ? 'bg-yellow-500/10 border-yellow-500/30'
+          ? 'bg-yellow-500/10 border-yellow-500/30 interactive-lift'
           : 'bg-bg-secondary border-border-primary opacity-60',
         size === 'sm' && 'p-3 gap-2',
         size === 'lg' && 'p-5 gap-4',

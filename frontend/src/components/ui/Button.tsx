@@ -22,6 +22,13 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   leftIcon?: ReactNode;
   rightIcon?: ReactNode;
   fullWidth?: boolean;
+  /**
+   * Chunky depth treatment: the button sits on a solid edge and compresses
+   * onto it when pressed. Deliberately opt-in and reserved for the one primary
+   * call to action on a view -- on a row of buttons it stops reading as
+   * "this is the important one" and just looks noisy.
+   */
+  chunky?: boolean;
 }
 
 /**
@@ -32,9 +39,9 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
  */
 const variantStyles: Record<ButtonVariant, string> = {
   primary:
-    'bg-primary-600 text-white shadow-sm hover:bg-primary-700 hover:shadow-md active:bg-primary-800 focus-visible:ring-primary-500',
+    'bg-primary-600 text-white hover:bg-primary-700 active:bg-primary-800 focus-visible:ring-primary-500',
   accent:
-    'bg-accent-700 text-white shadow-sm hover:bg-accent-800 hover:shadow-md active:bg-accent-900 focus-visible:ring-accent-500',
+    'bg-accent-700 text-white hover:bg-accent-800 active:bg-accent-900 focus-visible:ring-accent-500',
   secondary:
     'bg-bg-tertiary text-text-primary border border-border-primary hover:bg-bg-quaternary hover:border-border-secondary active:bg-bg-tertiary focus-visible:ring-border-focus',
   outline:
@@ -42,9 +49,9 @@ const variantStyles: Record<ButtonVariant, string> = {
   ghost:
     'bg-transparent text-text-secondary hover:bg-bg-tertiary hover:text-text-primary active:bg-bg-quaternary focus-visible:ring-border-focus',
   destructive:
-    'bg-error-600 text-white shadow-sm hover:bg-error-700 hover:shadow-md active:bg-error-800 focus-visible:ring-error-500',
+    'bg-error-600 text-white hover:bg-error-700 active:bg-error-800 focus-visible:ring-error-500',
   success:
-    'bg-success-600 text-white shadow-sm hover:bg-success-700 hover:shadow-md active:bg-success-800 focus-visible:ring-success-500',
+    'bg-success-600 text-white hover:bg-success-700 active:bg-success-800 focus-visible:ring-success-500',
 };
 
 const sizeStyles: Record<ButtonSize, string> = {
@@ -66,6 +73,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       leftIcon,
       rightIcon,
       fullWidth = false,
+      chunky = false,
       disabled,
       children,
       ...props
@@ -82,8 +90,17 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
           'transition-[background-color,border-color,box-shadow,transform,color] duration-fast',
           'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-bg-primary',
           'disabled:pointer-events-none disabled:opacity-55 disabled:shadow-none',
-          'motion-safe:hover:-translate-y-px motion-safe:active:translate-y-0 motion-safe:active:scale-[0.985]',
+          // `depth-chunky` owns its own transform/shadow stack, so the shared
+          // 1px lift would fight it -- each button gets one or the other.
+          !chunky && 'motion-safe:hover:-translate-y-px motion-safe:active:translate-y-0 motion-safe:active:scale-[0.985]',
           variantStyles[variant],
+          // After variantStyles on purpose: cn() is twMerge, so whichever
+          // shadow utility comes last wins. A caller's own `className` still
+          // comes after this and still overrides it.
+          !chunky && 'shadow-[var(--depth-raise-top),var(--depth-raise-bottom),var(--shadow-card)]',
+          !chunky && 'hover:shadow-[var(--depth-raise-top),var(--depth-raise-bottom),var(--shadow-card-hover)]',
+          !chunky && 'active:shadow-[var(--depth-press)]',
+          chunky && 'depth-chunky',
           sizeStyles[size],
           fullWidth && 'w-full',
           className,

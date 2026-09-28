@@ -7,11 +7,17 @@ export interface CardProps extends HTMLAttributes<HTMLDivElement> {
 }
 
 const variantStyles = {
-  default: 'bg-bg-elevated border border-border-primary shadow-card',
+  // The two inset layers make a surface read as raised without implying it is
+  // clickable -- that is `interactive` below, which adds the lift and press.
+  default:
+    'bg-bg-elevated border border-border-primary shadow-[var(--depth-raise-top),var(--depth-raise-bottom),var(--shadow-card)]',
   outlined: 'bg-bg-elevated border-2 border-border-primary',
-  elevated: 'bg-bg-elevated border border-border-primary shadow-elevated',
+  elevated:
+    'bg-bg-elevated border border-border-primary shadow-[var(--depth-raise-top),var(--depth-raise-bottom),var(--shadow-elevated)]',
   interactive: cn(
-    'bg-bg-elevated border border-border-primary shadow-card hover:shadow-card-hover transition-shadow duration-normal cursor-pointer',
+    // `interactive-lift` (index.css) owns the raised-surface shadows, the
+    // hover lift and the tap press, so this variant no longer sets its own.
+    'bg-bg-elevated border border-border-primary interactive-lift interactive-tilt cursor-pointer',
     // No-op unless a focusable ancestor (e.g. the <Link> a card is wrapped in)
     // carries `group` -- lets a keyboard user see which whole-card link is
     // focused, matching Button's ring treatment.
