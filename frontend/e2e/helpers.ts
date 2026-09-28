@@ -9,8 +9,49 @@ export function uniqueUser() {
   };
 }
 
-/** Registers a brand-new user through the real UI and lands on the dashboard. */
+/**
+ * Creates a brand-new user straight through the API and lands on the dashboard.
+ *
+ * Every logged-in spec needs *a* fresh account, not a rehearsal of the signup
+ * form, and driving the real form ~100 times a run cost roughly 4s each and
+ * re-broke the whole suite the last time Register.tsx grew a field. The form
+ * itself stays covered by `registerThroughUiForm` below -- one test, on purpose.
+ *
+ * The token is written to localStorage under the same key api/client.ts reads
+ * (`access_token`), which is the whole of what "being logged in" means here.
+ */
 export async function registerNewUser(page: Page) {
+  const user = uniqueUser();
+
+  const response = await page.request.post('/api/auth/register', {
+    data: {
+      username: user.username,
+      email: user.email,
+      password: user.password,
+      preferred_language: 'en',
+    },
+  });
+  if (!response.ok()) {
+    throw new Error(
+      `registerNewUser: POST /api/auth/register returned ${response.status()} -- ${await response.text()}`,
+    );
+  }
+  const { access_token: accessToken } = await response.json();
+
+  // Seed storage before any app code runs, so the first render is already
+  // authenticated and no redirect to /login races us.
+  await page.addInitScript((token) => {
+    localStorage.setItem('access_token', token);
+  }, accessToken);
+
+  await page.goto('/app/dashboard');
+  await expect(page).toHaveURL(/\/app\/dashboard/, { timeout: 15000 });
+  return user;
+}
+
+/** The real signup form, consent checkbox and all. Deliberately used by exactly
+ * one test -- see registerNewUser above for why everything else skips it. */
+export async function registerThroughUiForm(page: Page) {
   const user = uniqueUser();
   await page.goto('/register');
   await page.getByPlaceholder('Choose a username').fill(user.username);

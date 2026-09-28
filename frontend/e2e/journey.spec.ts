@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { registerNewUser, trackPageHealth } from './helpers';
+import { registerNewUser, registerThroughUiForm, trackPageHealth } from './helpers';
 
 // Full primary journey against the real running frontend + backend, one continuous
 // authenticated session: Landing -> Register -> Dashboard -> Courses -> Course detail
@@ -11,6 +11,16 @@ test.describe('Primary user journey', () => {
     const health = trackPageHealth(page);
     await page.goto('/');
     await expect(page.locator('body')).toContainText(/AtlasCode/i);
+    health.assertNoFailures();
+  });
+
+  // The one place the signup form itself is exercised. Every other spec creates
+  // its user through the API (see registerNewUser), so if this test is deleted
+  // the form loses its only coverage -- a missing field would go unnoticed.
+  test('the real registration form, consent checkbox included, creates an account', async ({ page }) => {
+    const health = trackPageHealth(page);
+    const user = await registerThroughUiForm(page);
+    await expect(page.locator('body')).toContainText(new RegExp(user.username, 'i'));
     health.assertNoFailures();
   });
 
