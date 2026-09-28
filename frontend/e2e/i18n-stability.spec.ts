@@ -7,7 +7,10 @@ async function switchLanguage(page: Page, label: RegExp) {
   await page.waitForTimeout(400);
 }
 
-/** Lesson 61 (JavaScript > Arrays and Objects) has real EN/FR/AR block translations. */
+/** Lesson 61 (Python in Depth > Strings in Depth). Verified against the seed:
+ * its first content block has real, distinct EN/FR/AR translations, which is
+ * the whole point of this spec. The strings below stop before any markdown
+ * emphasis, since the body renders the marker characters literally. */
 const TRANSLATED_LESSON = '/app/lessons/61';
 
 test.describe('Language switching does not disturb app state', () => {
@@ -16,7 +19,7 @@ test.describe('Language switching does not disturb app state', () => {
 
     // Start a lesson so there is real server-side progress to lose.
     await page.goto(TRANSLATED_LESSON);
-    await expect(lessonTitle(page, 'Arrays and Objects')).toBeVisible({ timeout: 15000 });
+    await expect(lessonTitle(page, 'Strings in Depth')).toBeVisible({ timeout: 15000 });
 
     const token = await page.evaluate(() => localStorage.getItem('access_token'));
     expect(token).toBeTruthy();
@@ -49,19 +52,19 @@ test.describe('Language switching does not disturb app state', () => {
     await registerNewUser(page);
 
     await page.goto(TRANSLATED_LESSON);
-    await expect(page.locator('body')).toContainText('Arrays hold ordered lists', { timeout: 15000 });
+    await expect(page.locator('body')).toContainText('A Python string is an', { timeout: 15000 });
 
     // The language selector lives in the app header, so switch from the
     // dashboard and come back to the lesson.
     await page.goto('/app/dashboard');
     await switchLanguage(page, /Français/i);
     await page.goto(TRANSLATED_LESSON);
-    await expect(page.locator('body')).toContainText('Les tableaux contiennent des listes ordonnées', { timeout: 15000 });
+    await expect(page.locator('body')).toContainText('Une chaîne Python est une séquence de caractères', { timeout: 15000 });
 
     await page.goto('/app/dashboard');
     await switchLanguage(page, /العربية/i);
     await page.goto(TRANSLATED_LESSON);
-    await expect(page.locator('body')).toContainText('تحتوي المصفوفات على قوائم مرتبة', { timeout: 15000 });
+    await expect(page.locator('body')).toContainText('السلسلة في بايثون تسلسل محارف', { timeout: 15000 });
     expect(await page.evaluate(() => document.documentElement.dir)).toBe('rtl');
   });
 

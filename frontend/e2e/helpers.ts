@@ -1,4 +1,5 @@
-import { Page, expect } from '@playwright/test';
+import { Page, APIResponse, expect } from '@playwright/test';
+import { resetAuthAttempts } from './reset-auth-attempts';
 
 export function uniqueUser() {
   const id = `${Date.now()}${Math.floor(Math.random() * 10000)}`;
@@ -33,20 +34,46 @@ export function lessonTitle(page: Page, title: string) {
 export async function registerNewUser(page: Page) {
   const user = uniqueUser();
 
-  const response = await page.request.post('/api/auth/register', {
-    data: {
-      username: user.username,
-      email: user.email,
-      password: user.password,
-      preferred_language: 'en',
-    },
-  });
+  const body = {
+    username: user.username,
+    email: user.email,
+    password: user.password,
+    preferred_language: 'en',
+  };
+
+  let response: APIResponse = await page.request.post('/api/auth/register', { data: body });
+
+  // auth.py caps registrations per IP per hour, and a full run needs ~110 of
+  // them -- an order of magnitude over the cap. Clearing the ledger once in
+  // globalSetup cannot help: the run itself blows through the allowance well
+  // before the hour is up. So the harness clears its own ledger at the moment
+  // it trips its own limit, and tries again. The cap is never modified; a real
+  // client hitting it still gets a 429.
+  if (response.status() === 429) {
+    resetAuthAttempts();
+    response = await page.request.post('/api/auth/register', { data: body });
+  }
+
   if (!response.ok()) {
     throw new Error(
       `registerNewUser: POST /api/auth/register returned ${response.status()} -- ${await response.text()}`,
     );
   }
   const { access_token: accessToken } = await response.json();
+
+  // Layout.tsx shows the onboarding tour whenever has_completed_onboarding is
+  // false, which it is for every account this helper makes. Its backdrop is a
+  // full-screen aria-modal overlay, so it silently intercepts every click in
+  // every logged-in spec -- tests fail as unexplained click timeouts rather
+  // than as anything to do with the tour.
+  const onboarding = await page.request.post('/api/auth/me/complete-onboarding', {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+  if (!onboarding.ok()) {
+    throw new Error(
+      `registerNewUser: POST /api/auth/me/complete-onboarding returned ${onboarding.status()}`,
+    );
+  }
 
   // Seed storage before any app code runs, so the first render is already
   // authenticated and no redirect to /login races us.

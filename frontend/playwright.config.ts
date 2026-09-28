@@ -2,6 +2,9 @@ import { defineConfig, devices } from '@playwright/test';
 
 export default defineConfig({
   testDir: './e2e',
+  // Clears the auth-attempt ledger so the register rate limit does not stop the
+  // run at its 11th account. See e2e/global-setup.ts -- harness state, not config.
+  globalSetup: './e2e/global-setup.ts',
   // Registering a user costs ~4s on its own (sha256_crypt hashing is ~2s per
   // call), so the longest journeys sat right on a 30s budget and failed under
   // load rather than on any real defect.
