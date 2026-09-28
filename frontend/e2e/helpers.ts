@@ -17,6 +17,9 @@ export async function registerNewUser(page: Page) {
   await page.getByPlaceholder('you@example.com').fill(user.email);
   await page.locator('#password').fill(user.password);
   await page.locator('#confirmPassword').fill(user.password);
+  // Register.tsx refuses to submit without this (see its `agreedToTerms` guard),
+  // so skipping it silently parks every logged-in journey on /register.
+  await page.locator('#agreedToTerms').check();
   await page.getByRole('button', { name: /create account/i }).click();
   await expect(page).toHaveURL(/\/app\/dashboard/, { timeout: 15000 });
   return user;
