@@ -1,5 +1,5 @@
 import { test, expect, Page } from '@playwright/test';
-import { registerNewUser } from './helpers';
+import { lessonTitle, registerNewUser } from './helpers';
 
 /**
  * Regression coverage for the two Phase 10 bugs:
@@ -90,7 +90,7 @@ test.describe('Lesson layout: bottom controls stay reachable at every required v
       await page.setViewportSize({ width: vp.width, height: vp.height });
       await registerNewUser(page);
       await page.goto('/app/lessons/1');
-      await expect(page.getByText('What Is Programming?')).toBeVisible({ timeout: 15000 });
+      await expect(lessonTitle(page, 'What Is Programming?')).toBeVisible({ timeout: 15000 });
 
       const next = page.getByTestId('lesson-nav-next');
       await expect(next).toBeVisible();

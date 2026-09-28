@@ -9,6 +9,16 @@ export function uniqueUser() {
   };
 }
 
+/** The lesson title as rendered by LessonHeader's <h1>.
+ *
+ * A bare getByText(title) also matches the breadcrumb copy of the same string
+ * further up the page, so it fails strict mode with "resolved to 2 elements".
+ * Assertions have to say which one they mean; the heading is the one that
+ * proves the lesson actually rendered. */
+export function lessonTitle(page: Page, title: string) {
+  return page.getByRole('heading', { level: 1, name: title });
+}
+
 /**
  * Creates a brand-new user straight through the API and lands on the dashboard.
  *

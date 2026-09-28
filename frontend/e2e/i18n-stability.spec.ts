@@ -1,5 +1,5 @@
 import { test, expect, Page } from '@playwright/test';
-import { registerNewUser } from './helpers';
+import { lessonTitle, registerNewUser } from './helpers';
 
 async function switchLanguage(page: Page, label: RegExp) {
   await page.locator('button', { hasText: /English|Français|العربية/i }).first().click();
@@ -16,7 +16,7 @@ test.describe('Language switching does not disturb app state', () => {
 
     // Start a lesson so there is real server-side progress to lose.
     await page.goto(TRANSLATED_LESSON);
-    await expect(page.getByText('Arrays and Objects')).toBeVisible({ timeout: 15000 });
+    await expect(lessonTitle(page, 'Arrays and Objects')).toBeVisible({ timeout: 15000 });
 
     const token = await page.evaluate(() => localStorage.getItem('access_token'));
     expect(token).toBeTruthy();

@@ -1,5 +1,5 @@
 import { test, expect, Page } from '@playwright/test';
-import { registerNewUser } from './helpers';
+import { lessonTitle, registerNewUser } from './helpers';
 
 /** Lesson 31 ("Version Control and Git") has exactly one exercise: a multiple
  * choice whose correct option is "Stages changes for commit". Phase 11
@@ -53,7 +53,7 @@ test.describe('Multiple-choice exercises end to end', () => {
     await registerNewUser(page);
 
     await page.goto(MCQ_LESSON);
-    await expect(page.getByText('Version Control and Git')).toBeVisible({ timeout: 15000 });
+    await expect(lessonTitle(page, 'Version Control and Git')).toBeVisible({ timeout: 15000 });
 
     // 1. Reach the real MCQ. It must be radio buttons, not a code editor.
     await advanceToExercise(page);
@@ -111,7 +111,7 @@ test.describe('Multiple-choice exercises end to end', () => {
     test.setTimeout(90000);
     await registerNewUser(page);
     await page.goto(MCQ_LESSON);
-    await expect(page.getByText('Version Control and Git')).toBeVisible({ timeout: 15000 });
+    await expect(lessonTitle(page, 'Version Control and Git')).toBeVisible({ timeout: 15000 });
     await advanceToExercise(page);
 
     await page.getByText(CORRECT_OPTION).click();
@@ -191,7 +191,7 @@ test.describe('Multiple-choice exercises end to end', () => {
       await page.setViewportSize({ width: vp.width, height: vp.height });
       await registerNewUser(page);
       await page.goto(MCQ_LESSON);
-      await expect(page.getByText('Version Control and Git')).toBeVisible({ timeout: 15000 });
+      await expect(lessonTitle(page, 'Version Control and Git')).toBeVisible({ timeout: 15000 });
       await advanceToExercise(page);
 
       await expect(page.getByTestId('mcq-options')).toBeVisible();
@@ -227,7 +227,7 @@ test.describe('Code exercises still work end to end', () => {
     test.setTimeout(90000);
     await registerNewUser(page);
     await page.goto(CODE_LESSON);
-    await expect(page.getByText('What Is Programming?')).toBeVisible({ timeout: 15000 });
+    await expect(lessonTitle(page, 'What Is Programming?')).toBeVisible({ timeout: 15000 });
 
     // Lesson 1 has 3 content blocks before its first (code) exercise.
     await advanceToExercise(page);
@@ -253,7 +253,7 @@ test.describe('Code exercises still work end to end', () => {
   test('an incorrect Python solution is rejected and awards no XP', async ({ page }) => {
     await registerNewUser(page);
     await page.goto(CODE_LESSON);
-    await expect(page.getByText('What Is Programming?')).toBeVisible({ timeout: 15000 });
+    await expect(lessonTitle(page, 'What Is Programming?')).toBeVisible({ timeout: 15000 });
     await advanceToExercise(page);
 
     const editor = page.locator('textarea').first();
