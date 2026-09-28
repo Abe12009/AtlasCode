@@ -371,6 +371,18 @@ input, textarea, select, button {
   font-family: inherit;
   font-size: inherit;
   line-height: inherit;
+}
+
+/* `color: inherit` deliberately excludes <button>.
+ *
+ * This rule is unlayered, so it beat Tailwind's `text-*` utilities in
+ * `@layer utilities` no matter their specificity: every Button variant lost
+ * its own colour and inherited the page's instead. In dark mode the inherited
+ * colour happens to be near-white, so nothing looked wrong; in light mode the
+ * primary CTA rendered #101828 on a saturated fill at 2.43:1, well under
+ * WCAG AA. Form controls still need the inherit -- they sit on surfaces whose
+ * colour they must follow -- so they keep it and buttons do not. */
+input, textarea, select {
   color: inherit;
 }
 
