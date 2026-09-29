@@ -1,11 +1,15 @@
 import { Link } from 'react-router-dom';
-import { useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { ArrowRight, BookOpen, FolderKanban, Trophy, Zap, Shield, Globe, Check, Layers, Brain, Menu, X as CloseIcon } from 'lucide-react';
 import { Button, Card, Badge, cn } from '../components/ui';
 import { LanguageSwitcher } from '../components/LanguageSwitcher';
 import { CodyMark, GithubIcon, InstagramIcon, XIcon } from '../components/icons/BrandIcons';
 import { useTranslation } from '../hooks/useTranslation';
 import { SOCIAL_LINKS } from '../config/site';
+
+const HeroGraph = lazy(() =>
+  import('../components/HeroGraph').then((m) => ({ default: m.HeroGraph })),
+);
 
 const SECTION_IDS = ['features', 'roadmap', 'stats'] as const;
 
@@ -227,7 +231,7 @@ export function Landing() {
                 </p>
                 <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 mb-12">
                   <Link to="/register" className="w-full sm:w-auto">
-                    <Button size="lg" fullWidth leftIcon={<ArrowRight className="h-5 w-5" />} className="bg-gradient-to-r from-accent-700 to-accent-800 hover:from-accent-800 hover:to-accent-900 shadow-lg hover:shadow-glow-accent">
+                    <Button size="lg" fullWidth chunky leftIcon={<ArrowRight className="h-5 w-5" />} className="bg-gradient-to-r from-accent-700 to-accent-800 hover:from-accent-800 hover:to-accent-900">
                       {t('landing.hero.cta_primary')}
                     </Button>
                   </Link>
@@ -254,37 +258,9 @@ export function Landing() {
               </div>
 
               <div className="relative animate-slide-up">
-                <div className="relative bg-bg-secondary/50 border border-border-primary/50 rounded-2xl p-1 backdrop-blur-xl">
-                  <div className="bg-bg-code/80 rounded-xl overflow-hidden border border-border-primary/50 backdrop-blur-xl">
-                    <div className="flex items-center gap-2 px-4 py-3 bg-bg-code-light/80 border-b border-border-primary/50">
-                      <div className="flex gap-1.5">
-                        <div className="w-3 h-3 rounded-full bg-red-500" />
-                        <div className="w-3 h-3 rounded-full bg-yellow-500" />
-                        <div className="w-3 h-3 rounded-full bg-green-500" />
-                      </div>
-                      <div className="flex-1 text-center text-xs text-text-tertiary font-mono">main.py</div>
-                      <div className="flex items-center gap-2">
-                        <span className="px-2 py-1 bg-primary-500/10 text-primary-400 text-xs rounded font-mono">Python</span>
-                        <span className="px-2 py-1 bg-accent-500/10 text-accent-400 text-xs rounded font-mono">3.11</span>
-                      </div>
-                    </div>
-                    <pre dir="ltr" className="p-6 overflow-x-auto text-left"><code className="text-sm text-gray-100 font-mono leading-relaxed">{`# Welcome to AtlasCode
-def learn_programming():
-    skills = ["Python", "JavaScript", "TypeScript"]
-    for skill in skills:
-        print(f"Mastering {skill}...")
-        practice(skill)
-    
-    return "Ready to build!"
-
-def practice(skill):
-    xp = complete_lessons(skill)
-    build_projects(skill)
-    earn_achievements(xp)
-
-learn_programming()`}</code></pre>
-                  </div>
-                </div>
+                <Suspense fallback={<div className="h-[420px] sm:h-[520px]" aria-hidden="true" />}>
+                  <HeroGraph className="h-[420px] w-full sm:h-[520px]" />
+                </Suspense>
                 <div className="absolute -bottom-6 -right-6 lg:-bottom-8 lg:-right-8 bg-bg-primary/90 border border-border-primary/50 rounded-xl p-4 shadow-2xl backdrop-blur-xl animate-fade-in" style={{ animationDelay: '200ms' }}>
                   <div className="flex items-center gap-3">
                     <div className="p-2 bg-primary-500/10 rounded-lg">
@@ -371,6 +347,39 @@ learn_programming()`}</code></pre>
                       )}
                     </div>
                   ))}
+                </div>
+              </div>
+            </div>
+            <div className="mt-8">
+              <div className="relative bg-bg-secondary/50 border border-border-primary/50 rounded-2xl p-1 backdrop-blur-xl">
+                <div className="bg-bg-code/80 rounded-xl overflow-hidden border border-border-primary/50 backdrop-blur-xl">
+                  <div className="flex items-center gap-2 px-4 py-3 bg-bg-code-light/80 border-b border-border-primary/50">
+                    <div className="flex gap-1.5">
+                      <div className="w-3 h-3 rounded-full bg-red-500" />
+                      <div className="w-3 h-3 rounded-full bg-yellow-500" />
+                      <div className="w-3 h-3 rounded-full bg-green-500" />
+                    </div>
+                    <div className="flex-1 text-center text-xs text-text-tertiary font-mono">main.py</div>
+                    <div className="flex items-center gap-2">
+                      <span className="px-2 py-1 bg-primary-500/10 text-primary-400 text-xs rounded font-mono">Python</span>
+                      <span className="px-2 py-1 bg-accent-500/10 text-accent-400 text-xs rounded font-mono">3.11</span>
+                    </div>
+                  </div>
+                  <pre dir="ltr" className="p-6 overflow-x-auto text-left"><code className="text-sm text-gray-100 font-mono leading-relaxed">{`# Welcome to AtlasCode
+def learn_programming():
+  skills = ["Python", "JavaScript", "TypeScript"]
+  for skill in skills:
+      print(f"Mastering {skill}...")
+      practice(skill)
+  
+  return "Ready to build!"
+
+def practice(skill):
+  xp = complete_lessons(skill)
+  build_projects(skill)
+  earn_achievements(xp)
+
+learn_programming()`}</code></pre>
                 </div>
               </div>
             </div>
