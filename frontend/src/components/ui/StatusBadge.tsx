@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { motion } from 'framer-motion';
 import { cn } from '../../lib/utils';
 import { CheckCircle, Lock, Clock, AlertCircle } from 'lucide-react';
@@ -145,6 +146,15 @@ export interface AchievementBadgeProps {
   earnedAt?: string;
   size?: 'sm' | 'md' | 'lg';
   className?: string;
+  /**
+   * Share control for this achievement, rendered only when supplied.
+   *
+   * Opt-in on purpose: this component renders both the signed-in user's own
+   * achievements (Profile, Dashboard) and *someone else's* on PublicProfile.
+   * An unconditional share button would put "share this" on a stranger's
+   * achievement, so only the owner's call sites pass one.
+   */
+  shareAction?: ReactNode;
 }
 
 export function AchievementBadge({
@@ -156,6 +166,7 @@ export function AchievementBadge({
   earnedAt,
   size = 'md',
   className,
+  shareAction,
 }: AchievementBadgeProps) {
   return (
     <div
@@ -184,12 +195,19 @@ export function AchievementBadge({
         {icon}
       </div>
       <div className="flex-1 min-w-0">
-        <h4 className={cn(
-          'font-semibold truncate',
-          earned ? 'text-text-primary' : 'text-text-tertiary'
-        )}>
-          {title}
-        </h4>
+        <div className="flex items-start justify-between gap-2">
+          <h4 className={cn(
+            'font-semibold truncate',
+            earned ? 'text-text-primary' : 'text-text-tertiary'
+          )}>
+            {title}
+          </h4>
+          {/* Only an unlocked achievement is shareable -- there is nothing to
+              show off about one still locked. */}
+          {earned && shareAction ? (
+            <div className="flex-shrink-0 -mt-1 -me-1">{shareAction}</div>
+          ) : null}
+        </div>
         {description && (
           <p className={cn(
             'text-sm mt-1 truncate',

@@ -6,6 +6,7 @@ import { BookOpen, FolderKanban, Trophy, Flame, Zap, Code, ArrowRight, TrendingU
 import { formatDistanceToNow } from 'date-fns';
 import { Card, Badge, Progress, Button, cn, Skeleton, StatusBadge, XPBadge, StreakBadge, QuestRoadmap } from '../components/ui';
 import type { QuestNodeData } from '../components/ui';
+import { ShareAchievementButton } from '../components/ShareAchievementButton';
 import { useTranslation } from '../hooks/useTranslation';
 
 export function Dashboard() {
@@ -427,6 +428,15 @@ export function Dashboard() {
                       </p>
                     </div>
                     <XPBadge xp={ua.achievement.xp_reward} size="sm" />
+                    {/* The dashboard only ever shows the signed-in user's own
+                        achievements, so sharing is safe here. */}
+                    <ShareAchievementButton
+                      achievement={{
+                        icon: ua.achievement.icon || '🏆',
+                        title: ua.achievement.translations[0]?.title ?? 'Achievement',
+                        username: user?.username ?? '',
+                      }}
+                    />
                   </div>
                 ))
               ) : (

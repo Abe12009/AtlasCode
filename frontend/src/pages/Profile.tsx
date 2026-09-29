@@ -5,6 +5,7 @@ import { Trophy, Target, Flame, FolderKanban, CheckCircle, Award, Settings, User
 import { useState } from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import { Card, Badge, Progress, Button, cn, Skeleton, XPBadge, StreakBadge, AchievementBadge, Alert, Modal, Input, PasswordInput } from '../components/ui';
+import { ShareAchievementButton } from '../components/ShareAchievementButton';
 import { useTranslation } from '../hooks/useTranslation';
 import { useAuth } from '../contexts/AuthContext';
 import { ProfileAvatar } from '../components/ProfileAvatar';
@@ -369,6 +370,18 @@ export function Profile() {
                         key={ua.id}
                         icon={ua.achievement.icon || '🏆'}
                         title={ua.achievement.translations[0]?.title}
+                        // These are the signed-in user's own achievements, so the
+                        // share control belongs here. PublicProfile renders the
+                        // same component for other people and passes none.
+                        shareAction={
+                          <ShareAchievementButton
+                            achievement={{
+                              icon: ua.achievement.icon || '🏆',
+                              title: ua.achievement.translations[0]?.title ?? 'Achievement',
+                              username: user?.username ?? '',
+                            }}
+                          />
+                        }
                         description={ua.achievement.translations[0]?.description ?? ''}
                         xpReward={ua.achievement.xp_reward}
                         earned={true}
