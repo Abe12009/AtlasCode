@@ -3,6 +3,7 @@ import { Outlet, NavLink, Link, useNavigate, useLocation } from 'react-router-do
 import { AnimatePresence, motion } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
 import { useTranslation } from '../hooks/useTranslation';
+import { CodyMark } from './icons/BrandIcons';
 import { LayoutDashboard, BookOpen, FolderKanban, User, LogOut, Menu, X, ChevronDown, Trophy, Code, Zap, Star, Swords } from 'lucide-react';
 import { CodyBubble, pulseCodyBubble } from './CodyBubble';
 import { CodyCharacter } from './CodyCharacter';
@@ -120,10 +121,7 @@ export function Layout() {
                 className="flex items-center gap-2 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 focus-visible:ring-offset-bg-primary"
                 aria-label={t('common.home')}
               >
-                <div className="relative flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-primary-500 to-accent-500">
-                  <Code className="h-5 w-5 text-white" aria-hidden="true" />
-                  <span className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-accent-500" aria-hidden="true" />
-                </div>
+                <CodyMark className="h-9 w-9 flex-shrink-0" />
                 <span className="text-xl font-bold text-gradient-brand">
                   AtlasCode
                 </span>
