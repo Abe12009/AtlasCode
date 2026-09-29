@@ -59,3 +59,61 @@ An earlier observation in this work described this as "10 XP awarded, zero
 lesson completion, zero achievement unlock" and implied the completion path
 might be broken. That was an artifact of the probe skipping `/start`; the
 table above is the accurate version.
+
+---
+
+# Proposal: make `submit` correct on its own (not built — separate task)
+
+Two options were considered: reject with `400 "lesson not started"`, or have
+`submit` create the missing row the way `start` does.
+
+**Recommendation: auto-create the row.** Reject-with-400 guards a condition that
+does not mean what it appears to mean.
+
+## Why 400 is the weaker option
+
+A `LessonProgress` row is not a permission, and its absence is not evidence that
+the user skipped anything. Two separate endpoints already create one as a side
+effect, via the same helper:
+
+- `lessons.py:158` `POST /lessons/{id}/start` — with status `in_progress`
+- `lessons.py:153` `GET /lessons/{id}/progress` — with status `ready`
+
+So merely *reading* a lesson's progress is enough to satisfy the check. A 400
+would therefore reject a caller who submitted without ever looking at progress,
+while happily accepting one who did nothing more than `GET` it. That is not a
+meaningful distinction to enforce, and it would turn a currently-working (if
+incomplete) call into a hard failure for no safety gain.
+
+Worth stating plainly: `start` is **not** a gate. It runs no prerequisite or
+lock check — it creates the row and advances status. Auto-creating in `submit`
+therefore bypasses no authorization whatsoever, which is the usual reason to
+prefer rejecting over repairing.
+
+## What auto-create would involve
+
+`lessons.py:34` already has the exact primitive, and its docstring shows the
+race has been thought about:
+
+```python
+async def _get_or_create_lesson_progress(db, user_id, lesson_id, initial_status)
+```
+
+It uses `INSERT ... ON CONFLICT DO NOTHING` against `uq_user_lesson`, so two
+concurrent submissions cannot produce the 500 that a naive select-then-insert
+would. `submit` would call it with `MissionStatusEnum.in_progress` in place of
+the current `scalar_one_or_none()`, and the existing `if lesson_progress:`
+guard at `exercises.py:203` disappears — the row is always there.
+
+The helper is private to `lessons.py`; it would move somewhere shared
+(`app/services/`) rather than be imported across API modules.
+
+Cost: roughly a handful of lines, one moved function, and a test that submitting
+without `/start` completes the lesson and awards the lesson XP.
+
+## Adjacent, deliberately out of scope
+
+`submit` performs **no** lock or prerequisite check today, in either ordering —
+confirmed by reading the handler. Auto-create neither introduces nor worsens
+that, but if lessons are meant to be gated, that gate is missing from this
+endpoint regardless of which option above is chosen. That is its own question.
