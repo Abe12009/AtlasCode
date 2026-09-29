@@ -103,6 +103,34 @@ export async function registerThroughUiForm(page: Page) {
   return user;
 }
 
+/**
+ * The XP an account should hold once `lessonId` is fully completed: every
+ * exercise reward in the lesson plus the lesson's own completion award.
+ *
+ * `readXp` returns the account total, not one exercise's slice of it, so
+ * asserting it equals a single exercise reward only held before lessons paid
+ * out on completion -- lesson 32 gives 10 for its exercise and 50 for
+ * finishing, and the assertion sat there reading 60 while expecting 10.
+ *
+ * Derived from the lesson under test rather than hardcoded, so a seed change
+ * retunes the expectation instead of quietly invalidating it, which is exactly
+ * how the old numbers went stale. Only valid where the test actually finishes
+ * the lesson: one solved exercise out of three earns the exercise reward alone.
+ */
+export async function expectedTotalXp(page: Page, lessonId: number): Promise<number> {
+  const lesson = await page.evaluate(async (id) => {
+    const res = await fetch(`http://localhost:8000/lessons/${id}`, {
+      headers: { Authorization: `Bearer ${localStorage.getItem('access_token')}` },
+    });
+    return res.json();
+  }, lessonId);
+  const exercises: number = (lesson.exercises ?? []).reduce(
+    (sum: number, ex: { xp_reward: number }) => sum + ex.xp_reward,
+    0,
+  );
+  return exercises + lesson.xp_reward;
+}
+
 /** The header logo link has aria-label="Home" (i18n common.home), not "AtlasCode" —
  * its visible text. Use this instead of matching the link by accessible name. */
 export async function expectAppShellVisible(page: Page) {

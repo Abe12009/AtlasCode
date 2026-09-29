@@ -1,12 +1,13 @@
 import { test, expect, Page } from '@playwright/test';
-import { lessonTitle, registerNewUser } from './helpers';
+import { expectedTotalXp, lessonTitle, registerNewUser } from './helpers';
 
 /** Lesson 31 ("Version Control and Git") has exactly one exercise: a multiple
  * choice whose correct option is "Stages changes for commit". Phase 11
  * converted lesson 18 (this file's previous example) into a Micro-Quest, so
  * this file — which specifically exercises the *classic*, non-Micro-Quest
  * per-block lesson flow — moved to a lesson that stayed classic. */
-const MCQ_LESSON = '/app/lessons/31';
+const MCQ_LESSON_ID = 31;
+const MCQ_LESSON = `/app/lessons/${MCQ_LESSON_ID}`;
 const CORRECT_OPTION = 'Stages changes for commit';
 const WRONG_OPTION = 'Commits changes permanently';
 
@@ -81,7 +82,10 @@ test.describe('Multiple-choice exercises end to end', () => {
     await expect(result).toContainText(/correct/i, { timeout: 15000 });
     await expect(result).not.toContainText(/incorrect/i);
 
-    await expect.poll(async () => await readXp(page), { timeout: 15000 }).toBe(10);
+    // Solving this lesson's only exercise completes the lesson, so the account
+    // holds the exercise reward plus the lesson's own completion award.
+    const mcqTotalXp = await expectedTotalXp(page, MCQ_LESSON_ID);
+    await expect.poll(async () => await readXp(page), { timeout: 15000 }).toBe(mcqTotalXp);
 
     // 8. Notifications: exactly one XP notification, plus lesson completion,
     // because this lesson's only exercise is now solved.
@@ -96,7 +100,7 @@ test.describe('Multiple-choice exercises end to end', () => {
     // 6 & 7. State is the backend's, so a reload preserves it.
     await page.reload();
     await page.waitForTimeout(800);
-    expect(await readXp(page)).toBe(10);
+    expect(await readXp(page)).toBe(mcqTotalXp);
 
     const status = await page.evaluate(async () => {
       const res = await fetch('http://localhost:8000/lessons/31/progress', {
@@ -117,7 +121,8 @@ test.describe('Multiple-choice exercises end to end', () => {
     await page.getByText(CORRECT_OPTION).click();
     await page.getByTestId('submit-answer').click();
     await expect(page.getByTestId('exercise-result')).toContainText(/correct/i, { timeout: 15000 });
-    await expect.poll(async () => await readXp(page), { timeout: 15000 }).toBe(10);
+    const solvedTotalXp = await expectedTotalXp(page, MCQ_LESSON_ID);
+    await expect.poll(async () => await readXp(page), { timeout: 15000 }).toBe(solvedTotalXp);
 
     // The UI locks a solved question, and the API would award nothing anyway.
     await expect(page.getByTestId('submit-answer')).toBeDisabled();
@@ -135,7 +140,7 @@ test.describe('Multiple-choice exercises end to end', () => {
     });
     expect(direct.is_correct).toBe(true);
     expect(direct.xp_earned).toBe(0);
-    expect(await readXp(page)).toBe(10);
+    expect(await readXp(page)).toBe(solvedTotalXp);
     expect((await readNotificationTypes(page)).filter((t) => t === 'xp_earned')).toHaveLength(1);
   });
 
@@ -241,6 +246,9 @@ test.describe('Code exercises still work end to end', () => {
 
     await page.getByRole('button', { name: /submit solution/i }).first().click();
     await expect(page.getByTestId('exercise-result')).toContainText(/correct/i, { timeout: 20000 });
+    // Deliberately the bare exercise reward, not expectedTotalXp: lesson 1 has
+    // three exercises and this test solves one, so the lesson does not complete
+    // and pays nothing. Do not "align" this with the MCQ totals above.
     await expect.poll(async () => await readXp(page), { timeout: 15000 }).toBe(10);
 
     // Resubmitting the same correct solution must not award XP again.

@@ -1,5 +1,5 @@
 import { test, expect, Page } from '@playwright/test';
-import { registerNewUser, trackPageHealth } from './helpers';
+import { expectedTotalXp, registerNewUser, trackPageHealth } from './helpers';
 
 /**
  * Every Micro-Quest lesson, end to end, against the real backend and the real
@@ -401,6 +401,7 @@ async function readXp(page: Page): Promise<number> {
   return dashboard.profile.xp as number;
 }
 
+
 async function readLessonStatus(page: Page, lessonId: number): Promise<string> {
   return page.evaluate(async (id) => {
     const res = await fetch(`http://localhost:8000/lessons/${id}/progress`, {
@@ -498,14 +499,15 @@ for (const quest of ALL_QUESTS) {
         'data-status',
         'current',
       );
-      await expect.poll(async () => await readXp(page), { timeout: 15000 }).toBe(quest.xp);
+      const totalXp = await expectedTotalXp(page, quest.lessonId);
+      await expect.poll(async () => await readXp(page), { timeout: 15000 }).toBe(totalXp);
       expect(await readLessonStatus(page, quest.lessonId)).toBe('completed');
 
       // 5. Reload: the completed state survives, and no XP is paid twice.
       await page.reload();
       await expect(page.getByTestId('quest-clear')).toBeVisible({ timeout: 15000 });
       await expect(page.getByTestId('quest-clear-xp')).toContainText(String(quest.xp));
-      expect(await readXp(page)).toBe(quest.xp);
+      expect(await readXp(page)).toBe(totalXp);
 
       // 6. And it still survives with nothing left in localStorage: completion
       //    is the backend's to state, not the browser's to remember.
@@ -517,7 +519,7 @@ for (const quest of ALL_QUESTS) {
       });
       await page.reload();
       await expect(page.getByTestId('quest-clear')).toBeVisible({ timeout: 15000 });
-      expect(await readXp(page)).toBe(quest.xp);
+      expect(await readXp(page)).toBe(totalXp);
     });
   });
 }
