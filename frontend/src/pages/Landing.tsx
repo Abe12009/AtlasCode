@@ -1,9 +1,9 @@
 import { Link } from 'react-router-dom';
 import { useEffect, useState } from 'react';
-import { Code, ArrowRight, BookOpen, FolderKanban, Trophy, Zap, Shield, Globe, Check, Layers, Brain, Menu, X as CloseIcon } from 'lucide-react';
+import { ArrowRight, BookOpen, FolderKanban, Trophy, Zap, Shield, Globe, Check, Layers, Brain, Menu, X as CloseIcon } from 'lucide-react';
 import { Button, Card, Badge, cn } from '../components/ui';
 import { LanguageSwitcher } from '../components/LanguageSwitcher';
-import { GithubIcon, InstagramIcon, XIcon } from '../components/icons/BrandIcons';
+import { CodyMark, GithubIcon, InstagramIcon, XIcon } from '../components/icons/BrandIcons';
 import { useTranslation } from '../hooks/useTranslation';
 import { SOCIAL_LINKS } from '../config/site';
 
@@ -103,10 +103,7 @@ export function Landing() {
         <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <Link to="/app/dashboard" className="flex items-center gap-2" aria-label={t('common.home')}>
-              <div className="relative flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-primary-500 to-accent-500">
-                <Code className="h-5 w-5 text-white" aria-hidden="true" />
-                <span className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-accent-500" aria-hidden="true" />
-              </div>
+              <CodyMark className="h-9 w-9 flex-shrink-0" />
               <span className="text-xl font-bold text-gradient-brand">
                 AtlasCode
               </span>
@@ -490,9 +487,7 @@ learn_programming()`}</code></pre>
           <div className="grid md:grid-cols-4 gap-8 mb-8">
             <div className="md:col-span-2">
               <Link to="/app/dashboard" className="flex items-center gap-2 mb-4">
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-primary-500 to-accent-500">
-                  <Code className="h-5 w-5 text-white" aria-hidden="true" />
-                </div>
+                <CodyMark className="h-8 w-8 flex-shrink-0" />
                 <span className="text-xl font-bold text-gradient-brand">
                   AtlasCode
                 </span>

@@ -1,9 +1,43 @@
 import type { SVGProps } from 'react';
 
 /**
- * Brand marks used for OAuth buttons and the landing footer's social links.
- * lucide-react dropped brand icons, so these are hand-rolled inline SVGs.
+ * Brand marks: AtlasCode's own, plus the third-party ones used by the OAuth
+ * buttons and the landing footer's social links. lucide-react dropped brand
+ * icons, so these are hand-rolled inline SVGs.
  */
+
+/**
+ * The Cody mark -- AtlasCode's logo, replacing the generic `</>` glyph the
+ * header and footer used before the rebrand.
+ *
+ * Inline rather than an <img src={codyIcon}> so it stays crisp at any size and
+ * costs no extra request. It carries its own rounded-square field and power
+ * badge, so call sites need no wrapper or accent dot.
+ *
+ * Deliberately paired with the existing `AtlasCode` text span rather than with
+ * assets/cody-lockup.svg: that file bakes the wordmark at a fixed #101828,
+ * which would vanish against the dark-theme header, and its
+ * `font-family: var(--font-sans)` cannot resolve inside an SVG used as an
+ * image. The live text is already theme-aware, selectable and translatable.
+ */
+export function CodyMark(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 680 680" aria-hidden="true" {...props}>
+      <rect x="0" y="0" width="680" height="680" rx="140" fill="#2563EB" />
+      <rect x="150" y="195" width="380" height="270" rx="46" fill="#101828" />
+      <ellipse cx="270" cy="300" rx="44" ry="54" fill="#FFFFFF" />
+      <circle cx="280" cy="312" r="26" fill="#101828" />
+      <circle cx="256" cy="286" r="9" fill="#FFFFFF" fillOpacity="0.85" />
+      <ellipse cx="410" cy="300" rx="44" ry="54" fill="#FFFFFF" />
+      <circle cx="400" cy="312" r="26" fill="#101828" />
+      <circle cx="424" cy="286" r="9" fill="#FFFFFF" fillOpacity="0.85" />
+      <path d="M290 400 Q340 430 390 400" fill="none" stroke="#BFE3FF" strokeWidth="9" strokeLinecap="round" />
+      <circle cx="340" cy="500" r="26" fill="#F97316" />
+      <line x1="340" y1="480" x2="340" y2="494" stroke="#FFFFFF" strokeWidth="5" strokeLinecap="round" />
+      <path d="M316 494 A24 24 0 1 0 364 494" fill="none" stroke="#FFFFFF" strokeWidth="5" strokeLinecap="round" />
+    </svg>
+  );
+}
 
 export function GoogleIcon(props: SVGProps<SVGSVGElement>) {
   return (
