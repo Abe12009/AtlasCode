@@ -28,3 +28,10 @@ jobs:
         working-directory: frontend
       - run: npm audit --audit-level=high
         working-directory: frontend
+      # The repo root carries its own package-lock.json (devDependencies only,
+      # but they resolve their own transitive tree -- undici via jsdom, for
+      # one). Auditing only frontend/ meant a root-only finding could never
+      # be caught here. `npm audit` reads the lockfile directly, so this
+      # needs no `npm ci` of its own.
+      - name: npm audit (repo root)
+        run: npm audit --audit-level=high
