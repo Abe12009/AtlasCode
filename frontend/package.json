@@ -51,5 +51,38 @@
     "typescript": "~6.0.2",
     "vite": "^8.2.2",
     "vitest": "^3.2.7"
+  },
+  "//overrides": [
+    "@grpc/grpc-js: @firebase/firestore declares `~1.9.0`, which pins the tree to",
+    "1.9.16 -- inside the vulnerable range (<=1.13.5) for GHSA-m9gg-hp2v-232j",
+    "(getAuthContext can return unauthorized certificates as authorized) and",
+    "GHSA-f596-whhp-79r4 (server handler errors leak into client status",
+    "messages). There is no forward fix: even @firebase/firestore@latest still",
+    "declares `~1.9.0`, and npm's own `audit fix --force` proposes downgrading",
+    "firebase three majors to 9.14.0, which is worse than the finding. So the",
+    "patched grpc-js is forced in here instead.",
+    "",
+    "READ THIS BEFORE ADDING A FIRESTORE IMPORT. This override is safe ONLY",
+    "because nothing in this app imports `firebase/firestore`. src/lib/firebase.ts",
+    "dynamically imports `firebase/app` and `firebase/auth` and nothing else, so",
+    "grpc-js never enters the bundle (`grep -r grpc dist` is empty) and the",
+    "overridden code cannot execute. It is not a tested-compatible pairing: it",
+    "forces @firebase/firestore 4.17.1 five minors past the range Firebase",
+    "actually tested it against, and grpc-js changed internals across 1.10-1.14.",
+    "",
+    "The moment anything imports `firebase/firestore`, this stops being inert and",
+    "becomes a real, load-bearing version mismatch in code that actually runs.",
+    "Whoever adds that import owns re-verifying grpc-js compatibility at that",
+    "point -- exercise the firestore paths against 1.14.x, and if they break,",
+    "drop the override and re-triage the two advisories above on their merits.",
+    "Do not inherit this override silently just because the audit is green.",
+    "",
+    "Scoped to @firebase/firestore deliberately rather than written flat, so a",
+    "future unrelated grpc-js consumer is not forced along with it."
+  ],
+  "overrides": {
+    "@firebase/firestore": {
+      "@grpc/grpc-js": "^1.14.5"
+    }
   }
 }
