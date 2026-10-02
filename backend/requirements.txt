@@ -19,7 +19,21 @@ pydantic-settings==2.0.0
 # Not reachable here regardless: this app only verifies HS256/RS256 tokens
 # (see app.core.security and app.services.firebase_auth, both of which pin
 # `algorithms=[...]` explicitly), so `ecdsa`'s EC sign/verify code never runs.
-python-jose[cryptography]==3.4.0
+python-jose[cryptography]==3.5.0
+# Pinned explicitly because python-jose is the only thing that pulls `pyasn1`
+# in, and 3.4.0 capped it at `pyasn1<0.5.0` -- which is why the tree resolved
+# to 0.4.8 and kept failing pip-audit on four network-reachable DoS advisories
+# in the BER/CER/DER decoder (PYSEC-2026-2263 unbounded recursion on nested
+# SEQUENCE/SET, PYSEC-2026-3455 unbounded long-form tag accumulation,
+# PYSEC-2026-3456 quadratic OID arc decoding, PYSEC-2026-3457 big-integer
+# blowup converting univ.Real to float). jose 3.5.0 relaxes that cap to
+# `pyasn1>=0.5.0`, so 0.6.4 -- the first release fixing all four -- installs.
+# Not reachable here either way: `pyasn1` is imported only by
+# jose.backends.rsa_backend (the pure-Python RSA fallback), and the
+# [cryptography] extra makes jose.backends.cryptography_backend the active
+# one, so rsa_backend never loads. Pinned anyway so the floor can't drift
+# back under a future jose that re-widens the range downward.
+pyasn1==0.6.4
 passlib[bcrypt]==1.7.4
 python-multipart==0.0.32
 python-dotenv==1.2.2
