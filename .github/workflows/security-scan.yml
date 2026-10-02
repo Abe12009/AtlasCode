@@ -15,7 +15,15 @@ jobs:
         with:
           python-version: "3.12"
       - run: pip install pip-audit
-      - run: pip-audit -r backend/requirements.txt
+      # ecdsa 0.19.2, PYSEC-2026-1325 (CVSS 7.4) -- Minerva timing attack on
+      # P-256. Ignored, not deferred: no fixed version exists and none is
+      # planned, the maintainers consider side channels out of scope for a
+      # pure-Python implementation. Unreachable here regardless -- the attack
+      # is on signing, key generation and ECDH, while this app only *verifies*
+      # HS256/RS256 with `algorithms=[...]` pinned (app/core/security.py,
+      # app/services/firebase_auth.py). Revisit if either ever signs with EC
+      # keys, or if upstream reverses position.
+      - run: pip-audit -r backend/requirements.txt --ignore-vuln PYSEC-2026-1325
 
   npm-audit:
     runs-on: ubuntu-latest
