@@ -148,7 +148,15 @@ class TestResetPassword:
         )
         user = result.scalar_one()
         token = password_reset_service.create_password_reset_token(user)
-        tampered = token[:-1] + ("a" if token[-1] != "a" else "b")
+        # Tamper the FIRST character of the signature, not the last. An HS256
+        # signature is 32 bytes = 43 base64url chars, so the final char encodes
+        # only 4 significant bits and {Y, Z, a, b} all decode to the same 32
+        # bytes -- replacing the last char with "a" left the token byte-identical
+        # (and therefore still valid) whenever it already ended in one of those,
+        # roughly 6% of runs, since `exp` changes the signature every time. Every
+        # other char carries all 6 bits, so changing one always breaks the digest.
+        head, signature = token.rsplit(".", 1)
+        tampered = f"{head}.{'a' if signature[0] != 'a' else 'b'}{signature[1:]}"
 
         response = await client.post(
             "/auth/reset-password", json={"token": tampered, "new_password": "another-new-password-1"}
