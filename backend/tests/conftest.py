@@ -1,5 +1,4 @@
 import pytest
-import asyncio
 import uuid
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
@@ -13,6 +12,26 @@ settings = get_settings()
 
 TEST_DATABASE_URL = "sqlite+aiosqlite:///./test_atlascode.db"
 
+# ponytail: one module-global engine shared by the whole session, so its
+# aiosqlite pool is bound to a single event loop and pytest.ini must pin both
+# asyncio loop scopes to `session` to match. That couples every async test to
+# one loop -- no per-test loop isolation, and a test leaking a pending task can
+# affect later ones. Upgrade path if that bites: make the engine a
+# function-scoped fixture and move the seed to a session-scoped setup that
+# hands over a URL rather than a live engine, then flip both loop scopes to
+# `function`. Deliberately not done as part of the pytest 9 security bump --
+# it is a test-architecture change across 402 async tests, not a version bump.
+#
+# ponytail: second deferred item in the same area -- the `duel_ws` fixture
+# below avoids being an async fixture holding one shared transport, because
+# under pytest-asyncio 0.21.1 that shape hit "Attempted to exit cancel scope in
+# a different task than it was entered in" at teardown (see its docstring).
+# pytest-asyncio 1.4.0 rewrote exactly that fixture-finalizer machinery, so the
+# workaround is now probably stricter than it needs to be -- but it is also
+# strictly safer, and all 11 websocket tests pass with it untouched. Left alone
+# on purpose during the pytest 9 bump. If anyone reworks the loop scoping
+# above, re-test whether a shared-transport async fixture is viable now and
+# simplify both together rather than either alone.
 test_engine = create_async_engine(TEST_DATABASE_URL, echo=False)
 TestAsyncSessionMaker = async_sessionmaker(test_engine, class_=AsyncSession, expire_on_commit=False)
 
@@ -38,13 +57,6 @@ def _generous_auth_rate_limits(monkeypatch):
     monkeypatch.setattr(settings, "auth_login_rate_limit_per_ip_per_hour", 100_000)
     monkeypatch.setattr(settings, "auth_register_rate_limit_per_ip_per_hour", 100_000)
     monkeypatch.setattr(settings, "password_reset_rate_limit_per_ip_per_hour", 100_000)
-
-
-@pytest.fixture(scope="session")
-def event_loop():
-    loop = asyncio.new_event_loop()
-    yield loop
-    loop.close()
 
 
 @pytest.fixture(scope="session", autouse=True)
