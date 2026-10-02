@@ -56,7 +56,7 @@ pytest-asyncio==1.4.0
 httpx==0.28.1
 # 4.1.0 (2023) declares `pytest>=4.6` with no upper bound, so it too would
 # have resolved against pytest 9 untested. 7.0.0 is the current line.
-pytest-cov==7.0.0
+pytest-cov==7.1.0
 # Test-only: exercises the Duel Arena WebSocket endpoints over the same
 # in-process ASGI transport the rest of the suite already uses (see
 # tests/conftest.py's `client` fixture) -- starlette's own TestClient can't
