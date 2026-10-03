@@ -1,5 +1,5 @@
 import { test, expect, Page } from '@playwright/test';
-import { lessonTitle, registerNewUser } from './helpers';
+import { codeEditorRoot, lessonTitle, registerNewUser } from './helpers';
 
 /**
  * Regression coverage for the two Phase 10 bugs:
@@ -144,7 +144,7 @@ test.describe('RTL code stays left-to-right', () => {
 
     // Walk to the code block (order 2).
     await page.getByTestId('lesson-nav-next').click();
-    const editorRoot = page.locator('textarea').first().locator('xpath=ancestor::div[contains(@class,"bg-bg-code")][1]');
+    const editorRoot = codeEditorRoot(page);
     await expect(editorRoot).toBeVisible();
     await expect(editorRoot).toHaveAttribute('dir', 'ltr');
 
@@ -212,7 +212,7 @@ test.describe('RTL code stays left-to-right', () => {
     await page.getByTestId('blueprint-continue').click();
     await expect(page.getByTestId('quest-stage')).toBeVisible();
 
-    const editorRoot = page.locator('textarea').first().locator('xpath=ancestor::div[contains(@class,"bg-bg-code")][1]');
+    const editorRoot = codeEditorRoot(page);
     await expect(editorRoot).toHaveAttribute('dir', 'ltr');
 
     const terminal = page.getByTestId('terminal-panel');

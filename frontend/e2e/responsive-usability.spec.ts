@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { registerNewUser } from './helpers';
+import { codeEditor, lessonTitle, registerNewUser } from './helpers';
 
 const NARROW = [
   { name: '320x800', width: 320, height: 800 },
@@ -42,7 +42,9 @@ test.describe('Responsive usability', () => {
 
       // Lesson 1 step 2 is a code block; its last step is a code exercise.
       await page.goto('/app/lessons/1');
-      await expect(page.getByText('What Is Programming?')).toBeVisible({ timeout: 15000 });
+      // Not getByText: the title also appears in the breadcrumb <span>,
+      // so a bare text match resolves to two elements.
+      await expect(lessonTitle(page, 'What Is Programming?')).toBeVisible({ timeout: 15000 });
 
       // Walk to the first exercise, which renders the editable editor.
       for (let i = 0; i < 3; i++) {
@@ -50,11 +52,13 @@ test.describe('Responsive usability', () => {
         await page.waitForTimeout(250);
       }
 
-      const editor = page.locator('textarea').first();
+      const editor = codeEditor(page);
       await expect(editor).toBeVisible();
       await editor.click();
       await editor.fill('print("hello from e2e")');
-      await expect(editor).toHaveValue('print("hello from e2e")');
+      // toHaveValue is form-control-only; CodeMirror's surface is a
+      // contenteditable div, so assert its text instead.
+      await expect(editor).toHaveText('print("hello from e2e")');
 
       // The editor must not push the page wider than the viewport.
       const overflow = await page.evaluate(

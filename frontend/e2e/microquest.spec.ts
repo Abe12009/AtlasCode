@@ -1,5 +1,5 @@
 import { test, expect, Page } from '@playwright/test';
-import { expectedTotalXp, registerNewUser, trackPageHealth } from './helpers';
+import { codeEditor, expectedTotalXp, mcqRadios, registerNewUser, trackPageHealth } from './helpers';
 
 /**
  * Every Micro-Quest lesson, end to end, against the real backend and the real
@@ -56,7 +56,7 @@ const ALGORITHM_CORRECT_OPTION = 'Runs forever';
 const ALGORITHM_WRONG_OPTION = 'Finiteness';
 
 async function clickOption(page: Page, text: string) {
-  await page.getByRole('radio').first().waitFor();
+  await mcqRadios(page).first().waitFor();
   await page.locator('label', { hasText: text }).first().locator('input[type="radio"]').check();
 }
 
@@ -111,10 +111,10 @@ const QUESTS: Record<string, Quest> = {
     xp: 15,
     blueprint: { kind: 'order_steps', order: ['init', 'visit', 'decide', 'update'] },
     answerWrong: async (page) => {
-      await page.locator('textarea').first().fill('print("not even close")');
+      await codeEditor(page).fill('print("not even close")');
     },
     answerCorrect: async (page) => {
-      await page.locator('textarea').first().fill(CODE_SOLUTION);
+      await codeEditor(page).fill(CODE_SOLUTION);
     },
     submit: submitCode,
     hookText: { en: /locker/i, fr: /casiers/i, ar: /الخزانات/ },
@@ -155,12 +155,10 @@ const QUESTS: Record<string, Quest> = {
     xp: 15,
     blueprint: { kind: 'spot_the_bug', correctId: 'bound', wrongId: 'sorted' },
     answerWrong: async (page) => {
-      await page.locator('textarea').first().fill('def binary_search(arr, target):\n    return None');
+      await codeEditor(page).fill('def binary_search(arr, target):\n    return None');
     },
     answerCorrect: async (page) => {
-      await page
-        .locator('textarea')
-        .first()
+      await codeEditor(page)
         .fill(
           'def binary_search(arr, target):\n' +
             '    left, right = 0, len(arr) - 1\n' +
@@ -188,12 +186,10 @@ const QUESTS: Record<string, Quest> = {
     xp: 10,
     blueprint: { kind: 'match_pairs', pairs: ['assign', 'get_safe', 'delete', 'membership'] },
     answerWrong: async (page) => {
-      await page.locator('textarea').first().fill("print('nope')");
+      await codeEditor(page).fill("print('nope')");
     },
     answerCorrect: async (page) => {
-      await page
-        .locator('textarea')
-        .first()
+      await codeEditor(page)
         .fill(
           'product = {\n    "name": "Tagine",\n    "price": 150,\n    "in_stock": True\n}\n' +
             'product["price"] = 180\nprint(product)',
@@ -208,12 +204,10 @@ const QUESTS: Record<string, Quest> = {
     xp: 15,
     blueprint: { kind: 'order_steps', order: ['state', 'split', 'write', 'combine'] },
     answerWrong: async (page) => {
-      await page.locator('textarea').first().fill("print('nope')");
+      await codeEditor(page).fill("print('nope')");
     },
     answerCorrect: async (page) => {
-      await page
-        .locator('textarea')
-        .first()
+      await codeEditor(page)
         .fill(
           'def is_even(n):\n    return n % 2 == 0\n\n' +
             'def count_evens(numbers):\n    count = 0\n    for n in numbers:\n' +
@@ -277,12 +271,10 @@ const QUESTS: Record<string, Quest> = {
       wrongId: 'where_first',
     },
     answerWrong: async (page) => {
-      await page.locator('textarea').first().fill('SELECT * FROM nowhere;');
+      await codeEditor(page).fill('SELECT * FROM nowhere;');
     },
     answerCorrect: async (page) => {
-      await page
-        .locator('textarea')
-        .first()
+      await codeEditor(page)
         .fill('SELECT city, AVG(age) as avg_age\nFROM students\nGROUP BY city\nHAVING COUNT(*) >= 1;');
     },
     submit: submitCode,

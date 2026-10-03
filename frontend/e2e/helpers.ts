@@ -21,6 +21,56 @@ export function lessonTitle(page: Page, title: string) {
 }
 
 /**
+ * The code editor's editable surface.
+ *
+ * `CodeEditor.tsx` was a `<textarea>` until commit 1504728 (2026-09-18) moved
+ * it to CodeMirror 6, which renders a contenteditable `div.cm-content` with
+ * `role="textbox"` and no textarea anywhere. Every spec still targeting
+ * `locator('textarea')` therefore waited on an element that does not exist and
+ * died as an unexplained `locator.fill` timeout rather than as a missing
+ * element. Playwright's `fill()` does support contenteditable, so this is a
+ * retarget, not a change of technique.
+ *
+ * Note for assertions: `toHaveValue()` is form-control-only and will not work
+ * here -- use `toHaveText()`.
+ */
+export function codeEditor(page: Page) {
+  return page.locator('.cm-content').first();
+}
+
+/**
+ * The code editor's outer frame -- the `div[dir="ltr"].bg-bg-code` wrapper.
+ *
+ * Deliberately anchored on `data-testid="code-editor"` rather than on
+ * `.cm-content`, because `CodeEditor.tsx` has two render paths and only one of
+ * them is CodeMirror: a read-only editor (a lesson's `code_example`, the
+ * compiled-code preview, a locked project task) renders a plain `<pre>`
+ * instead, so `.cm-content` does not exist there at all. Both paths carry the
+ * same testid and both sit inside the same wrapper, which is what the RTL
+ * tests actually assert `dir` on. Verified in-browser that
+ * @uiw/react-codemirror does forward the prop to the DOM.
+ */
+export function codeEditorRoot(page: Page) {
+  return page
+    .getByTestId('code-editor')
+    .first()
+    .locator('xpath=ancestor::div[contains(@class,"bg-bg-code")][1]');
+}
+
+/**
+ * The radio inputs of the multiple-choice answer panel.
+ *
+ * A bare `getByRole('radio')` is page-wide, and since ThemeToggle.tsx landed
+ * (2026-09-06) the app header carries a `role="radiogroup"` of three
+ * `role="radio"` buttons (Light/Dark/System). So page-wide queries see 4
+ * options + 3 theme buttons = 7, and `.first()` resolves to "Light" rather
+ * than to option A. Scoped to the panel the tests already assert on.
+ */
+export function mcqRadios(page: Page) {
+  return page.getByTestId('mcq-options').getByRole('radio');
+}
+
+/**
  * Creates a brand-new user straight through the API and lands on the dashboard.
  *
  * Every logged-in spec needs *a* fresh account, not a rehearsal of the signup

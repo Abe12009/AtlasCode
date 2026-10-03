@@ -1,5 +1,5 @@
 import { test, expect, Page } from '@playwright/test';
-import { expectedTotalXp, lessonTitle, registerNewUser } from './helpers';
+import { codeEditor, expectedTotalXp, lessonTitle, mcqRadios, registerNewUser } from './helpers';
 
 /** Lesson 31 ("Version Control and Git") has exactly one exercise: a multiple
  * choice whose correct option is "Stages changes for commit". Phase 11
@@ -59,7 +59,7 @@ test.describe('Multiple-choice exercises end to end', () => {
     // 1. Reach the real MCQ. It must be radio buttons, not a code editor.
     await advanceToExercise(page);
     await expect(page.getByTestId('mcq-options')).toBeVisible();
-    await expect(page.getByRole('radio')).toHaveCount(4);
+    await expect(mcqRadios(page)).toHaveCount(4);
     await expect(page.getByTestId('terminal-panel')).toHaveCount(0);
     await expect(page.getByText(CORRECT_OPTION)).toBeVisible();
 
@@ -173,7 +173,7 @@ test.describe('Multiple-choice exercises end to end', () => {
 
     await advanceToExercise(page);
     await expect(page.getByTestId('mcq-options')).toBeVisible();
-    await expect(page.getByRole('radio')).toHaveCount(4);
+    await expect(mcqRadios(page)).toHaveCount(4);
     await expect(page.getByTestId('submit-answer')).toContainText('إرسال الإجابة');
 
     // Options are Arabic, not the English text.
@@ -200,7 +200,7 @@ test.describe('Multiple-choice exercises end to end', () => {
       await advanceToExercise(page);
 
       await expect(page.getByTestId('mcq-options')).toBeVisible();
-      const radios = page.getByRole('radio');
+      const radios = mcqRadios(page);
       await expect(radios).toHaveCount(4);
 
       // Every option stays inside the viewport.
@@ -239,7 +239,7 @@ test.describe('Code exercises still work end to end', () => {
     await expect(page.getByTestId('terminal-panel')).toBeVisible();
     await expect(page.getByTestId('answer-panel')).toHaveCount(0);
 
-    const editor = page.locator('textarea').first();
+    const editor = codeEditor(page);
     await editor.fill('print("Hello, World!")');
     await page.getByRole('button', { name: /^run( code)?$/i }).first().click();
     await expect(page.locator('body')).toContainText('Hello, World!', { timeout: 20000 });
@@ -264,7 +264,7 @@ test.describe('Code exercises still work end to end', () => {
     await expect(lessonTitle(page, 'What Is Programming?')).toBeVisible({ timeout: 15000 });
     await advanceToExercise(page);
 
-    const editor = page.locator('textarea').first();
+    const editor = codeEditor(page);
     await editor.fill('print("this is not the expected output")');
     await page.getByRole('button', { name: /submit solution/i }).first().click();
 

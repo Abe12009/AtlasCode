@@ -38,10 +38,17 @@ test.describe('Primary user journey', () => {
     // Dashboard -> Courses
     await page.getByRole('link', { name: /^Courses$/i }).click();
     await expect(page).toHaveURL(/\/app\/courses$/);
-    await expect(page.getByText('Python Foundations')).toBeVisible();
+    // Scoped to the card heading: 5 other courses name Python Foundations in
+    // their "complete this first" prerequisite line, so a bare text match is
+    // ambiguous (6 elements) for both the assertion and the click.
+    const pythonFoundations = page.getByRole('heading', {
+      name: 'Python Foundations',
+      exact: true,
+    });
+    await expect(pythonFoundations).toBeVisible();
 
     // Courses -> Course detail (Python Foundations, course id 1)
-    await page.getByText('Python Foundations').click();
+    await pythonFoundations.click();
     await expect(page).toHaveURL(/\/app\/courses\/1$/);
     await expect(page.getByText('Getting Started')).toBeVisible();
 

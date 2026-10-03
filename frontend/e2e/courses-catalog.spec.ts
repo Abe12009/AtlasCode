@@ -24,7 +24,14 @@ test.describe('Course catalog', () => {
   test('all required courses are visible on the courses page', async ({ page }) => {
     await registerNewUser(page);
     await page.goto('/app/courses');
-    await expect(page.getByText('Python Foundations')).toBeVisible({ timeout: 15000 });
+    // Not getByText: courses 2, 3, 4, 5 and 8 all declare course 1 as their
+    // prerequisite, so each locked card renders "Complete Python Foundations
+    // first" -- a bare text match resolves to 6 elements and fails strict
+    // mode. The card heading is what "the course is listed" actually means,
+    // and is the locator the course-detail test below already uses.
+    await expect(
+      page.getByRole('heading', { name: 'Python Foundations', exact: true }),
+    ).toBeVisible({ timeout: 15000 });
 
     const bodyText = await page.locator('body').innerText();
     for (const title of EXPECTED_COURSE_TITLES) {
