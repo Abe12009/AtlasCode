@@ -178,7 +178,33 @@ export async function expectedTotalXp(page: Page, lessonId: number): Promise<num
     (sum: number, ex: { xp_reward: number }) => sum + ex.xp_reward,
     0,
   );
-  return exercises + lesson.xp_reward;
+
+  // Achievement rewards are part of profile.xp too (achievements.py adds them
+  // straight onto it), so a total that leaves them out can never match what
+  // readXp() reads back. This was already wrong before Lesson.xp_reward
+  // started being credited -- the formula was short by whichever achievement
+  // the lesson completion unlocked, e.g. first-lesson's 50.
+  const dashboard = await page.evaluate(async () => {
+    const res = await fetch('http://localhost:8000/dashboard', {
+      headers: { Authorization: `Bearer ${localStorage.getItem('access_token')}` },
+    });
+    return res.json();
+  });
+  const earned = (dashboard.recent_achievements ?? []) as Array<{
+    achievement: { xp_reward: number };
+  }>;
+  // /dashboard caps this list at 5. These flows are fresh accounts that
+  // complete one lesson, so 1-2 is expected -- fail loudly rather than
+  // silently undercount if that ever stops being true.
+  if (earned.length >= 5) {
+    throw new Error(
+      `expectedTotalXp: /dashboard returned ${earned.length} achievements, which is its limit(5) ` +
+        `-- the sum below may be short. Read the full achievement list instead.`,
+    );
+  }
+  const achievementXp = earned.reduce((sum, ua) => sum + (ua.achievement?.xp_reward ?? 0), 0);
+
+  return exercises + lesson.xp_reward + achievementXp;
 }
 
 /** The header logo link has aria-label="Home" (i18n common.home), not "AtlasCode" —

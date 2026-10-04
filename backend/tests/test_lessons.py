@@ -4,7 +4,7 @@ import pytest
 from httpx import AsyncClient
 from sqlalchemy import select, func
 
-from app.models import LessonProgress, MissionStatusEnum, User
+from app.models import Lesson, LessonProgress, MissionStatusEnum, User
 
 
 class TestLessons:
@@ -216,7 +216,10 @@ class TestSubmitCompletesLessonWithoutStart:
                 ExerciseOption.is_correct.is_(True),
             )
         )
-        return lesson_id, exercise_id, option.scalars().first()
+        lesson_xp = await db_session.execute(
+            select(Lesson.xp_reward).where(Lesson.id == lesson_id)
+        )
+        return lesson_id, exercise_id, option.scalars().first(), lesson_xp.scalar_one()
 
     @staticmethod
     async def _lesson_progress(db_session, email, lesson_id):
@@ -233,7 +236,7 @@ class TestSubmitCompletesLessonWithoutStart:
     async def test_submit_without_start_creates_progress_and_completes_lesson(
         self, client: AsyncClient, test_user, db_session
     ):
-        lesson_id, exercise_id, option_id = await self._single_exercise_lesson(db_session)
+        lesson_id, exercise_id, option_id, lesson_xp = await self._single_exercise_lesson(db_session)
         email = test_user["data"]["email"]
 
         # The precondition that made the old bug possible: no row at all.
@@ -261,16 +264,16 @@ class TestSubmitCompletesLessonWithoutStart:
         # lesson_completed is the flag that was silently false before the fix.
         assert body["lesson_completed"] is True
 
-        # The XP delta is the exercise reward plus whatever achievements the
-        # completion unlocked. Note it does NOT include Lesson.xp_reward:
-        # that column is never credited to profile.xp anywhere in the backend
-        # (only achievements.py does, for achievement rewards), so the "+50"
-        # in the findings doc table is the first-lesson achievement, not the
-        # lesson's own reward. Asserted as a sum so this test states where
-        # every point came from rather than hardcoding a seed-dependent total.
+        # Three distinct sources, asserted as a sum so this test states where
+        # every point came from rather than hardcoding a seed-dependent total:
+        # the exercise's own reward (the response's xp_earned), the lesson's
+        # completion reward (Lesson.xp_reward, credited since the xp_reward
+        # fix -- it used to be defined but never awarded), and any achievement
+        # the completion unlocked.
         achievement_xp = sum(a["xp_reward"] for a in body["achievements_earned"])
         after = (await client.get("/auth/profile", headers=test_user["headers"])).json()
-        assert after["xp"] - before["xp"] == body["xp_earned"] + achievement_xp
+        assert after["xp"] - before["xp"] == body["xp_earned"] + lesson_xp + achievement_xp
+        assert lesson_xp > 0, "the seeded lesson should carry a completion reward"
         assert achievement_xp > 0, "completing a first lesson should unlock an achievement"
         assert after["completed_lessons"] == before["completed_lessons"] + 1
 
@@ -278,7 +281,7 @@ class TestSubmitCompletesLessonWithoutStart:
         self, client: AsyncClient, test_user, db_session
     ):
         """The path the web client already takes must behave exactly as before."""
-        lesson_id, exercise_id, option_id = await self._single_exercise_lesson(db_session)
+        lesson_id, exercise_id, option_id, lesson_xp = await self._single_exercise_lesson(db_session)
         email = test_user["data"]["email"]
 
         start = await client.post(f"/lessons/{lesson_id}/start", headers=test_user["headers"])
@@ -310,7 +313,7 @@ class TestSubmitCompletesLessonWithoutStart:
         is the only thing stopping a second submission from incrementing
         completed_lessons again.
         """
-        lesson_id, exercise_id, option_id = await self._single_exercise_lesson(db_session)
+        lesson_id, exercise_id, option_id, lesson_xp = await self._single_exercise_lesson(db_session)
         payload = {"exercise_id": exercise_id, "selected_option_id": option_id}
 
         first = await client.post(
@@ -329,6 +332,71 @@ class TestSubmitCompletesLessonWithoutStart:
         assert after["xp"] == mid["xp"]
         assert after["completed_lessons"] == mid["completed_lessons"]
 
+
+    async def test_lesson_reward_is_not_paid_twice_when_the_lesson_re_completes(
+        self, client: AsyncClient, test_user, db_session
+    ):
+        """The completion branch can be re-entered; the reward must not repeat.
+
+        `previous_success` stops a *resubmission* from re-entering the block,
+        but it is per-exercise: add a new exercise to an already-completed
+        lesson and solve it, and the branch runs again with
+        `correct_count >= total_exercises` still true. Without the
+        `lesson_already_completed` guard that pays Lesson.xp_reward a second
+        time and increments completed_lessons again.
+        """
+        from app.models import Exercise, ExerciseOption, ExerciseTypeEnum
+
+        lesson_id, exercise_id, option_id, lesson_xp = await self._single_exercise_lesson(
+            db_session
+        )
+
+        first = await client.post(
+            f"/exercises/{exercise_id}/submit",
+            headers=test_user["headers"],
+            json={"exercise_id": exercise_id, "selected_option_id": option_id},
+        )
+        assert first.status_code == 200
+        assert first.json()["lesson_completed"] is True
+        after_first = (await client.get("/auth/profile", headers=test_user["headers"])).json()
+
+        # A second exercise appears in the lesson after it was completed.
+        extra = Exercise(
+            lesson_id=lesson_id,
+            exercise_type=ExerciseTypeEnum.multiple_choice,
+            order=99,
+            xp_reward=7,
+        )
+        db_session.add(extra)
+        await db_session.flush()
+        right = ExerciseOption(exercise_id=extra.id, order=0, is_correct=True)
+        db_session.add_all([right, ExerciseOption(exercise_id=extra.id, order=1, is_correct=False)])
+        await db_session.commit()
+
+        try:
+            second = await client.post(
+                f"/exercises/{extra.id}/submit",
+                headers=test_user["headers"],
+                json={"exercise_id": extra.id, "selected_option_id": right.id},
+            )
+            assert second.status_code == 200
+            body = second.json()
+            assert body["is_correct"] is True
+
+            achievement_xp = sum(a["xp_reward"] for a in body["achievements_earned"])
+            after_second = (
+                await client.get("/auth/profile", headers=test_user["headers"])
+            ).json()
+
+            # Only the new exercise's own reward (plus any achievement it
+            # happened to unlock) -- emphatically not another lesson_xp.
+            assert after_second["xp"] - after_first["xp"] == body["xp_earned"] + achievement_xp
+            assert after_second["xp"] - after_first["xp"] < lesson_xp + body["xp_earned"]
+            assert after_second["completed_lessons"] == after_first["completed_lessons"]
+        finally:
+            # Leave the shared session-scoped seed as it was found.
+            await db_session.delete(extra)
+            await db_session.commit()
 
 class TestLessonLockIsNotEnforced:
     """Pins the premise behind *not* adding a lock check to submit.

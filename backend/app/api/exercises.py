@@ -21,7 +21,7 @@ from app.services.code_executor import execute_code, validate_python_code
 from app.services.exercise_grading import grade_exercise, resolve_strategy, STRATEGY_SANDBOX
 from app.services.notifications import create_notification
 from app.services.lesson_progress import get_or_create_lesson_progress
-from app.services.stats import record_activity
+from app.services.stats import level_for_xp, record_activity
 
 router = APIRouter(prefix="/exercises", tags=["exercises"])
 
@@ -211,6 +211,15 @@ async def submit_exercise(
             MissionStatusEnum.in_progress,
             commit=False,
         )
+        # Read the prior state before mutating, so the completion bonus below
+        # can be awarded once and only once. Same shape as `previous_success`
+        # above and achievements' `already_earned` set: look up what has
+        # already been granted, then skip it. Needed because a lesson can
+        # re-enter the completion branch -- solve every exercise (lesson
+        # completes), then a new exercise is added to that lesson and solved:
+        # `previous_success` is false for the new exercise, so the branch runs
+        # again with correct_count >= total_exercises still true.
+        lesson_already_completed = lesson_progress.status == MissionStatusEnum.completed
         lesson_progress.xp_earned += xp_earned
 
         all_exercises_result = await db.execute(
@@ -238,8 +247,27 @@ async def submit_exercise(
             # progress). This one was not -- harmless while the whole block
             # was unreachable without a progress row, but auto-create now
             # reaches it for a profile-less user too.
-            if profile:
+            if profile and not lesson_already_completed:
+                # Lesson.xp_reward was defined on the model but never actually
+                # credited anywhere: finishing a lesson paid only its
+                # exercises' XP plus whatever achievement fired, so the column
+                # was decorative. Mirrors how a project pays its own
+                # xp_reward on completion (projects.py submit-task), including
+                # recomputing the level -- the exercise-XP level calc above
+                # runs before this, so without it the level would lag a
+                # submission behind.
+                #
+                # Deliberately NOT added to `lesson_progress.xp_earned`:
+                # that column means "XP from this lesson's exercises" and
+                # GET /lessons/{id}/progress exposes it, a contract
+                # test_microquest.py asserts for 14 quests
+                # (`progress["xp_earned"] == 10`). Folding the completion
+                # bonus in there would redefine the field, which is a
+                # separate product call -- the reward belongs to the
+                # profile, which is what "crediting" it means.
                 profile.completed_lessons += 1
+                profile.xp += exercise.lesson.xp_reward
+                profile.level = max(profile.level, level_for_xp(profile.xp))
 
             await create_notification(
                 db, current_user.id, NotificationTypeEnum.lesson_completed,
