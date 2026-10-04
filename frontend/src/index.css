@@ -244,6 +244,11 @@
   --wash-grid-opacity: 0.045;
   --wash-mesh-primary: 0.10;
   --wash-mesh-accent: 0.08;
+  /* Landing hero ambient layer. Kept weaker here for the same reason as the
+   * washes above: on the near-white #F7F9FC ground, tinted glows go muddy
+   * long before they read as "glow". */
+  --hero-glow-strength: 0.07;
+  --hero-grid-opacity: 0.022;
   --glass-bg: rgb(255 255 255 / 0.72);
   --glass-strong-bg: rgb(255 255 255 / 0.88);
 }
@@ -344,6 +349,8 @@
   --wash-grid-opacity: 0.05;
   --wash-mesh-primary: 0.16;
   --wash-mesh-accent: 0.12;
+  --hero-glow-strength: 0.16;
+  --hero-grid-opacity: 0.03;
   --glass-bg: rgb(17 28 49 / 0.72);
   --glass-strong-bg: rgb(11 17 32 / 0.9);
 }
@@ -941,6 +948,88 @@ html[dir="rtl"] .prose ol {
     radial-gradient(ellipse 80% 50% at 15% 10%, color-mix(in oklab, var(--color-primary-500) calc(var(--wash-mesh-primary) * 100%), transparent) 0%, transparent 55%),
     radial-gradient(ellipse 60% 45% at 85% 85%, color-mix(in oklab, var(--color-accent-500) calc(var(--wash-mesh-accent) * 100%), transparent) 0%, transparent 55%),
     radial-gradient(ellipse 45% 35% at 55% 45%, color-mix(in oklab, var(--color-success-500) calc(var(--wash-mesh-accent) * 60%), transparent) 0%, transparent 55%);
+}
+
+/* --- Landing hero ambient layer --------------------------------------------
+ * Decorative only (every element using these is aria-hidden and sits behind
+ * the hero's z-10 content). Deliberately additive: `.bg-grid-pattern` is used
+ * by 10 other files, so the edge-faded variant below is a separate class
+ * rather than a change to it, and `.animate-float` (3s/10px) is left alone
+ * rather than slowed, since these glows want a much longer 14-20s travel.
+ *
+ * prefers-reduced-motion needs no rule here. The global block near the end of
+ * this file already forces `animation-duration: 0.01ms` and
+ * `animation-iteration-count: 1`, and every keyframe set below starts and ends
+ * at translate3d(0,0,0) with no fill-mode, so a reduced-motion visitor lands
+ * on the un-animated position: the glow stays, frozen at rest. Same shape as
+ * the existing `float` keyframes.
+ */
+.hero-glow {
+  position: absolute;
+  border-radius: 9999px;
+  pointer-events: none;
+  filter: blur(72px);
+  will-change: transform;
+}
+
+.hero-glow-blue {
+  background: radial-gradient(
+    circle at 50% 50%,
+    color-mix(in oklab, var(--color-primary-500) calc(var(--hero-glow-strength) * 100%), transparent) 0%,
+    transparent 70%
+  );
+  animation: hero-drift-a 17s ease-in-out infinite;
+}
+
+.hero-glow-orange {
+  background: radial-gradient(
+    circle at 50% 50%,
+    color-mix(in oklab, var(--color-accent-500) calc(var(--hero-glow-strength) * 100%), transparent) 0%,
+    transparent 70%
+  );
+  animation: hero-drift-b 14s ease-in-out infinite;
+}
+
+/* The only new hue on the page. There is no purple in the palette -- the
+ * header comment in this file notes a violet family was deliberately replaced
+ * -- so this is scoped here as a decorative literal rather than added as a
+ * `--color-*` ramp, and it is never used behind text or for any UI state.
+ * Swap the color-mix base to `var(--color-success-500)` to fall back to the
+ * third hue `.bg-mesh-gradient` already uses. */
+.hero-glow-purple {
+  background: radial-gradient(
+    circle at 50% 50%,
+    color-mix(in oklab, #8B5CF6 calc(var(--hero-glow-strength) * 85%), transparent) 0%,
+    transparent 70%
+  );
+  animation: hero-drift-c 20s ease-in-out infinite;
+}
+
+@keyframes hero-drift-a {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  50%      { transform: translate3d(26px, -20px, 0); }
+}
+
+@keyframes hero-drift-b {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  50%      { transform: translate3d(-22px, 24px, 0); }
+}
+
+@keyframes hero-drift-c {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  50%      { transform: translate3d(18px, 28px, 0); }
+}
+
+/* Same 1px/44px lattice as `.bg-grid-pattern`, but faded out toward the edges
+ * so it reads as texture under the hero rather than a panel that stops. */
+.hero-grid {
+  background-image:
+    linear-gradient(color-mix(in oklab, var(--color-primary-500) 100%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in oklab, var(--color-primary-500) 100%, transparent) 1px, transparent 1px);
+  background-size: 44px 44px;
+  opacity: var(--hero-grid-opacity);
+  -webkit-mask-image: radial-gradient(ellipse 70% 60% at 50% 42%, #000 35%, transparent 100%);
+          mask-image: radial-gradient(ellipse 70% 60% at 50% 42%, #000 35%, transparent 100%);
 }
 
 .glass {

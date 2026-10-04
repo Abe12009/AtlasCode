@@ -206,11 +206,15 @@ export function Landing() {
       <main>
         <section className="relative pt-32 pb-20 lg:pt-48 lg:pb-32 overflow-hidden">
           <div className="absolute inset-0 bg-mesh-gradient z-0" aria-hidden="true" />
-          <div className="absolute inset-0 bg-grid-pattern z-0" aria-hidden="true" />
+          {/* Edge-faded variant of bg-grid-pattern, hero only -- see .hero-grid in index.css. */}
+          <div className="absolute inset-0 hero-grid z-0" aria-hidden="true" />
+          {/* Ambient glow: three slow-drifting blurred blobs. Sizes and offsets
+              stay in Tailwind; .hero-glow-* own only paint and animation, so
+              neither layer silently overrides the other. */}
           <div className="absolute inset-0 overflow-hidden pointer-events-none z-0" aria-hidden="true">
-            <div className="absolute top-20 left-10 w-72 h-72 bg-primary-500/10 rounded-full blur-3xl animate-float" style={{ animationDelay: '0s' }} />
-            <div className="absolute bottom-20 right-10 w-96 h-96 bg-accent-500/10 rounded-full blur-3xl animate-float" style={{ animationDelay: '1.5s' }} />
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-r from-primary-500/5 via-transparent to-accent-500/5 rounded-full blur-3xl" />
+            <div className="hero-glow hero-glow-blue top-10 -left-16 h-[26rem] w-[26rem] sm:h-[32rem] sm:w-[32rem]" />
+            <div className="hero-glow hero-glow-orange bottom-0 -right-20 h-[24rem] w-[24rem] sm:h-[30rem] sm:w-[30rem]" />
+            <div className="hero-glow hero-glow-purple top-1/3 left-1/2 h-[22rem] w-[22rem] sm:h-[28rem] sm:w-[28rem]" />
           </div>
 
           <div className="relative max-w-full mx-auto px-4 sm:px-6 lg:px-8 z-10">
