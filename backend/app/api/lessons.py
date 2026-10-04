@@ -5,9 +5,9 @@ from fastapi.responses import JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
 from sqlalchemy.orm import selectinload
-from app.db.compat import conflict_insert
 from app.db.session import get_db
 from app.core.dependencies import get_current_user
+from app.services.lesson_progress import get_or_create_lesson_progress
 from app.models import (
     Lesson, LessonBlock, LessonBlockTranslation, Exercise, ExerciseTranslation,
     ExerciseOption, ExerciseOptionTranslation, ExerciseTypeEnum, LessonProgress, StudentProfile,
@@ -29,37 +29,6 @@ def _extract_trace(exercise: Exercise) -> Optional[list]:
     return trace if isinstance(trace, list) else None
 
 router = APIRouter(prefix="/lessons", tags=["lessons"])
-
-
-async def _get_or_create_lesson_progress(
-    db: AsyncSession,
-    user_id: int,
-    lesson_id: int,
-    initial_status: MissionStatusEnum,
-) -> LessonProgress:
-    """Idempotently obtain this user's progress row for a lesson.
-
-    A plain "select, then insert if missing" races: two concurrent requests can
-    both see no row and both insert, and the loser fails the uq_user_lesson
-    constraint with a 500. Letting the database resolve the conflict instead
-    makes the loser's insert a no-op, so both requests read back the same
-    single row. An existing row is never modified here.
-    """
-    stmt = (
-        conflict_insert(LessonProgress)
-        .values(user_id=user_id, lesson_id=lesson_id, status=initial_status)
-        .on_conflict_do_nothing(index_elements=["user_id", "lesson_id"])
-    )
-    await db.execute(stmt)
-    await db.commit()
-
-    result = await db.execute(
-        select(LessonProgress).where(
-            LessonProgress.user_id == user_id,
-            LessonProgress.lesson_id == lesson_id,
-        )
-    )
-    return result.scalar_one()
 
 
 @router.get("/{lesson_id}", response_model=LessonResponse)
@@ -150,7 +119,7 @@ async def get_lesson_progress(
     current_user = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
-    return await _get_or_create_lesson_progress(
+    return await get_or_create_lesson_progress(
         db, current_user.id, lesson_id, MissionStatusEnum.ready
     )
 
@@ -161,7 +130,7 @@ async def start_lesson(
     current_user = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
-    progress = await _get_or_create_lesson_progress(
+    progress = await get_or_create_lesson_progress(
         db, current_user.id, lesson_id, MissionStatusEnum.in_progress
     )
 

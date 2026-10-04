@@ -155,9 +155,11 @@ class TestDeleteAccountCascade:
         # 2. Rows for the tables no endpoint reliably populates from a single
         #    call -- inserted directly so the cascade is verified against
         #    every user-owned table, not just the ones reachable through
-        #    today's API surface. (LessonProgress/CourseProgress are only
-        #    ever *updated* by the submit endpoint above, not created --
-        #    something else creates them when a lesson is first opened.)
+        #    today's API surface. LessonProgress is NOT among them any more:
+        #    submit creates it now (lesson_completion_findings.md #1), so
+        #    adding one here collided on uq_user_lesson. CourseProgress still
+        #    needs inserting -- submit only ever updates an existing row
+        #    (`if cp:`), it does not create one.
         exercise = (
             await db_session.execute(select(Exercise).where(Exercise.id == MCQ_ID))
         ).scalar_one()
@@ -168,7 +170,6 @@ class TestDeleteAccountCascade:
             await db_session.execute(select(Module).where(Module.id == lesson.module_id))
         ).scalar_one()
 
-        db_session.add(LessonProgress(user_id=user_id, lesson_id=lesson.id, current_block=1))
         db_session.add(CourseProgress(user_id=user_id, course_id=module.course_id, completed_lessons=1))
 
         achievement = (await db_session.execute(select(Achievement).limit(1))).scalar_one()

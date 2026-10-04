@@ -1,13 +1,13 @@
 # Backend findings: lesson completion and exercise submission
 
 Two independent findings from 2026-09-29, turned up while verifying the
-achievement share cards. **Neither is built.** They are separate concerns with
-separate fates — #2 is not answered by shipping #1.
+achievement share cards. They are separate concerns with separate fates — #2 is
+not answered by shipping #1.
 
 | # | Finding | Status |
 |---|---|---|
-| 1 | `submit` silently skips lesson completion when no progress row exists | Decision approved, not built |
-| 2 | Lesson access is advisory where project access is enforced | Open, undecided |
+| 1 | `submit` silently skips lesson completion when no progress row exists | **Fixed 2026-10-03** |
+| 2 | Lesson access is advisory where project access is enforced | **Resolved as "no change"** — the premise was understated; see below |
 
 ---
 
@@ -32,7 +32,7 @@ the seed predicts.
 
 ### Why
 
-`app/api/exercises.py:203` guards the whole completion block:
+`app/api/exercises.py:203` guarded the whole completion block (pre-fix):
 
 ```python
 lesson_progress = lesson_progress_result.scalar_one_or_none()
@@ -55,14 +55,49 @@ reachable by anything that is not the first-party client — a future mobile app
 an integration, a support script replaying a submission — and each would see a
 plausible-looking `200`.
 
-### Decision: auto-create the row (approved, not yet built)
+### Fixed (2026-10-03)
+
+`_get_or_create_lesson_progress` moved from `app/api/lessons.py` to
+`app/services/lesson_progress.py` as `get_or_create_lesson_progress`, and
+`submit` now calls it with `MissionStatusEnum.in_progress` where it used to do
+`scalar_one_or_none()`. The `if lesson_progress:` guard is gone, so the
+completion block always runs.
+
+One thing the original plan missed: the helper committed, and `submit` is
+deliberately a single transaction (`record_activity` and `create_notification`
+both leave committing to the caller, and there is exactly one `db.commit()` at
+the end). Calling it as-is would have split the handler in two, so that a
+failure between the halves left the exercise XP awarded but the lesson not
+completed — and a retry would then see `previous_success` and skip completion
+for good, which is a worse version of the bug being fixed. The helper therefore
+takes `commit=False`; `/start` and `/progress`, which have nothing pending,
+keep the committing default.
+
+Also guarded `profile.completed_lessons += 1`, whose siblings were already
+guarded (`if profile:` for xp, `if cp:` for course progress). It was
+unreachable without a progress row before; auto-create reaches it for a
+profile-less user.
+
+Tests in `tests/test_lessons.py`: completion without `/start` creates the row
+and completes the lesson, the existing `/start`-first path is unchanged, and a
+resubmission does not double-count. The first was confirmed to fail against
+pre-fix code with `submit should have created the progress row`.
+
+**Correction to the table above.** The `60` is `10` (exercise) + `50` from the
+*first-lesson achievement*, not "lesson 31's own `xp_reward`" as originally
+written. `Lesson.xp_reward` is never credited to `profile.xp` anywhere in the
+backend — `achievements.py:133` is the only place that adds a reward to a
+profile. Whether lesson `xp_reward` is meant to be awarded at all is a separate
+open question, untouched here.
+
+### Decision: auto-create the row (as approved)
 
 Rejecting with `400 "lesson not started"` was the alternative. It was rejected
 because **a `LessonProgress` row is not a permission**. Two endpoints already
 create one as a side effect, through the same helper:
 
-- `lessons.py:158` `POST /lessons/{id}/start` — status `in_progress`
-- `lessons.py:153` `GET /lessons/{id}/progress` — status `ready`
+- `lessons.py:128` `POST /lessons/{id}/start` — status `in_progress`
+- `lessons.py:117` `GET /lessons/{id}/progress` — status `ready`
 
 So merely *reading* progress satisfies the check. A 400 would reject a caller
 who submitted without ever reading progress while admitting one who did nothing
@@ -72,7 +107,8 @@ The usual reason to prefer rejecting over repairing is that repairing might
 bypass an authorization check. It does not here; see finding #2 for why, and
 note that #2 remains true either way.
 
-**Shape of the work.** `lessons.py:34` already has the primitive, and its
+**Shape of the work.** The primitive already existed (then at `lessons.py:34`,
+now `services/lesson_progress.py:8`), and its
 docstring shows the race was thought through:
 
 ```python
@@ -102,10 +138,10 @@ it is not assumed handled once auto-create lands.
 consistent with the rest of the lesson API rather than an isolated omission.
 `MissionStatusEnum.locked` on a lesson is a display hint, not a gate:
 
-- `lessons.py:126` — `GET /lessons/{id}` **clears** a locked status: `if progress
+- `lessons.py:95` — `GET /lessons/{id}` **clears** a locked status: `if progress
   and progress.status == MissionStatusEnum.locked: progress.status = ready`.
   Fetching a lesson unlocks it.
-- `lessons.py:170` — `POST /lessons/{id}/start` promotes `locked` straight to
+- `lessons.py:139` — `POST /lessons/{id}/start` promotes `locked` straight to
   `in_progress`.
 - `exercises.py` — submission checks neither lock nor prerequisite.
 
@@ -120,10 +156,41 @@ move on a project is refused. That may well be deliberate — lessons browsable,
 projects gated — but the two subsystems currently disagree, and the lesson-side
 `locked` state advertises an enforcement that does not exist.
 
-**Open question:** should lessons be gated like projects, or should lesson
-`locked` be renamed/retired so it stops implying a guarantee it does not make?
-Deciding this is a product call, not a bug fix, which is why it is not bundled
-with #1.
+### Resolved 2026-10-03: no change, and the premise was understated
+
+Re-checked before adding a lock check to `submit`. Lesson locking is not merely
+advisory — it is **unreachable**, so a check would have been dead code:
+
+- `Lesson` has **no prerequisite column**. `Project` has
+  `prerequisite_lesson_id` and `prerequisite_project_id`; a lesson has only
+  `order`. `_check_project_unlocked` reads columns that do not exist on a
+  lesson, so there was no existing gating logic to reuse.
+- There is exactly **one** `LessonProgress` creation site
+  (`services/lesson_progress.py`), and every caller passes an explicit status —
+  `ready` from `/progress`, `in_progress` from `/start` and now from `submit`.
+  So no *API* path exercises the model's `default=locked`. (A direct ORM
+  insert does — `test_account_deletion.py` was building one that way — but
+  that is test setup, not a reachable application state.) Nothing in the seed
+  or any migration writes a progress row.
+- The read path defaults the other way: `courses.py` maps status with
+  `.get(db_status, "available")`, so a lesson with no row renders *available*.
+- Live dev DB: `lesson_progress` is 31 completed / 384 in_progress / 1 ready —
+  **0 locked of 416**. `project_progress` has 76 locked rows, so projects
+  really do lock.
+- The client cannot produce it either: `Dashboard.tsx` initialises
+  `let status = 'locked'` and then overwrites it in every branch, ending in a
+  catch-all `else status = 'available'`.
+
+So the two subsystems do not actually disagree about enforcement — only the
+lesson `locked` *vocabulary* implies a gate that no code can enter.
+`tests/test_lessons.py::TestLessonLockIsNotEnforced` pins that premise: if
+lesson gating is ever built, it fails and points here.
+
+**Still a product call, deliberately not taken:** gate lessons like projects
+(needs a `prerequisite_lesson_id` column, a migration, seed values, and it
+stops lessons being browsable in any order), or retire the lesson `locked`
+state so it stops advertising enforcement that was never there. Not bundled
+with #1, and not guessed.
 
 ---
 

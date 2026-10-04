@@ -20,6 +20,7 @@ from app.services.achievements import check_and_award_achievements
 from app.services.code_executor import execute_code, validate_python_code
 from app.services.exercise_grading import grade_exercise, resolve_strategy, STRATEGY_SANDBOX
 from app.services.notifications import create_notification
+from app.services.lesson_progress import get_or_create_lesson_progress
 from app.services.stats import record_activity
 
 router = APIRouter(prefix="/exercises", tags=["exercises"])
@@ -194,61 +195,75 @@ async def submit_exercise(
             db, current_user.id, NotificationTypeEnum.xp_earned, {"xp": xp_earned}
         )
 
-        lesson_progress_result = await db.execute(
-            select(LessonProgress).where(
-                LessonProgress.user_id == current_user.id,
-                LessonProgress.lesson_id == exercise.lesson_id
+        # Create the row if this lesson was never explicitly /start-ed. It used
+        # to be `scalar_one_or_none()` behind an `if lesson_progress:`, so a
+        # submission from anything that had not opened the lesson first awarded
+        # the exercise XP and then silently skipped completion entirely -- no
+        # `completed` status, no lesson XP, no notification, no course roll-up,
+        # no achievement -- while still returning 200. A LessonProgress row is
+        # not a permission (merely GETting /progress creates one), so the
+        # missing row is repaired rather than rejected. `commit=False` keeps
+        # this in the handler's single transaction; see the helper's docstring.
+        lesson_progress = await get_or_create_lesson_progress(
+            db,
+            current_user.id,
+            exercise.lesson_id,
+            MissionStatusEnum.in_progress,
+            commit=False,
+        )
+        lesson_progress.xp_earned += xp_earned
+
+        all_exercises_result = await db.execute(
+            select(func.count(Exercise.id)).where(Exercise.lesson_id == exercise.lesson_id)
+        )
+        total_exercises = all_exercises_result.scalar() or 0
+
+        correct_attempts_result = await db.execute(
+            select(func.count(ExerciseAttempt.id.distinct())).where(
+                ExerciseAttempt.user_id == current_user.id,
+                ExerciseAttempt.exercise_id.in_(
+                    select(Exercise.id).where(Exercise.lesson_id == exercise.lesson_id)
+                ),
+                ExerciseAttempt.is_correct == True
             )
         )
-        lesson_progress = lesson_progress_result.scalar_one_or_none()
-        if lesson_progress:
-            lesson_progress.xp_earned += xp_earned
+        correct_count = correct_attempts_result.scalar() or 0
 
-            all_exercises_result = await db.execute(
-                select(func.count(Exercise.id)).where(Exercise.lesson_id == exercise.lesson_id)
-            )
-            total_exercises = all_exercises_result.scalar() or 0
-
-            correct_attempts_result = await db.execute(
-                select(func.count(ExerciseAttempt.id.distinct())).where(
-                    ExerciseAttempt.user_id == current_user.id,
-                    ExerciseAttempt.exercise_id.in_(
-                        select(Exercise.id).where(Exercise.lesson_id == exercise.lesson_id)
-                    ),
-                    ExerciseAttempt.is_correct == True
-                )
-            )
-            correct_count = correct_attempts_result.scalar() or 0
-
-            if correct_count >= total_exercises and total_exercises > 0:
-                lesson_completed = True
-                lesson_progress.status = MissionStatusEnum.completed
-                lesson_progress.completed_at = now
+        if correct_count >= total_exercises and total_exercises > 0:
+            lesson_completed = True
+            lesson_progress.status = MissionStatusEnum.completed
+            lesson_progress.completed_at = now
+            # `profile` is scalar_one_or_none() above, and its sibling writes
+            # are already guarded (`if profile:` for xp, `if cp:` for course
+            # progress). This one was not -- harmless while the whole block
+            # was unreachable without a progress row, but auto-create now
+            # reaches it for a profile-less user too.
+            if profile:
                 profile.completed_lessons += 1
 
-                await create_notification(
-                    db, current_user.id, NotificationTypeEnum.lesson_completed,
-                    {"lesson_id": exercise.lesson_id}
-                )
+            await create_notification(
+                db, current_user.id, NotificationTypeEnum.lesson_completed,
+                {"lesson_id": exercise.lesson_id}
+            )
 
-                course_progress_result = await db.execute(
-                    select(LessonProgress).join(Lesson).join(Module).where(
-                        LessonProgress.user_id == current_user.id,
-                        Module.course_id == exercise.lesson.module.course_id
-                    )
+            course_progress_result = await db.execute(
+                select(LessonProgress).join(Lesson).join(Module).where(
+                    LessonProgress.user_id == current_user.id,
+                    Module.course_id == exercise.lesson.module.course_id
                 )
-                completed_in_course = sum(1 for lp in course_progress_result.scalars() if lp.status == MissionStatusEnum.completed)
+            )
+            completed_in_course = sum(1 for lp in course_progress_result.scalars() if lp.status == MissionStatusEnum.completed)
 
-                cp_result = await db.execute(
-                    select(CourseProgress).where(
-                        CourseProgress.user_id == current_user.id,
-                        CourseProgress.course_id == exercise.lesson.module.course_id
-                    )
+            cp_result = await db.execute(
+                select(CourseProgress).where(
+                    CourseProgress.user_id == current_user.id,
+                    CourseProgress.course_id == exercise.lesson.module.course_id
                 )
-                cp = cp_result.scalar_one_or_none()
-                if cp:
-                    cp.completed_lessons = completed_in_course
-                    cp.progress_percent = (completed_in_course / cp.total_lessons * 100) if cp.total_lessons > 0 else 0
+            )
+            cp = cp_result.scalar_one_or_none()
+            if cp:
+                cp.completed_lessons = completed_in_course
+                cp.progress_percent = (completed_in_course / cp.total_lessons * 100) if cp.total_lessons > 0 else 0
 
     achievements_earned = []
     if activity_profile:

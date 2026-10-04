@@ -167,3 +167,195 @@ class TestLessons:
                 lesson = response.json()
                 assert "blocks" in lesson
                 assert "exercises" in lesson
+
+class TestSubmitCompletesLessonWithoutStart:
+    """Submitting an exercise must complete its lesson even if the lesson was
+    never explicitly /start-ed.
+
+    Before this, submit looked up the progress row with scalar_one_or_none()
+    and skipped the whole completion block when there was none: the exercise
+    XP was awarded, but the lesson stayed incomplete with no lesson XP, no
+    notification, no course roll-up and no achievement -- and the response was
+    still 200, so nothing signalled the half-finish. The web client always
+    opens a lesson first, so only a non-first-party caller reached it. See
+    lesson_completion_findings.md finding #1.
+    """
+
+    @staticmethod
+    async def _single_exercise_lesson(db_session):
+        """A lesson whose only exercise is option-graded.
+
+        One exercise means one correct submission completes the lesson;
+        option-graded means the grader never enters the code sandbox, so the
+        test stays fast and deterministic. Discovered by query rather than
+        hardcoded so a reseed cannot silently retarget it.
+        """
+        from app.models import Exercise, ExerciseOption
+
+        rows = await db_session.execute(
+            select(Exercise.lesson_id, Exercise.id)
+            .where(
+                Exercise.lesson_id.in_(
+                    select(Exercise.lesson_id)
+                    .group_by(Exercise.lesson_id)
+                    .having(func.count(Exercise.id) == 1)
+                ),
+                Exercise.id.in_(
+                    select(ExerciseOption.exercise_id).where(ExerciseOption.is_correct.is_(True))
+                ),
+            )
+            .order_by(Exercise.lesson_id)
+        )
+        pair = rows.first()
+        assert pair, "seed should contain a single-exercise, option-graded lesson"
+        lesson_id, exercise_id = pair
+
+        option = await db_session.execute(
+            select(ExerciseOption.id).where(
+                ExerciseOption.exercise_id == exercise_id,
+                ExerciseOption.is_correct.is_(True),
+            )
+        )
+        return lesson_id, exercise_id, option.scalars().first()
+
+    @staticmethod
+    async def _lesson_progress(db_session, email, lesson_id):
+        user = await db_session.execute(select(User).where(User.email == email))
+        user_id = user.scalar_one().id
+        row = await db_session.execute(
+            select(LessonProgress).where(
+                LessonProgress.user_id == user_id,
+                LessonProgress.lesson_id == lesson_id,
+            )
+        )
+        return row.scalar_one_or_none()
+
+    async def test_submit_without_start_creates_progress_and_completes_lesson(
+        self, client: AsyncClient, test_user, db_session
+    ):
+        lesson_id, exercise_id, option_id = await self._single_exercise_lesson(db_session)
+        email = test_user["data"]["email"]
+
+        # The precondition that made the old bug possible: no row at all.
+        assert await self._lesson_progress(db_session, email, lesson_id) is None
+
+        before = (await client.get("/auth/profile", headers=test_user["headers"])).json()
+        response = await client.post(
+            f"/exercises/{exercise_id}/submit",
+            headers=test_user["headers"],
+            json={"exercise_id": exercise_id, "selected_option_id": option_id},
+        )
+        assert response.status_code == 200
+        body = response.json()
+        assert body["is_correct"] is True
+
+        # The row is created, and the lesson is actually completed -- not
+        # merely present. expire_all() because the request committed behind
+        # this session.
+        db_session.expire_all()
+        progress = await self._lesson_progress(db_session, email, lesson_id)
+        assert progress is not None, "submit should have created the progress row"
+        assert progress.status == MissionStatusEnum.completed
+        assert progress.completed_at is not None
+
+        # lesson_completed is the flag that was silently false before the fix.
+        assert body["lesson_completed"] is True
+
+        # The XP delta is the exercise reward plus whatever achievements the
+        # completion unlocked. Note it does NOT include Lesson.xp_reward:
+        # that column is never credited to profile.xp anywhere in the backend
+        # (only achievements.py does, for achievement rewards), so the "+50"
+        # in the findings doc table is the first-lesson achievement, not the
+        # lesson's own reward. Asserted as a sum so this test states where
+        # every point came from rather than hardcoding a seed-dependent total.
+        achievement_xp = sum(a["xp_reward"] for a in body["achievements_earned"])
+        after = (await client.get("/auth/profile", headers=test_user["headers"])).json()
+        assert after["xp"] - before["xp"] == body["xp_earned"] + achievement_xp
+        assert achievement_xp > 0, "completing a first lesson should unlock an achievement"
+        assert after["completed_lessons"] == before["completed_lessons"] + 1
+
+    async def test_submit_after_start_is_unchanged(
+        self, client: AsyncClient, test_user, db_session
+    ):
+        """The path the web client already takes must behave exactly as before."""
+        lesson_id, exercise_id, option_id = await self._single_exercise_lesson(db_session)
+        email = test_user["data"]["email"]
+
+        start = await client.post(f"/lessons/{lesson_id}/start", headers=test_user["headers"])
+        assert start.status_code == 200
+        assert start.json()["status"] == MissionStatusEnum.in_progress.value
+
+        before = (await client.get("/auth/profile", headers=test_user["headers"])).json()
+        response = await client.post(
+            f"/exercises/{exercise_id}/submit",
+            headers=test_user["headers"],
+            json={"exercise_id": exercise_id, "selected_option_id": option_id},
+        )
+        assert response.status_code == 200
+        assert response.json()["is_correct"] is True
+
+        db_session.expire_all()
+        progress = await self._lesson_progress(db_session, email, lesson_id)
+        assert progress is not None
+        assert progress.status == MissionStatusEnum.completed
+        after = (await client.get("/auth/profile", headers=test_user["headers"])).json()
+        assert after["completed_lessons"] == before["completed_lessons"] + 1
+
+    async def test_auto_create_does_not_double_count_a_resubmission(
+        self, client: AsyncClient, test_user, db_session
+    ):
+        """Submitting the same correct answer twice must not complete twice.
+
+        Auto-create now runs on every correct submission, so previous_success
+        is the only thing stopping a second submission from incrementing
+        completed_lessons again.
+        """
+        lesson_id, exercise_id, option_id = await self._single_exercise_lesson(db_session)
+        payload = {"exercise_id": exercise_id, "selected_option_id": option_id}
+
+        first = await client.post(
+            f"/exercises/{exercise_id}/submit", headers=test_user["headers"], json=payload
+        )
+        assert first.status_code == 200
+        mid = (await client.get("/auth/profile", headers=test_user["headers"])).json()
+
+        second = await client.post(
+            f"/exercises/{exercise_id}/submit", headers=test_user["headers"], json=payload
+        )
+        assert second.status_code == 200
+        assert second.json()["xp_earned"] == 0
+
+        after = (await client.get("/auth/profile", headers=test_user["headers"])).json()
+        assert after["xp"] == mid["xp"]
+        assert after["completed_lessons"] == mid["completed_lessons"]
+
+
+class TestLessonLockIsNotEnforced:
+    """Pins the premise behind *not* adding a lock check to submit.
+
+    No code path can put a lesson progress row into locked: the single
+    creation site always passes an explicit ready or in_progress, so the
+    model default=locked is unreachable, and both GET /lessons/{id} and
+    /start clear the status anyway. A lock check on submit would therefore be
+    dead code. If lesson gating is ever built, this test should fail and send
+    its author to lesson_completion_findings.md finding #2, still open.
+    """
+
+    async def test_no_endpoint_produces_a_locked_lesson_progress_row(
+        self, client: AsyncClient, test_user, db_session
+    ):
+        for path in ("/lessons/2/progress", "/lessons/3/progress"):
+            assert (await client.get(path, headers=test_user["headers"])).status_code == 200
+        assert (
+            await client.post("/lessons/2/start", headers=test_user["headers"])
+        ).status_code == 200
+
+        user = await db_session.execute(
+            select(User).where(User.email == test_user["data"]["email"])
+        )
+        user_id = user.scalar_one().id
+        db_session.expire_all()
+        statuses = await db_session.execute(
+            select(LessonProgress.status).where(LessonProgress.user_id == user_id)
+        )
+        assert MissionStatusEnum.locked not in set(statuses.scalars().all())
