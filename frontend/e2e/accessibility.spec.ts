@@ -27,12 +27,30 @@ test.describe('Accessibility basics', () => {
     for (let i = 0; i < count; i++) {
       const input = inputs.nth(i);
       const id = await input.getAttribute('id');
-      const ariaLabel = await input.getAttribute('aria-label');
-      let hasLabel = Boolean(ariaLabel);
-      if (!hasLabel && id) {
-        hasLabel = (await page.locator(`label[for="${id}"]`).count()) > 0;
-      }
-      expect(hasLabel, `Input #${i} (id="${id}") has no associated <label> or aria-label`).toBeTruthy();
+      // Every mechanism that actually produces an accessible name, not just
+      // two of them. The original check accepted only aria-label and
+      // label[for=id], so it failed Register.tsx's terms checkbox -- which is
+      // wrapped in its <label> instead. An implicit (wrapping) label is valid
+      // per the HTML spec and names the control correctly: Chrome's own a11y
+      // engine computes "I agree to the Terms of Service and Privacy Policy"
+      // for it, sourced from that relatedElement. Giving it an aria-label to
+      // satisfy the old check would have *overridden* that visible text and
+      // dropped the Terms/Privacy link context, so the check is what was
+      // wrong here, not the markup.
+      const hasLabel = await input.evaluate((el) => {
+        const describedByName =
+          el.getAttribute('aria-label')?.trim() ||
+          el.getAttribute('aria-labelledby')?.trim();
+        if (describedByName) return true;
+        const elId = el.getAttribute('id');
+        if (elId && document.querySelector(`label[for="${CSS.escape(elId)}"]`)) return true;
+        // Implicit association: the control sits inside its own <label>.
+        return Boolean(el.closest('label'));
+      });
+      expect(
+        hasLabel,
+        `Input #${i} (id="${id}") has no accessible name: no aria-label, no aria-labelledby, no label[for], and no wrapping <label>`,
+      ).toBeTruthy();
     }
   });
 

@@ -83,9 +83,13 @@ test.describe('Mobile pass: onboarding tour fallback', () => {
   for (const vp of WIDTHS) {
     test(`onboarding tour shows a centered fallback (no spotlight) at ${vp.name}`, async ({ page }) => {
       await page.setViewportSize({ width: vp.width, height: vp.height });
-      // A freshly registered account starts with has_completed_onboarding=false,
-      // so the tour auto-starts on landing at the dashboard -- no DB setup needed.
-      await registerNewUser(page);
+      // POST /auth/register sets has_completed_onboarding=false, so the tour
+      // auto-starts at the dashboard -- but registerNewUser dismisses it via
+      // API by default (its backdrop is a full-screen aria-modal that eats
+      // every click in every other spec), and there is no endpoint to turn it
+      // back on. These two tests are the ones that actually want the tour, so
+      // they opt out of that dismissal.
+      await registerNewUser(page, { keepOnboarding: true });
 
       const tour = page.getByRole('dialog', { name: /onboarding tour/i });
       await expect(tour).toBeVisible({ timeout: 10000 });

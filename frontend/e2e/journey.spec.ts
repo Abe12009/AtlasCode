@@ -77,7 +77,9 @@ test.describe('Primary user journey', () => {
 
     // Read XP on the dashboard right after the first correct submission.
     await page.goto('/app/dashboard');
-    await expect(page.getByText(/^XP$/)).toBeVisible();
+    // The dashboard stat is labelled "Total XP" (dashboard.total_xp), so the
+    // anchored /^XP$/ this used to match could never resolve.
+    await expect(page.getByText(XP_STAT_LABEL, { exact: true })).toBeVisible();
     const xpAfterFirstSubmit = await readXp(page);
     expect(xpAfterFirstSubmit).toBeGreaterThan(0);
 
@@ -123,8 +125,13 @@ test.describe('Primary user journey', () => {
   });
 });
 
+/** The dashboard's XP stat label, i18n key `dashboard.total_xp` (en). */
+const XP_STAT_LABEL = 'Total XP';
+
 async function readXp(page: import('@playwright/test').Page): Promise<number> {
-  const xpLabel = page.getByText(/^XP$/).first();
+  // Matches the label <p>, whose sibling <p> holds the value; `..` is their
+  // shared wrapper div, so its innerText is the label followed by the number.
+  const xpLabel = page.getByText(XP_STAT_LABEL, { exact: true }).first();
   const card = xpLabel.locator('..');
   const text = await card.innerText();
   const match = text.match(/\d+/);

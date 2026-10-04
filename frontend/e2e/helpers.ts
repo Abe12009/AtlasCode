@@ -81,7 +81,16 @@ export function mcqRadios(page: Page) {
  * The token is written to localStorage under the same key api/client.ts reads
  * (`access_token`), which is the whole of what "being logged in" means here.
  */
-export async function registerNewUser(page: Page) {
+export async function registerNewUser(
+  page: Page,
+  /**
+   * `keepOnboarding: true` skips the complete-onboarding call below, leaving
+   * the account with has_completed_onboarding=false so the tour actually
+   * renders. Only the tests *about* the tour want this -- for everyone else
+   * the tour's full-screen aria-modal backdrop silently eats every click.
+   */
+  options: { keepOnboarding?: boolean } = {},
+) {
   const user = uniqueUser();
 
   const body = {
@@ -116,13 +125,18 @@ export async function registerNewUser(page: Page) {
   // full-screen aria-modal overlay, so it silently intercepts every click in
   // every logged-in spec -- tests fail as unexplained click timeouts rather
   // than as anything to do with the tour.
-  const onboarding = await page.request.post('/api/auth/me/complete-onboarding', {
-    headers: { Authorization: `Bearer ${accessToken}` },
-  });
-  if (!onboarding.ok()) {
-    throw new Error(
-      `registerNewUser: POST /api/auth/me/complete-onboarding returned ${onboarding.status()}`,
-    );
+  // There is no endpoint that turns onboarding back on (complete-onboarding is
+  // one-way, and POST /auth/register is what sets the flag false), so a test
+  // that needs the tour has to not dismiss it in the first place.
+  if (!options.keepOnboarding) {
+    const onboarding = await page.request.post('/api/auth/me/complete-onboarding', {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+    if (!onboarding.ok()) {
+      throw new Error(
+        `registerNewUser: POST /api/auth/me/complete-onboarding returned ${onboarding.status()}`,
+      );
+    }
   }
 
   // Seed storage before any app code runs, so the first render is already
