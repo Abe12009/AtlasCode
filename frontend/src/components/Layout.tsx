@@ -104,6 +104,29 @@ export function Layout() {
       <a href="#main-content" className="skip-link">
         {t('accessibility.skip_to_main')}
       </a>
+
+      {/* Ambient fields. `fixed` rather than absolute so they stay put as the
+          page scrolls: an ambient wash should not slide behind different cards
+          on a long page, and a fixed layer is not repainted on scroll.
+          Anchored past the viewport edges so each core sits OUTSIDE the content
+          column and only the blurred tail reaches behind a card -- that is what
+          keeps the composited text contrast inside its budget.
+          Sizes and offsets stay in Tailwind; .ambient-field-* own only paint
+          and animation, so neither layer silently overrides the other.
+          Logical insets (-start/-end, i.e. inset-inline-*) rather than
+          -left/-right: the layout mirrors under dir="rtl" and the wash has to
+          mirror with it, or the glow that sits behind the page heading in
+          English ends up opposite it in Arabic.
+          Invisible in light mode via --field-strength: 0 -- no branch here. */}
+      <div
+        className="fixed inset-0 overflow-hidden pointer-events-none z-0"
+        aria-hidden="true"
+        data-testid="ambient-fields"
+      >
+        <div className="ambient-field ambient-field-blue -top-40 -start-48 h-[34rem] w-[34rem]" />
+        <div className="ambient-field ambient-field-orange -bottom-48 -end-44 h-[32rem] w-[32rem]" />
+        <div className="ambient-field ambient-field-green top-1/2 -start-56 h-[26rem] w-[26rem]" />
+      </div>
       <header
         ref={headerRef}
         className={cn(
@@ -289,7 +312,9 @@ export function Layout() {
       </header>
 
       <main
-        className="flex-1 pt-20 pb-8 max-w-full w-full mx-auto px-4 sm:px-6 lg:px-8"
+        // relative z-10: the ambient field layer above is z-0, and without a
+        // stacking context of its own the content would paint underneath it.
+        className="relative z-10 flex-1 pt-20 pb-8 max-w-full w-full mx-auto px-4 sm:px-6 lg:px-8"
         id="main-content"
         role="main"
       >

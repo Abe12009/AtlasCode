@@ -1161,6 +1161,47 @@ html[dir="rtl"] .prose ol {
   -webkit-backdrop-filter: var(--glass-blur);
 }
 
+/* --- Ambient fields (Spatial Glass) -----------------------------------------
+ * The soft colour behind the app shell. Same shape as the landing hero's
+ * blobs, and deliberately reusing its `hero-drift-*` keyframes rather than
+ * declaring a second set of near-identical ones.
+ *
+ * Dark-only through tokens, not a branch: --field-strength is 0 in light, so
+ * these render at opacity 0 there and the markup can be identical.
+ *
+ * `filter: blur()` is NOT `backdrop-filter` -- it blurs the element's own
+ * paint rather than compositing whatever is behind it, so these do not count
+ * against the two-overlapping-backdrop-filter budget.
+ *
+ * prefers-reduced-motion needs no rule here: the global block forces
+ * animation-duration to 0.01ms with iteration-count 1, and every hero-drift
+ * keyframe starts and ends at translate3d(0,0,0) with no fill-mode, so a
+ * reduced-motion visitor gets the field frozen at rest rather than missing.
+ */
+.ambient-field {
+  position: absolute;
+  border-radius: 9999px;
+  pointer-events: none;
+  filter: blur(var(--field-blur));
+  opacity: var(--field-strength);
+  will-change: transform;
+}
+
+.ambient-field-blue {
+  background: radial-gradient(circle at 50% 50%, var(--field-blue) 0%, transparent 70%);
+  animation: hero-drift-a 17s ease-in-out infinite;
+}
+
+.ambient-field-orange {
+  background: radial-gradient(circle at 50% 50%, var(--field-orange) 0%, transparent 70%);
+  animation: hero-drift-b 14s ease-in-out infinite;
+}
+
+.ambient-field-green {
+  background: radial-gradient(circle at 50% 50%, var(--field-green) 0%, transparent 70%);
+  animation: hero-drift-c 20s ease-in-out infinite;
+}
+
 /* Primary button: gradient fill + coloured glow, both from tokens so light
  * mode flattens to the previous solid treatment without a component branch. */
 .btn-primary-gradient {
