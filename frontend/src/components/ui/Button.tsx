@@ -38,12 +38,20 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
  * keyboard users, and no movement at all when the user prefers reduced motion.
  */
 const variantStyles: Record<ButtonVariant, string> = {
+  // Gradient + coloured glow, both token-driven so light mode flattens back to
+  // the solid fill without a branch here. `bg-primary-600` stays as the base
+  // colour under the gradient image, which keeps the button solid if a
+  // background-image ever fails to paint.
   primary:
     'bg-primary-600 text-white hover:bg-primary-700 active:bg-primary-800 focus-visible:ring-primary-500',
   accent:
     'bg-accent-700 text-white hover:bg-accent-800 active:bg-accent-900 focus-visible:ring-accent-500',
+  // Glass. `glass-flat` rather than `glass-surface`: buttons sit inside cards
+  // and toolbars that may already be glass, and stacking a blur inside a blur
+  // is the overlap the budget exists to stop. Text colour is unchanged, so
+  // contrast is governed by the fill cap in --glass-fill.
   secondary:
-    'bg-bg-tertiary text-text-primary border border-border-primary hover:bg-bg-quaternary hover:border-border-secondary active:bg-bg-tertiary focus-visible:ring-border-focus',
+    'glass-flat text-text-primary hover:bg-bg-quaternary active:bg-bg-tertiary focus-visible:ring-border-focus',
   outline:
     'border border-border-secondary bg-transparent text-text-primary hover:bg-bg-tertiary hover:border-border-tertiary active:bg-bg-quaternary focus-visible:ring-border-focus',
   ghost:
@@ -82,6 +90,22 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   ) => {
     const isDisabled = disabled || loading;
 
+    // `.btn-primary-gradient` is unlayered CSS in index.css, and unlayered CSS
+    // beats every Tailwind utility regardless of order -- this repo has been
+    // bitten by that before. So a caller painting its own background (the
+    // orange "Submit"/"Run" CTAs in ExerciseAnswer, ExercisePanel,
+    // CircuitLabPanel and GitQuestPanel all pass
+    // `bg-gradient-to-r from-accent-700 ...`) would silently lose to the
+    // design-system blue -- which is exactly what happened the first time this
+    // shipped: every orange CTA in the app turned blue.
+    //
+    // twMerge cannot arbitrate this for us: it keeps both an arbitrary
+    // `bg-[image:...]` and a `bg-gradient-*` utility, leaving source order to
+    // decide. So the component defers explicitly instead.
+    const callerPaintsBackground = /(?:^|\s)(?:bg-gradient|bg-linear|bg-\[|from-)/.test(
+      className ?? '',
+    );
+
     return (
       <button
         ref={ref}
@@ -97,7 +121,17 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
           // After variantStyles on purpose: cn() is twMerge, so whichever
           // shadow utility comes last wins. A caller's own `className` still
           // comes after this and still overrides it.
-          !chunky && 'shadow-[var(--depth-raise-top),var(--depth-raise-bottom),var(--shadow-card)]',
+          //
+          // Which is exactly why the primary glow is composed into this stack
+          // rather than set in variantStyles: a `shadow-[...]` there would be
+          // collapsed away by this one and the glow would silently never
+          // paint. --btn-primary-glow is an invisible-but-valid shadow in
+          // light mode, so the same expression works in both themes.
+          !chunky && variant !== 'primary' &&
+            'shadow-[var(--depth-raise-top),var(--depth-raise-bottom),var(--shadow-card)]',
+          !chunky && variant === 'primary' &&
+            'shadow-[var(--depth-raise-top),var(--depth-raise-bottom),var(--shadow-card),var(--btn-primary-glow)]',
+          variant === 'primary' && !callerPaintsBackground && 'btn-primary-gradient',
           !chunky && 'hover:shadow-[var(--depth-raise-top),var(--depth-raise-bottom),var(--shadow-card-hover)]',
           !chunky && 'active:shadow-[var(--depth-press)]',
           chunky && 'depth-chunky',

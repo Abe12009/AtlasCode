@@ -115,7 +115,9 @@ export function CodeEditor({
     <div
       dir="ltr"
       className={cn(
-        'border border-border-primary rounded-xl overflow-hidden bg-bg-code',
+        // `no-glass`: code never sits on translucency. Holds even if a
+        // parent card is glass -- see .no-glass in index.css.
+        'no-glass border border-border-primary rounded-xl overflow-hidden bg-bg-code',
         fillHeight && 'h-full flex flex-col',
         className
       )}
@@ -223,7 +225,7 @@ export function TerminalPanel({ output, error, isRunning, clearable = true, onCl
   }, [output, error]);
 
   return (
-    <div dir="ltr" className={cn('border border-border-primary rounded-xl overflow-hidden bg-bg-code flex flex-col', className)} data-testid={testId}>
+    <div dir="ltr" className={cn('no-glass border border-border-primary rounded-xl overflow-hidden bg-bg-code flex flex-col', className)} data-testid={testId}>
       <div className="flex items-center justify-between px-3 py-2 bg-bg-code-light border-b border-border-primary">
         <div className="flex items-center gap-2">
           <div className="flex gap-1.5">

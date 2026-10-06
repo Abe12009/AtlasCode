@@ -2,22 +2,33 @@ import React, { forwardRef, type HTMLAttributes, type ReactNode } from 'react';
 import { cn } from '../../lib/utils';
 
 export interface CardProps extends HTMLAttributes<HTMLDivElement> {
-  variant?: 'default' | 'outlined' | 'elevated' | 'interactive' | 'filled';
+  variant?: 'default' | 'outlined' | 'elevated' | 'interactive' | 'filled' | 'glass' | 'glass-flat';
   padding?: 'none' | 'sm' | 'md' | 'lg';
 }
 
 const variantStyles = {
-  // The two inset layers make a surface read as raised without implying it is
-  // clickable -- that is `interactive` below, which adds the lift and press.
-  default:
-    'bg-bg-elevated border border-border-primary shadow-[var(--depth-raise-top),var(--depth-raise-bottom),var(--shadow-card)]',
+  // `glass-flat` rather than `glass-surface`: `default` is what list-rendered
+  // cards use, and the Courses catalogue alone renders 25 of them. The paint
+  // is identical -- only the backdrop-filter is dropped -- and over the
+  // near-black ground the difference is barely visible, while 25 live blurs
+  // on one page is not. Opt into `glass` explicitly for the few surfaces that
+  // genuinely want blur.
+  //
+  // In light mode every --glass-* token resolves to the previous opaque
+  // surface, so this is visually unchanged there. That is the whole
+  // dark-only-glass decision: it lives in the token values, not in a branch
+  // here.
+  default: 'glass-flat',
   outlined: 'bg-bg-elevated border-2 border-border-primary',
-  elevated:
-    'bg-bg-elevated border border-border-primary shadow-[var(--depth-raise-top),var(--depth-raise-bottom),var(--shadow-elevated)]',
+  elevated: 'glass-raised-flat',
+  /** Blurred glass. Budget: at most two of these overlapping on screen. */
+  glass: 'glass-surface',
+  /** Explicit non-blurred glass, for lists and anything long. */
+  'glass-flat': 'glass-flat',
   interactive: cn(
     // `interactive-lift` (index.css) owns the raised-surface shadows, the
     // hover lift and the tap press, so this variant no longer sets its own.
-    'bg-bg-elevated border border-border-primary interactive-lift interactive-tilt cursor-pointer',
+    'glass-flat interactive-lift interactive-tilt cursor-pointer',
     // No-op unless a focusable ancestor (e.g. the <Link> a card is wrapped in)
     // carries `group` -- lets a keyboard user see which whole-card link is
     // focused, matching Button's ring treatment.

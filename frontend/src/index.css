@@ -251,10 +251,55 @@
   --hero-grid-opacity: 0.022;
   --glass-bg: rgb(255 255 255 / 0.72);
   --glass-strong-bg: rgb(255 255 255 / 0.88);
+
+  /* --- Spatial Glass: LIGHT values ------------------------------------------
+   * Glass is dark-mode-only, and that decision lives here in the token values
+   * rather than in a branch inside Card/Button -- the components use the same
+   * class either way. On the near-white #F7F9FC ground a translucent white
+   * fill gives almost no signal while any tint from an ambient field pushes
+   * text-tertiary (5.19:1, only 0.69 above the 4.5:1 floor) toward failing.
+   * So light keeps the opaque elevated surface and takes only the softened
+   * border, inset highlight and shadow.
+   */
+  --glass-base: var(--color-bg-elevated);
+  --glass-fill: none;
+  --glass-blur: none;
+  --glass-border: var(--color-border-primary);
+  --glass-highlight: var(--depth-raise-top);
+  --glass-shadow: var(--shadow-card);
+  --glass-shadow-raised: var(--shadow-elevated);
+  /* How strongly an ambient field may tint a surface. 0 in light: the fields
+   * are dark-only, so nothing may lighten a light-mode card. */
+  --glass-tint-strength: 0;
+
+  /* Ambient field hues. Declared in both themes so a field element never
+   * resolves to an undefined custom property; light keeps them at zero
+   * strength (see --field-strength) rather than redefining every stop. */
+  --field-blue: var(--color-primary-500);
+  --field-orange: var(--color-accent-500);
+  --field-green: var(--color-success-500);
+  --field-strength: 0;
+  --field-blur: 80px;
+
+  /* Primary button gradient. Starts at 600, NOT 500: white on
+   * --color-primary-500 (#3B82F6) measures 3.68:1, below the 4.5:1 floor for
+   * button text, while white on 600 (#2563EB) is 5.17:1 and every stop below
+   * is darker still. The gradient is 180deg for the same RTL reason as the
+   * glass fill -- an angled one would run backwards in Arabic. */
+  --btn-primary-gradient: linear-gradient(180deg, var(--color-primary-600), var(--color-primary-800));
+  --btn-primary-gradient-hover: linear-gradient(180deg, var(--color-primary-700), var(--color-primary-900));
+  /* A real but invisible shadow, not `none`: this value is composed into a
+   * comma-separated box-shadow list on the button, and `none` inside such a
+   * list invalidates the entire declaration. */
+  --btn-primary-glow: 0 0 0 0 rgb(0 0 0 / 0);
 }
 
 [data-theme="dark"] {
-  --color-bg-primary: #0B1120;
+  /* Near-black ground for Spatial Glass. Was #0B1120; the darker ground is
+   * what makes a translucent surface read as glass rather than as a slightly
+   * different flat colour. It also moves every light-on-dark contrast ratio
+   * upward, so it is the safe direction for the text tokens. */
+  --color-bg-primary: #05070D;
   --color-bg-secondary: #111C31;
   --color-bg-tertiary: #1B2739;
   --color-bg-quaternary: #2C3A4F;
@@ -353,6 +398,45 @@
   --hero-grid-opacity: 0.03;
   --glass-bg: rgb(17 28 49 / 0.72);
   --glass-strong-bg: rgb(11 17 32 / 0.9);
+
+  /* --- Spatial Glass: DARK values -------------------------------------------
+   * The real thing. A translucent surface over the near-black ground, so what
+   * is behind a card genuinely shows through.
+   *
+   * The fill is 180deg on purpose, NOT a diagonal: paint does not mirror under
+   * dir="rtl", so an angled gradient would run the wrong way in Arabic. Same
+   * reason the shadow offsets below are vertical-only.
+   */
+  --glass-base: transparent;
+  --glass-fill: linear-gradient(180deg, rgb(255 255 255 / 0.07), rgb(255 255 255 / 0.02));
+  --glass-blur: blur(14px);
+  --glass-border: rgb(255 255 255 / 0.1);
+  --glass-highlight: inset 0 1px 0 rgb(255 255 255 / 0.12);
+  --glass-shadow: 0 16px 32px -12px rgb(0 0 0 / 0.6), 0 2px 6px -2px rgb(0 0 0 / 0.5);
+  --glass-shadow-raised: 0 24px 48px -16px rgb(0 0 0 / 0.7), 0 4px 10px -4px rgb(0 0 0 / 0.55);
+  /* Capped deliberately. A field behind a translucent card lightens the
+   * composite locally, which makes contrast position-dependent -- the same
+   * label can pass over a dark patch and fail over a glow. text-tertiary sits
+   * at 4.82:1 on dark today, 0.32 above the floor, so this is the budget that
+   * keeps a tinted card from eating it. Raise it only with a fresh composited
+   * measurement. */
+  --glass-tint-strength: 0.05;
+
+  --field-blue: var(--color-primary-500);
+  --field-orange: var(--color-accent-500);
+  --field-green: var(--color-success-500);
+  /* Green rather than a purple third hue: the palette has no purple (see this
+   * file's header -- a violet family was deliberately replaced), and the hero
+   * already settled on the success ramp for its third field. */
+  --field-strength: 0.14;
+  --field-blur: 80px;
+
+  --btn-primary-gradient: linear-gradient(180deg, var(--color-primary-600), var(--color-primary-800));
+  --btn-primary-gradient-hover: linear-gradient(180deg, var(--color-primary-700), var(--color-primary-900));
+  /* The coloured glow only reads on the dark ground; on light it would just
+   * look like a smudge, so it is off there -- same dark-only-through-tokens
+   * approach as the glass itself. Vertical-only offset for RTL. */
+  --btn-primary-glow: 0 6px 20px -6px rgb(37 99 235 / 0.55);
 }
 
 * {
@@ -1030,6 +1114,80 @@ html[dir="rtl"] .prose ol {
   opacity: var(--hero-grid-opacity);
   -webkit-mask-image: radial-gradient(ellipse 70% 60% at 50% 42%, #000 35%, transparent 100%);
           mask-image: radial-gradient(ellipse 70% 60% at 50% 42%, #000 35%, transparent 100%);
+}
+
+/* --- Spatial Glass surfaces -------------------------------------------------
+ * Paint only. Size, position and spacing stay in Tailwind, because unlayered
+ * CSS in this file outranks every Tailwind utility -- if these classes set
+ * layout too, a caller could never override it.
+ *
+ * `.glass-surface` and `.glass-flat` are identical except for the
+ * backdrop-filter. That is the whole performance story: blur is the expensive
+ * part, the look is mostly the fill + border + highlight + shadow, and over a
+ * near-black ground the two are nearly indistinguishable.
+ *
+ * Budget: at most TWO blurred layers overlapping at any point on screen.
+ * `.glass-flat` is the default for anything list-rendered -- the Courses
+ * catalogue alone renders 25 cards over a 5081px page, and 25 live
+ * backdrop-filters is exactly the case the plan ruled out.
+ *
+ * In light mode every token below resolves to the existing opaque surface
+ * (--glass-fill: none, --glass-blur: none), so these classes are a no-op
+ * visually there and no component needs a theme branch.
+ */
+.glass-surface,
+.glass-flat {
+  background-color: var(--glass-base);
+  background-image: var(--glass-fill);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-highlight), var(--glass-shadow);
+}
+
+.glass-surface {
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+}
+
+.glass-raised,
+.glass-raised-flat {
+  background-color: var(--glass-base);
+  background-image: var(--glass-fill);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-highlight), var(--glass-shadow-raised);
+}
+
+.glass-raised {
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+}
+
+/* Primary button: gradient fill + coloured glow, both from tokens so light
+ * mode flattens to the previous solid treatment without a component branch. */
+.btn-primary-gradient {
+  background-image: var(--btn-primary-gradient);
+}
+
+.btn-primary-gradient:hover:not(:disabled) {
+  background-image: var(--btn-primary-gradient-hover);
+}
+
+/* Code must never sit on translucency.
+ *
+ * The editor, the terminal and the Circuit Lab canvas stay fully opaque: a
+ * glass card wrapping any of them would put the page behind it underneath
+ * syntax-highlighted text, which is both unreadable and an accessibility
+ * problem. Applied to the surface itself so it holds no matter what a parent
+ * card does, and asserted by test (see `ui/__tests__/glass.test.ts`).
+ *
+ * !important is deliberate and load-bearing here: this has to beat a glass
+ * utility on the same element, and a silent regression is exactly the failure
+ * this guard exists to prevent.
+ */
+.no-glass {
+  background-color: var(--color-bg-code) !important;
+  background-image: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
 }
 
 .glass {
