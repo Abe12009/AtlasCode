@@ -168,7 +168,7 @@ export function MicroQuestLesson({ lesson, currentLanguage }: MicroQuestLessonPr
                   onClick={() => advanceTo('blueprint')}
                   data-testid="hook-continue"
                   rightIcon={isRTL ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-                  className="w-full sm:w-auto bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 shadow-lg hover:shadow-glow-primary"
+                  className="w-full sm:w-auto"
                 >
                   {t('microquest.continue')}
                 </Button>
@@ -208,7 +208,7 @@ export function MicroQuestLesson({ lesson, currentLanguage }: MicroQuestLessonPr
                     onClick={() => advanceTo('quest')}
                     data-testid="blueprint-continue"
                     rightIcon={isRTL ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-                    className="w-full sm:w-auto bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 shadow-lg hover:shadow-glow-primary"
+                    className="w-full sm:w-auto"
                   >
                     {t('microquest.start_quest')}
                   </Button>

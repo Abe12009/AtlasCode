@@ -139,7 +139,6 @@ export function Login() {
                 loading={loading}
                 leftIcon={loading ? <Loader2 className="h-5 w-5 animate-spin" aria-hidden="true" /> : undefined}
                 size="lg"
-                className="bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 shadow-lg hover:shadow-glow-primary"
               >
                 {t('auth.sign_in')}
               </Button>

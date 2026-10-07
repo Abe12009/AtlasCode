@@ -505,7 +505,7 @@ export function VisualProgrammingPage() {
                       compileMutation.mutate({ nodes: state.nodes, edges: state.edges } as any);
                     }}
                     disabled={isCompiling || state.nodes.length === 0}
-                    className="w-full bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 shadow-lg hover:shadow-glow-primary"
+                    className="w-full"
                     leftIcon={isCompiling ? <RotateCcw className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
                   >
                     {isCompiling ? t('visual_programming.compiling') : t('visual_programming.compile')}

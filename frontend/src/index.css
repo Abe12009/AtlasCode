@@ -428,7 +428,11 @@
   /* Green rather than a purple third hue: the palette has no purple (see this
    * file's header -- a violet family was deliberately replaced), and the hero
    * already settled on the success ramp for its third field. */
-  --field-strength: 0.14;
+  /* 0.20, up from 0.14: at 0.14 the wash was measurable but barely visible.
+   * The ceiling is the contrast budget, not taste -- the Dashboard's
+   * tertiary label sat at 5.00:1 with the fields at worst-case drift, so
+   * there was room. Re-measure before raising this again. */
+  --field-strength: 0.20;
   --field-blur: 80px;
 
   --btn-primary-gradient: linear-gradient(180deg, var(--color-primary-600), var(--color-primary-800));

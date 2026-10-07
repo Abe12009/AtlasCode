@@ -99,7 +99,7 @@ export function SpotTheBugBlueprint({ config, language, onSolved, solved }: Spot
           disabled={selectedId === null}
           data-testid="blueprint-check"
           leftIcon={<Bug className="h-4 w-4" />}
-          className="w-full sm:w-auto bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 shadow-lg hover:shadow-glow-primary"
+          className="w-full sm:w-auto"
         >
           {t('microquest.check_bug')}
         </Button>

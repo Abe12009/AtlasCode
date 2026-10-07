@@ -364,7 +364,6 @@ export function LessonDetail() {
                   <Button
                     onClick={goToNext}
                     rightIcon={isRTL ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-                    className="bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 shadow-lg hover:shadow-glow-primary"
                     data-testid="lesson-nav-next"
                   >
                     {t('lessons.next')}
@@ -476,7 +475,6 @@ function LessonBlockView({ block, index, total, onNext, onPrev, hasPrev }: Lesso
         <Button
           onClick={onNext}
           rightIcon={isRTL ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-          className="bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 shadow-lg hover:shadow-glow-primary"
         >
           {t('lessons.next')}
         </Button>

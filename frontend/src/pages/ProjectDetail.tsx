@@ -359,7 +359,7 @@ export function ProjectDetail() {
                               onClick={() => handleSubmit(task.id)}
                               disabled={submitMutation.isPending || isLocked || isCompletedTask || !canSubmitTask(index)}
                               leftIcon={<Play className="h-4 w-4" />}
-                              className="flex-1 min-w-[180px] bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 shadow-lg hover:shadow-glow-primary"
+                              className="flex-1 min-w-[180px]"
                             >
                               {submitMutation.isPending ? t('projects.submitting') : isCompletedTask ? t('projects.task_completed') : isLocked ? t('projects.locked') : canSubmitTask(index) ? t('projects.submit_task') : t('projects.complete_previous')}
                             </Button>

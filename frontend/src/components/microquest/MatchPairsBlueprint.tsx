@@ -203,7 +203,7 @@ export function MatchPairsBlueprint({ config, language, onSolved, solved }: Matc
             onClick={check}
             disabled={!allMatched}
             data-testid="blueprint-check"
-            className="w-full bg-gradient-to-r from-primary-500 to-primary-600 shadow-lg hover:from-primary-600 hover:to-primary-700 hover:shadow-glow-primary sm:w-auto"
+            className="w-full sm:w-auto"
           >
             {t('microquest.check_pairs')}
           </Button>

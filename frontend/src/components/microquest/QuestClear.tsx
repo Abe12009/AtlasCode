@@ -45,7 +45,7 @@ export function QuestClear({ xpEarned, lessonTitle }: QuestClearProps) {
       <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
         <Link to="/app/dashboard" className="w-full sm:w-auto">
           <Button
-            className="w-full bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 shadow-lg hover:shadow-glow-primary"
+            className="w-full"
             rightIcon={<ArrowRight className="h-4 w-4" />}
             data-testid="quest-clear-continue"
           >

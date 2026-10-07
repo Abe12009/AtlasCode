@@ -194,7 +194,7 @@ export function Dashboard() {
         </div>
         <Link
           to="/app/courses"
-          className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white font-semibold rounded-xl transition-all shadow-lg hover:shadow-glow-primary"
+          className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary-600 btn-primary-gradient text-white font-semibold rounded-xl transition-all shadow-[var(--depth-raise-top),var(--depth-raise-bottom),var(--shadow-card),var(--btn-primary-glow)]"
         >
           <BookOpen className="h-5 w-5" />
           <span>{t('dashboard.browse_courses')}</span>
@@ -231,7 +231,7 @@ export function Dashboard() {
         ))}
       </div>
 
-      <div className="bg-bg-secondary/50 border border-border-primary/50 rounded-2xl p-6 lg:p-8">
+      <div className="glass-surface rounded-2xl p-6 lg:p-8">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
             <div className="p-3 bg-primary-500/10 rounded-xl">
@@ -303,7 +303,7 @@ export function Dashboard() {
 
                 <Link
                   to={`/app/lessons/${currentMission.id}`}
-                  className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white font-semibold rounded-xl transition-all shadow-lg hover:shadow-glow-primary"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary-600 btn-primary-gradient text-white font-semibold rounded-xl transition-all shadow-[var(--depth-raise-top),var(--depth-raise-bottom),var(--shadow-card),var(--btn-primary-glow)]"
                 >
                   <span>{t('dashboard.continue_lesson')}</span>
                   <ArrowRight className="h-4 w-4" />
@@ -350,7 +350,7 @@ export function Dashboard() {
             );
           })()}
 
-          <Card variant="default" padding="lg">
+          <Card variant="glass" padding="lg">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-semibold text-text-primary flex items-center gap-2">
                 <Flag className="h-5 w-5 text-accent-400" />
@@ -390,7 +390,7 @@ export function Dashboard() {
                   <p className="text-text-secondary mb-3">{t('dashboard.no_courses_started')}</p>
                   <Link
                     to="/app/courses"
-                    className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white font-semibold rounded-xl transition-all shadow-lg hover:shadow-glow-primary"
+                    className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary-600 btn-primary-gradient text-white font-semibold rounded-xl transition-all shadow-[var(--depth-raise-top),var(--depth-raise-bottom),var(--shadow-card),var(--btn-primary-glow)]"
                   >
                     <BookOpen className="h-4 w-4" />
                     <span>{t('dashboard.browse_courses')}</span>
@@ -402,7 +402,7 @@ export function Dashboard() {
         </div>
 
         <div className="space-y-6">
-          <Card variant="default" padding="lg">
+          <Card variant="glass" padding="lg">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-semibold text-text-primary flex items-center gap-2">
                 <Trophy className="h-5 w-5 text-yellow-400" />
@@ -468,7 +468,7 @@ export function Dashboard() {
               </div>
               <Link
                 to={`/app/projects/${currentProject.project_id}`}
-                className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white font-semibold rounded-xl transition-all shadow-lg hover:shadow-glow-primary w-full justify-center"
+                className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary-600 btn-primary-gradient text-white font-semibold rounded-xl transition-all shadow-[var(--depth-raise-top),var(--depth-raise-bottom),var(--shadow-card),var(--btn-primary-glow)] w-full justify-center"
               >
                 <FolderKanban className="h-4 w-4" />
                 <span>{t('dashboard.continue_project')}</span>

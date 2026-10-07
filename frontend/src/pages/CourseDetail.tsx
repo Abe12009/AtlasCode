@@ -281,7 +281,7 @@ export function CourseDetail() {
                   className="w-full"
                 >
                   <Button
-                    className="w-full bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 shadow-lg hover:shadow-glow-primary"
+                    className="w-full"
                     size="lg"
                     leftIcon={<Play className="h-5 w-5" />}
                   >

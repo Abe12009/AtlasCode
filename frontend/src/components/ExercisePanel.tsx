@@ -72,7 +72,6 @@ export function ExercisePanel({
           onClick={onNext}
           disabled={!!result && !result.is_correct}
           rightIcon={isRTL ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-          className="bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 shadow-lg hover:shadow-glow-primary"
           data-testid="exercise-nav-next"
         >
           {t('lessons.next')}

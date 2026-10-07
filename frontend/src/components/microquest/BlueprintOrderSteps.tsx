@@ -136,7 +136,7 @@ export function BlueprintOrderSteps({
         <Button
           onClick={check}
           data-testid="blueprint-check"
-          className="w-full sm:w-auto bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 shadow-lg hover:shadow-glow-primary"
+          className="w-full sm:w-auto"
         >
           {t('microquest.check_blueprint')}
         </Button>
