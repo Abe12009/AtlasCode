@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { MotionConfig } from 'framer-motion';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
@@ -67,6 +67,35 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+/**
+ * Every lazy route's element: Suspense for the import, RouteErrorBoundary for
+ * a render throw.
+ *
+ * Suspense alone only covers loading. A component that throws while rendering
+ * unmounts the tree and leaves a blank page served with a 200 -- the failure
+ * mode Visual Programming hit, and one all 21 lazy routes shared.
+ *
+ * `key={pathname}` is load-bearing. An error boundary keeps its error state
+ * until it unmounts, and a parameterised route (lessons/:lessonId,
+ * courses/:courseId, ...) reuses the same element instance across param
+ * changes -- so without the key, one bad lesson would leave every later
+ * lesson showing the error page until a full reload. Keying on the path
+ * remounts the boundary per navigation.
+ *
+ * The providers (QueryClient, Auth, MotionConfig) live above <AppRoutes/>, so
+ * none of them is unmounted by a route error: the session and the query cache
+ * survive, and for /app routes the Layout chrome stays rendered so the user
+ * can navigate away.
+ */
+function GuardedRoute({ children }: { children: React.ReactNode }) {
+  const { pathname } = useLocation();
+  return (
+    <RouteErrorBoundary key={pathname}>
+      <Suspense fallback={<LoadingFallback />}>{children}</Suspense>
+    </RouteErrorBoundary>
+  );
+}
+
 function AppRoutes() {
   const { currentLanguage, isRTL } = useTranslation();
 
@@ -77,50 +106,44 @@ function AppRoutes() {
 
   return (
     <Routes>
-      <Route path="/" element={<Suspense fallback={<LoadingFallback />}><Landing /></Suspense>} />
-      <Route path="/login" element={<PublicRoute><Suspense fallback={<LoadingFallback />}><Login /></Suspense></PublicRoute>} />
-      <Route path="/register" element={<PublicRoute><Suspense fallback={<LoadingFallback />}><Register /></Suspense></PublicRoute>} />
-      <Route path="/forgot-password" element={<PublicRoute><Suspense fallback={<LoadingFallback />}><ForgotPassword /></Suspense></PublicRoute>} />
-      <Route path="/reset-password" element={<PublicRoute><Suspense fallback={<LoadingFallback />}><ResetPassword /></Suspense></PublicRoute>} />
-      <Route path="/privacy" element={<Suspense fallback={<LoadingFallback />}><Privacy /></Suspense>} />
-      <Route path="/terms" element={<Suspense fallback={<LoadingFallback />}><Terms /></Suspense>} />
-      <Route path="/contact" element={<Suspense fallback={<LoadingFallback />}><Contact /></Suspense>} />
+      <Route path="/" element={<GuardedRoute><Landing /></GuardedRoute>} />
+      <Route path="/login" element={<PublicRoute><GuardedRoute><Login /></GuardedRoute></PublicRoute>} />
+      <Route path="/register" element={<PublicRoute><GuardedRoute><Register /></GuardedRoute></PublicRoute>} />
+      <Route path="/forgot-password" element={<PublicRoute><GuardedRoute><ForgotPassword /></GuardedRoute></PublicRoute>} />
+      <Route path="/reset-password" element={<PublicRoute><GuardedRoute><ResetPassword /></GuardedRoute></PublicRoute>} />
+      <Route path="/privacy" element={<GuardedRoute><Privacy /></GuardedRoute>} />
+      <Route path="/terms" element={<GuardedRoute><Terms /></GuardedRoute>} />
+      <Route path="/contact" element={<GuardedRoute><Contact /></GuardedRoute>} />
       <Route
         path="/app"
         element={
           <ProtectedRoute>
-            <Suspense fallback={<LoadingFallback />}>
+            <GuardedRoute>
               <Layout />
-            </Suspense>
+            </GuardedRoute>
           </ProtectedRoute>
         }
       >
         <Route index element={<Navigate to="/app/dashboard" replace />} />
-        <Route path="dashboard" element={<Suspense fallback={<LoadingFallback />}><Dashboard /></Suspense>} />
-        <Route path="courses" element={<Suspense fallback={<LoadingFallback />}><Courses /></Suspense>} />
-        <Route path="courses/:courseId" element={<Suspense fallback={<LoadingFallback />}><CourseDetail /></Suspense>} />
-        <Route path="lessons/:lessonId" element={<Suspense fallback={<LoadingFallback />}><LessonDetail /></Suspense>} />
-        {/* Boundary scoped to this route for now. Suspense covers the lazy
-            import, not a render throw -- see RouteErrorBoundary. NOTE: none of
-            the other 20 lazy routes has one either, so they share this failure
-            mode; widening it is a separate change. */}
+        <Route path="dashboard" element={<GuardedRoute><Dashboard /></GuardedRoute>} />
+        <Route path="courses" element={<GuardedRoute><Courses /></GuardedRoute>} />
+        <Route path="courses/:courseId" element={<GuardedRoute><CourseDetail /></GuardedRoute>} />
+        <Route path="lessons/:lessonId" element={<GuardedRoute><LessonDetail /></GuardedRoute>} />
         <Route
           path="visual/:exerciseId"
           element={
-            <RouteErrorBoundary>
-              <Suspense fallback={<LoadingFallback />}>
-                <VisualProgrammingPage />
-              </Suspense>
-            </RouteErrorBoundary>
+            <GuardedRoute>
+              <VisualProgrammingPage />
+            </GuardedRoute>
           }
         />
-        <Route path="duels" element={<Suspense fallback={<LoadingFallback />}><DuelLobby /></Suspense>} />
-        <Route path="duels/:duelId" element={<Suspense fallback={<LoadingFallback />}><DuelArena /></Suspense>} />
-        <Route path="projects" element={<Suspense fallback={<LoadingFallback />}><Projects /></Suspense>} />
-        <Route path="projects/:projectId" element={<Suspense fallback={<LoadingFallback />}><ProjectDetail /></Suspense>} />
-        <Route path="profile" element={<Suspense fallback={<LoadingFallback />}><Profile /></Suspense>} />
-        <Route path="cody" element={<Suspense fallback={<LoadingFallback />}><Cody /></Suspense>} />
-        <Route path="u/:username" element={<Suspense fallback={<LoadingFallback />}><PublicProfile /></Suspense>} />
+        <Route path="duels" element={<GuardedRoute><DuelLobby /></GuardedRoute>} />
+        <Route path="duels/:duelId" element={<GuardedRoute><DuelArena /></GuardedRoute>} />
+        <Route path="projects" element={<GuardedRoute><Projects /></GuardedRoute>} />
+        <Route path="projects/:projectId" element={<GuardedRoute><ProjectDetail /></GuardedRoute>} />
+        <Route path="profile" element={<GuardedRoute><Profile /></GuardedRoute>} />
+        <Route path="cody" element={<GuardedRoute><Cody /></GuardedRoute>} />
+        <Route path="u/:username" element={<GuardedRoute><PublicProfile /></GuardedRoute>} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
