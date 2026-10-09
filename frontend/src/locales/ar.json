@@ -569,7 +569,8 @@
     "exercise_locked": "هذا التمرين مغلق.",
     "invalid_visual_program": "برنامج مرئي غير صالح. يرجى التحقق من العقد والاتصالات.",
     "visual_compilation_failed": "فشل تجميع البرنامج المرئي.",
-    "network_unavailable": "الشبكة غير متاحة. قد لا تعمل بعض الميزات."
+    "network_unavailable": "الشبكة غير متاحة. قد لا تعمل بعض الميزات.",
+    "route_failed": "تعذّر تحميل هذه الصفحة."
   },
   "accessibility": {
     "skip_to_main": "الانتقال إلى المحتوى الرئيسي",

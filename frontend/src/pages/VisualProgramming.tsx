@@ -8,23 +8,18 @@ import { useTranslation } from '../hooks/useTranslation';
 import { VisualNode } from '../components/VisualNode';
 import type { VisualProgramResponse, Exercise, ExerciseTranslation } from '../types';
 import { Card, Button, Badge, Alert, cn, Skeleton, CodeEditor, TerminalPanel, StatusBadge, XPBadge } from '../components/ui';
+import { normaliseGraph, type GraphNode, type GraphEdge } from '../lib/visualGraph';
 
 type NodeType = 'start' | 'end' | 'variable' | 'output' | 'assign' | 'if' | 'else' | 'loop' | 'while_loop' | 'function' | 'return' | 'operation';
 
-interface Node {
-  id: string;
-  type: string;
-  position: { x: number; y: number };
-  config: Record<string, string>;
-}
-
-interface Edge {
-  id: string;
-  source: string;
-  target: string;
-  sourceHandle?: string;
-  targetHandle?: string;
-}
+/**
+ * The editor's node shape: position is REQUIRED here on purpose -- everything
+ * downstream does arithmetic on it. What arrives from the API may not have it
+ * (see normaliseGraph), so untrusted input is normalised on ingest rather
+ * than this type being loosened and every reader having to cope.
+ */
+type Node = GraphNode;
+type Edge = GraphEdge;
 
 interface VisualEditorState {
   nodes: Node[];
@@ -135,15 +130,19 @@ export function VisualProgrammingPage() {
     if (starterData) {
       try {
         const starter = typeof starterData === 'string' ? JSON.parse(starterData) : starterData;
-        if (starter.nodes && starter.edges) {
-          const newState: VisualEditorState = {
-            nodes: starter.nodes,
-            edges: starter.edges,
+        // Normalise before it reaches state: the payload is untrusted JSON and
+        // the old code assigned `starter.nodes` verbatim, so a node without a
+        // `position` reached getHandlePosition and threw during render,
+        // blanking the page (seeded exercises 15 and 20 do exactly this).
+        const { nodes, edges } = normaliseGraph(starter);
+        if (nodes.length > 0) {
+          setState({
+            nodes,
+            edges,
             selectedNodeId: null,
-            history: [{ nodes: starter.nodes, edges: starter.edges }],
+            history: [{ nodes, edges }],
             historyIndex: 0,
-          };
-          setState(newState);
+          });
         }
       } catch (e) {
         console.error('Failed to parse starter data:', e);

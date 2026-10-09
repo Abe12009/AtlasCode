@@ -5,6 +5,7 @@ import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { LoadingFallback } from './components/LoadingFallback';
 import { lazy, Suspense, useEffect } from 'react';
 import { useTranslation } from './hooks/useTranslation';
+import { RouteErrorBoundary } from './components/RouteErrorBoundary';
 
 const Landing = lazy(() => import('./pages/Landing').then(m => ({ default: m.Landing })));
 const Login = lazy(() => import('./pages/Login').then(m => ({ default: m.Login })));
@@ -99,7 +100,20 @@ function AppRoutes() {
         <Route path="courses" element={<Suspense fallback={<LoadingFallback />}><Courses /></Suspense>} />
         <Route path="courses/:courseId" element={<Suspense fallback={<LoadingFallback />}><CourseDetail /></Suspense>} />
         <Route path="lessons/:lessonId" element={<Suspense fallback={<LoadingFallback />}><LessonDetail /></Suspense>} />
-        <Route path="visual/:exerciseId" element={<Suspense fallback={<LoadingFallback />}><VisualProgrammingPage /></Suspense>} />
+        {/* Boundary scoped to this route for now. Suspense covers the lazy
+            import, not a render throw -- see RouteErrorBoundary. NOTE: none of
+            the other 20 lazy routes has one either, so they share this failure
+            mode; widening it is a separate change. */}
+        <Route
+          path="visual/:exerciseId"
+          element={
+            <RouteErrorBoundary>
+              <Suspense fallback={<LoadingFallback />}>
+                <VisualProgrammingPage />
+              </Suspense>
+            </RouteErrorBoundary>
+          }
+        />
         <Route path="duels" element={<Suspense fallback={<LoadingFallback />}><DuelLobby /></Suspense>} />
         <Route path="duels/:duelId" element={<Suspense fallback={<LoadingFallback />}><DuelArena /></Suspense>} />
         <Route path="projects" element={<Suspense fallback={<LoadingFallback />}><Projects /></Suspense>} />

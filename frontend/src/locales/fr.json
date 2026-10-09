@@ -564,7 +564,8 @@
     "exercise_locked": "Cet exercice est verrouillé.",
     "invalid_visual_program": "Programme visuel invalide. Veuillez vérifier vos nœuds et connexions.",
     "visual_compilation_failed": "Échec de la compilation du programme visuel.",
-    "network_unavailable": "Réseau indisponible. Certaines fonctionnalités peuvent ne pas fonctionner."
+    "network_unavailable": "Réseau indisponible. Certaines fonctionnalités peuvent ne pas fonctionner.",
+    "route_failed": "Cette page n'a pas pu être chargée."
   },
   "accessibility": {
     "skip_to_main": "Aller au contenu principal",

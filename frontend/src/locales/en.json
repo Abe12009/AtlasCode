@@ -564,7 +564,8 @@
     "exercise_locked": "This exercise is locked.",
     "invalid_visual_program": "Invalid visual program. Please check your nodes and connections.",
     "visual_compilation_failed": "Failed to compile visual program.",
-    "network_unavailable": "Network unavailable. Some features may not work."
+    "network_unavailable": "Network unavailable. Some features may not work.",
+    "route_failed": "This page could not be loaded."
   },
   "accessibility": {
     "skip_to_main": "Skip to main content",
