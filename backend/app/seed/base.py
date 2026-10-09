@@ -1,3 +1,5 @@
+import json
+
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
 from app.models import (
@@ -23,6 +25,42 @@ async def module_exists(db: AsyncSession, course_id: int, slug: str) -> bool:
 async def lesson_exists(db: AsyncSession, module_id: int, slug: str) -> bool:
     result = await db.execute(select(Lesson).where(Lesson.module_id == module_id, Lesson.slug == slug))
     return result.scalar_one_or_none() is not None
+
+
+def visual_graph(nodes: list[dict], edges: list[dict]) -> str:
+    """Serialise a visual-programming starter graph for ``Exercise.starter_code``.
+
+    Exists because both ways of hand-writing this JSON went wrong in the seed:
+
+    * Nodes were authored without a ``position``, and the editor does
+      arithmetic on ``node.position.x`` -- a position-less graph used to throw
+      during render and blank the whole page.
+    * One entry was a Python single-quoted literal containing ``\"`` escapes,
+      which produce *bare* quotes inside the JSON string. The result did not
+      parse at all, so the API served an empty graph and that exercise's
+      starter never loaded.
+
+    Taking real dicts and going through ``json.dumps`` removes the escaping
+    problem by construction, and the assertions below make a missing or
+    non-numeric position a seed-time failure rather than a runtime white
+    screen. The client normalises defensively too (see
+    frontend/src/lib/visualGraph.ts); this is the other half, so authored
+    exercises carry their intended layout rather than a fallback.
+    """
+    for node in nodes:
+        position = node.get("position")
+        assert isinstance(position, dict), f"node {node.get('id')!r} has no position"
+        for axis in ("x", "y"):
+            value = position.get(axis)
+            assert isinstance(value, (int, float)) and not isinstance(value, bool), (
+                f"node {node.get('id')!r} position.{axis} must be a number, got {value!r}"
+            )
+    ids = {node.get("id") for node in nodes}
+    for edge in edges:
+        assert edge.get("source") in ids and edge.get("target") in ids, (
+            f"edge {edge} references a node that does not exist"
+        )
+    return json.dumps({"nodes": nodes, "edges": edges}, ensure_ascii=False)
 
 
 async def get_or_create_course(db: AsyncSession, slug: str, order: int, translations: list) -> int:

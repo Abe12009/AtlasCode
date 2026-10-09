@@ -1,4 +1,5 @@
 from .base import (
+    visual_graph,
     get_or_create_course, get_or_create_module, get_or_create_lesson,
     LanguageEnum, DifficultyEnum, ExerciseTypeEnum
 )
@@ -349,7 +350,19 @@ async def seed_python_foundations(db):
                 "type": ExerciseTypeEnum.visual_programming,
                 "order": 2,
                 "xp_reward": 15,
-                "starter_code": '{"nodes": [{"id": "1", "type": "start", "config": {}}, {"id": "2", "type": "loop", "config": {"var": "i", "times": "5"}}, {"id": "3", "type": "output", "config": {"value": "i"}}, {"id": "4", "type": "end", "config": {}}], "edges": [{"source": "1", "target": "2"}, {"source": "2", "target": "3"}, {"source": "3", "target": "4"}]}',
+                "starter_code": visual_graph(
+                    [
+                        {"id": "1", "type": "start", "position": {"x": 40, "y": 50}, "config": {}},
+                        {"id": "2", "type": "loop", "position": {"x": 330, "y": 50}, "config": {"var": "i", "times": "5"}},
+                        {"id": "3", "type": "output", "position": {"x": 40, "y": 230}, "config": {"value": "i"}},
+                        {"id": "4", "type": "end", "position": {"x": 330, "y": 230}, "config": {}},
+                    ],
+                    [
+                        {"source": "1", "target": "2"},
+                        {"source": "2", "target": "3"},
+                        {"source": "3", "target": "4"},
+                    ],
+                ),
                 "solution_code": 'for i in range(5):\n    print(i)',
                 "test_code": 'import sys, io; stdout = sys.stdout; sys.stdout = io.StringIO(); exec(compile(code, "<string>", "exec")); output = sys.stdout.getvalue(); sys.stdout = stdout; assert "0" in output and "4" in output',
                 "translations": [
@@ -482,7 +495,21 @@ async def seed_python_foundations(db):
                 "type": ExerciseTypeEnum.visual_programming,
                 "order": 2,
                 "xp_reward": 15,
-                "starter_code": '{"nodes": [{"id": "1", "type": "start", "config": {}}, {"id": "2", "type": "function", "config": {"name": "double", "params": "x"}}, {"id": "3", "type": "return", "config": {"value": "x * 2"}}, {"id": "4", "type": "output", "config": {"value": "double(5)"}}, {"id": "5", "type": "end", "config": {}}], "edges": [{"source": "1", "target": "2"}, {"source": "2", "target": "3"}, {"source": "2", "target": "4"}, {"source": "4", "target": "5"}]}',
+                "starter_code": visual_graph(
+                    [
+                        {"id": "1", "type": "start", "position": {"x": 40, "y": 50}, "config": {}},
+                        {"id": "2", "type": "function", "position": {"x": 330, "y": 50}, "config": {"name": "double", "params": "x"}},
+                        {"id": "3", "type": "return", "position": {"x": 40, "y": 230}, "config": {"value": "x * 2"}},
+                        {"id": "4", "type": "output", "position": {"x": 330, "y": 230}, "config": {"value": "double(5)"}},
+                        {"id": "5", "type": "end", "position": {"x": 40, "y": 410}, "config": {}},
+                    ],
+                    [
+                        {"source": "1", "target": "2"},
+                        {"source": "2", "target": "3"},
+                        {"source": "2", "target": "4"},
+                        {"source": "4", "target": "5"},
+                    ],
+                ),
                 "solution_code": 'def double(x):\n    return x * 2\n\nprint(double(5))',
                 "test_code": 'import sys, io; stdout = sys.stdout; sys.stdout = io.StringIO(); exec(compile(code, "<string>", "exec")); output = sys.stdout.getvalue(); sys.stdout = stdout; assert "10" in output',
                 "translations": [

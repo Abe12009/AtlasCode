@@ -1,4 +1,5 @@
 from .base import (
+    visual_graph,
     get_or_create_course, get_or_create_module, get_or_create_lesson,
     LanguageEnum, DifficultyEnum, ExerciseTypeEnum
 )
@@ -280,7 +281,21 @@ async def seed_cs_fundamentals(db):
                 "type": ExerciseTypeEnum.visual_programming,
                 "order": 1,
                 "xp_reward": 15,
-                "starter_code": '{"nodes": [{"id": "1", "type": "start", "config": {}}, {"id": "2", "type": "variable", "config": {"name": "animals", "value": "[Dog(\"Rex\"), Cat(\"Whiskers\")]"}}, {"id": "3", "type": "loop", "config": {"var": "a", "times": "len(animals)"}}, {"id": "4", "type": "output", "config": {"value": "a.name + \" says \" + a.speak()"}}, {"id": "5", "type": "end", "config": {}}], "edges": [{"source": "1", "target": "2"}, {"source": "2", "target": "3"}, {"source": "3", "target": "4"}, {"source": "4", "target": "5"}]}',
+                "starter_code": visual_graph(
+                    [
+                        {"id": "1", "type": "start", "position": {"x": 40, "y": 50}, "config": {}},
+                        {"id": "2", "type": "variable", "position": {"x": 330, "y": 50}, "config": {"name": "animals", "value": '[Dog("Rex"), Cat("Whiskers")]'}},
+                        {"id": "3", "type": "loop", "position": {"x": 40, "y": 230}, "config": {"var": "a", "times": "len(animals)"}},
+                        {"id": "4", "type": "output", "position": {"x": 330, "y": 230}, "config": {"value": 'a.name + " says " + a.speak()'}},
+                        {"id": "5", "type": "end", "position": {"x": 40, "y": 410}, "config": {}},
+                    ],
+                    [
+                        {"source": "1", "target": "2"},
+                        {"source": "2", "target": "3"},
+                        {"source": "3", "target": "4"},
+                        {"source": "4", "target": "5"},
+                    ],
+                ),
                 "solution_code": 'class Animal:\n    def __init__(self, name):\n        self.name = name\n    def speak(self):\n        return "..."\n\nclass Dog(Animal):\n    def speak(self):\n        return "Woof!"\n\nclass Cat(Animal):\n    def speak(self):\n        return "Meow!"\n\nanimals = [Dog("Rex"), Cat("Whiskers")]\nfor a in animals:\n    print(a.name, "says", a.speak())',
                 "test_code": 'import sys, io; stdout = sys.stdout; sys.stdout = io.StringIO(); exec(compile(code, "<string>", "exec")); output = sys.stdout.getvalue(); sys.stdout = stdout; assert "Woof" in output and "Meow" in output',
                 "translations": [

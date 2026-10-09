@@ -1,5 +1,6 @@
 import pytest
 from httpx import AsyncClient
+from sqlalchemy import select
 
 
 class TestDashboard:
@@ -145,15 +146,75 @@ class TestVisualProgramming:
         assert result["is_valid"] is False
         assert any("Unreachable nodes" in e for e in result["errors"])
 
-    async def test_visual_starter(self, client: AsyncClient, test_user):
-        for exercise_id in range(1, 20):
-            response = await client.get(f"/visual/{exercise_id}/starter", headers=test_user["headers"])
-            if response.status_code == 200:
-                starter = response.json()
-                assert "nodes" in starter
-                assert "edges" in starter
-                return
-        pytest.skip("No visual exercise found")
+    async def test_every_visual_starter_is_renderable(
+        self, client: AsyncClient, test_user, db_session
+    ):
+        """Every visual_programming starter must parse AND carry positions.
+
+        The previous version of this test looped ids 1..20, asserted only that
+        `nodes` and `edges` keys existed, and `return`ed on the first 200 -- so
+        it checked exactly one exercise, never looked at `position`, and passed
+        while all three seeded graphs were broken:
+
+          * 15 and 20 shipped every node without a `position`, and the editor
+            does arithmetic on `node.position.x` -- it threw during render and
+            blanked the page.
+          * 54's starter_code was invalid JSON (a Python escaping bug), so the
+            endpoint's except-JSONDecodeError served an empty graph and its
+            starter never loaded at all.
+
+        So this walks every one of them, does not return early, and asserts the
+        properties that actually make a graph renderable.
+        """
+        from app.models import Exercise, ExerciseTypeEnum
+
+        result = await db_session.execute(
+            select(Exercise.id)
+            .where(Exercise.exercise_type == ExerciseTypeEnum.visual_programming)
+            .order_by(Exercise.id)
+        )
+        exercise_ids = list(result.scalars().all())
+        assert exercise_ids, "seed should contain visual_programming exercises"
+
+        failures: list[str] = []
+        for exercise_id in exercise_ids:
+            response = await client.get(
+                f"/visual/{exercise_id}/starter", headers=test_user["headers"]
+            )
+            if response.status_code != 200:
+                failures.append(f"exercise {exercise_id}: HTTP {response.status_code}")
+                continue
+            starter = response.json()
+
+            # An unparseable starter_code is indistinguishable from an empty
+            # one here -- the endpoint swallows JSONDecodeError and returns
+            # {"nodes": [], "edges": []} -- so an empty graph IS the failure.
+            if not starter.get("nodes"):
+                failures.append(
+                    f"exercise {exercise_id}: no nodes "
+                    "(starter_code is empty or does not parse)"
+                )
+                continue
+
+            for node in starter["nodes"]:
+                position = node.get("position")
+                if not isinstance(position, dict):
+                    failures.append(f"exercise {exercise_id} node {node.get('id')!r}: no position")
+                    continue
+                for axis in ("x", "y"):
+                    value = position.get(axis)
+                    if not isinstance(value, (int, float)) or isinstance(value, bool):
+                        failures.append(
+                            f"exercise {exercise_id} node {node.get('id')!r}: "
+                            f"position.{axis} is {value!r}, not a number"
+                        )
+
+            node_ids = {n.get("id") for n in starter["nodes"]}
+            for edge in starter.get("edges", []):
+                if edge.get("source") not in node_ids or edge.get("target") not in node_ids:
+                    failures.append(f"exercise {exercise_id}: edge {edge} references a missing node")
+
+        assert not failures, "unrenderable visual starters:\n  " + "\n  ".join(failures)
 
     async def test_unauthenticated_visual(self, client: AsyncClient):
         response = await client.post("/visual/compile", json={"nodes": [], "edges": []})
