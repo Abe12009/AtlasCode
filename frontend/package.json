@@ -50,7 +50,7 @@
     "tailwindcss": "^4.3.3",
     "typescript": "~6.0.2",
     "vite": "^8.2.2",
-    "vitest": "^3.2.7"
+    "vitest": "^4.1.11"
   },
   "//overrides": [
     "@grpc/grpc-js: @firebase/firestore declares `~1.9.0`, which pins the tree to",
