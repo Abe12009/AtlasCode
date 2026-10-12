@@ -23,7 +23,25 @@ jobs:
       # HS256/RS256 with `algorithms=[...]` pinned (app/core/security.py,
       # app/services/firebase_auth.py). Revisit if either ever signs with EC
       # keys, or if upstream reverses position.
-      - run: pip-audit -r backend/requirements.txt --ignore-vuln PYSEC-2026-1325
+      # python-jose 3.5.0, CVE-2026-85394 (CVSS 4.0 9.3) -- asymmetric keys are
+      # not validated during HMAC init, so a DER-encoded public key lacking PEM
+      # armor is accepted as an HMAC secret. Anyone holding the service's public
+      # key can then forge HS256 tokens. Incomplete fix for CVE-2024-33663; no
+      # fixed version exists.
+      #
+      # Ignored because the exploit needs BOTH of its preconditions and this app
+      # provides neither. (1) `algorithms` unrestricted: both decode sites pin it
+      # -- app/core/security.py:67 to ["HS256"], app/services/firebase_auth.py:166
+      # to ["RS256"], and firebase_auth.py:153 rejects any header alg != RS256
+      # before decode is even called. (2) a DER public key as the verifying key:
+      # security.py passes a symmetric secret, firebase_auth.py passes a JWK dict
+      # straight from Google's /v1/jwk/ endpoint. No DER, no unpinned algorithm.
+      #
+      # Revisit if any jwt.decode() call loses its explicit `algorithms=[...]`,
+      # if a PEM/DER public key is ever passed as a verification key, or if
+      # upstream ships a fix -- at which point drop this and pin the fixed
+      # version. Migrating to PyJWT also removes it (see requirements.txt).
+      - run: pip-audit -r backend/requirements.txt --ignore-vuln PYSEC-2026-1325 --ignore-vuln CVE-2026-85394
 
   npm-audit:
     runs-on: ubuntu-latest
