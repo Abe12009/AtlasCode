@@ -1,0 +1,45 @@
+name: Tests
+
+# push is restricted to main so a branch with an open PR does not run this
+# twice (once for the branch push, once for the pull_request event).
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          # Matches Render's real runtime: render.yaml sets `runtime: python`
+          # with `rootDir: backend`, and Render reads the version from
+          # backend/.python-version, which pins 3.12.11.
+          python-version: "3.12.11"
+      - run: pip install -r requirements.txt
+        working-directory: backend
+      # pytest.ini sets testpaths = tests, so a bare `pytest` picks up the
+      # suite and the session-scoped asyncio loop config.
+      - run: pytest
+        working-directory: backend
+
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - run: npm ci
+        working-directory: frontend
+      # `npm run build` is tsc -b && vite build; split so a type error is
+      # reported as a typecheck failure and the tests run before the build.
+      - run: npx tsc -b
+        working-directory: frontend
+      - run: npm test
+        working-directory: frontend
+      - run: npx vite build
+        working-directory: frontend
