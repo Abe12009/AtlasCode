@@ -427,3 +427,20 @@ class TestLessonLockIsNotEnforced:
             select(LessonProgress.status).where(LessonProgress.user_id == user_id)
         )
         assert MissionStatusEnum.locked not in set(statuses.scalars().all())
+
+
+class TestMissingLessonIsNotFound:
+    """A bogus lesson id must 404, not 500.
+
+    Both endpoints went straight to get_or_create_lesson_progress, which
+    inserts a progress row keyed on lesson_id -- a nonexistent lesson tripped
+    the foreign key and surfaced as a 500.
+    """
+
+    async def test_start_missing_lesson_404(self, client: AsyncClient, test_user):
+        response = await client.post("/lessons/999999/start", headers=test_user["headers"])
+        assert response.status_code == 404
+
+    async def test_progress_missing_lesson_404(self, client: AsyncClient, test_user):
+        response = await client.get("/lessons/999999/progress", headers=test_user["headers"])
+        assert response.status_code == 404

@@ -28,6 +28,20 @@ def _extract_trace(exercise: Exercise) -> Optional[list]:
     trace = config.get("trace") if isinstance(config, dict) else None
     return trace if isinstance(trace, list) else None
 
+
+async def _require_lesson(db: AsyncSession, lesson_id: int) -> None:
+    """404 on a lesson that does not exist.
+
+    Mirrors projects.py. Both progress endpoints below go on to insert a
+    progress row keyed on lesson_id, which on Postgres trips the foreign key
+    and surfaces as a 500 (the test engine does not enforce FKs, so there it
+    silently created an orphan row and returned 200).
+    """
+    result = await db.execute(select(Lesson.id).where(Lesson.id == lesson_id))
+    if not result.scalar_one_or_none():
+        raise HTTPException(status_code=404, detail="Lesson not found")
+
+
 router = APIRouter(prefix="/lessons", tags=["lessons"])
 
 
@@ -119,6 +133,7 @@ async def get_lesson_progress(
     current_user = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
+    await _require_lesson(db, lesson_id)
     return await get_or_create_lesson_progress(
         db, current_user.id, lesson_id, MissionStatusEnum.ready
     )
@@ -130,6 +145,7 @@ async def start_lesson(
     current_user = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
+    await _require_lesson(db, lesson_id)
     progress = await get_or_create_lesson_progress(
         db, current_user.id, lesson_id, MissionStatusEnum.in_progress
     )
