@@ -11,6 +11,7 @@ from app.models import (
     UserAchievement,
 )
 from app.services.achievements import check_and_award_achievements
+from app.services.stats import level_for_xp
 
 
 async def _user_id(client, headers):
@@ -225,3 +226,30 @@ class TestAchievementNotification:
             )
         ).scalars().all()
         assert len(notifications) == 1
+
+
+class TestAchievementXpRecomputesLevel:
+    async def test_achievement_xp_crossing_a_level_boundary_levels_up(
+        self, client, test_user, db_session
+    ):
+        """Achievement XP used to be added without recomputing the level.
+
+        Both callers recompute the level *before* calling the service, so a
+        reward that crossed a boundary left the profile one level behind its
+        own XP until some later request happened to recompute.
+        """
+        user_id = await _user_id(client, test_user["headers"])
+        profile = await _profile(db_session, user_id)
+        profile.xp = 80  # level 1; first-lesson's +50 XP crosses into level 2
+        profile.level = level_for_xp(profile.xp)
+        profile.completed_lessons = 1
+        await db_session.commit()
+        await db_session.refresh(profile)
+
+        earned = await check_and_award_achievements(db_session, user_id, profile)
+        await db_session.commit()
+        await db_session.refresh(profile)
+
+        assert {a.slug for a in earned} == {"first-lesson"}
+        assert profile.xp == 130
+        assert profile.level == 2 == level_for_xp(profile.xp)

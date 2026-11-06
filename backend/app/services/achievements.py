@@ -131,6 +131,11 @@ async def check_and_award_achievements(
             already_earned.add(achievement.id)
             if achievement.xp_reward:
                 profile.xp += achievement.xp_reward
+                # Achievement XP is the last XP written in a request: both
+                # callers (exercises.py submit, projects.py submit-task)
+                # recompute the level before calling here, so without this
+                # the level lagged a whole request behind its own XP.
+                profile.level = max(profile.level, level_for_xp(profile.xp))
 
             title_result = await db.execute(
                 select(AchievementTranslation.title).where(
