@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
-import { dashboardApi } from '../api/services';
+import { coursesApi, dashboardApi } from '../api/services';
 import { BookOpen, FolderKanban, Trophy, Flame, Zap, Code, ArrowRight, TrendingUp, Sparkles, Flag, MapPin, ChevronDown, ChevronUp } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { Card, Badge, Progress, Button, cn, Skeleton, StatusBadge, XPBadge, StreakBadge, QuestRoadmap } from '../components/ui';
@@ -10,11 +10,44 @@ import { ShareAchievementButton } from '../components/ShareAchievementButton';
 import { useTranslation } from '../hooks/useTranslation';
 
 export function Dashboard() {
-  const { t } = useTranslation();
+  const { t, currentLanguage } = useTranslation();
   const [storyExpanded, setStoryExpanded] = useState(false);
   const { data: dashboard, isLoading, error } = useQuery({
     queryKey: ['dashboard'],
     queryFn: dashboardApi.get,
+  });
+
+  /** Which course the quest map represents.
+   *
+   * 1. the course the student's current mission belongs to, else
+   * 2. the first course still in progress, else
+   * 3. nothing -- the map shows an empty state instead of inventing lessons.
+   *
+   * The dashboard endpoint puts no `course_id` on `current_mission` (see
+   * app/api/dashboard.py: it resolves only the course *title*), so rule 1
+   * matches that title against `course_progress` -- the same join the welcome
+   * subtitle below already does. A current mission whose course has no
+   * CourseProgress row yet (that row is created lazily on first visit to the
+   * course page) therefore falls through to rule 2.
+   */
+  const roadmapCourseId = (() => {
+    const rows = dashboard?.course_progress ?? [];
+    const missionCourseTitle = dashboard?.current_mission_course_title;
+    if (missionCourseTitle) {
+      const matched = rows.find((p) => p.title === missionCourseTitle);
+      if (matched) return matched.course_id;
+    }
+    return rows.find((p) => p.progress_percent < 100)?.course_id ?? null;
+  })();
+
+  /** Real lessons for that one course. Same query key as CourseDetail, so
+   * opening the course page next is a cache hit rather than a second fetch.
+   * GET /courses/{id} is what carries per-lesson `status` -- the dashboard
+   * endpoint's course_progress has only counts. */
+  const { data: roadmapCourse } = useQuery({
+    queryKey: ['course', String(roadmapCourseId), currentLanguage],
+    queryFn: () => coursesApi.getById(roadmapCourseId as number, currentLanguage),
+    enabled: roadmapCourseId != null,
   });
 
   if (isLoading) {
@@ -118,58 +151,31 @@ export function Dashboard() {
     return furthest ? { title: furthest.title as string, percent: furthest.progress_percent } : null;
   })();
 
+  /** One node per real lesson of `roadmapCourse`, carrying that lesson's own
+   * id and the status the backend computed for it (completed / current /
+   * available / locked -- see app/api/courses.py `_lesson_status`).
+   *
+   * What this replaces: nodes numbered 1..total_lessons from the course's
+   * *counts*, with a status re-derived from `completed_lessons` (so the
+   * initial `let status = 'locked'` was dead -- the final `else` overwrote it
+   * with 'available'), and a `path` of `/app/lessons/${courseId}-${i}` that
+   * matched no route. QuestRoadmap never read `path`, so no node was ever a
+   * link; the strings are simply gone rather than repointed, and nodes stay
+   * non-clickable.
+   */
   const buildQuestNodes = (): QuestNodeData[] => {
-    const nodes: QuestNodeData[] = [];
-
-    if (courseProgress.length > 0) {
-      courseProgress.forEach((progress, courseIndex) => {
-        const courseId = progress.course_id;
-        const completed = progress.completed_lessons;
-        const total = progress.total_lessons;
-        const percent = progress.progress_percent;
-
-        for (let i = 1; i <= total; i++) {
-          let status: QuestNodeData['status'] = 'locked';
-          if (i < completed) status = 'completed';
-          else if (i === completed + 1 && percent < 100) status = 'current';
-          else if (i === completed + 1 && percent >= 100) status = 'completed';
-          else if (i <= completed) status = 'completed';
-          else status = 'available';
-
-          nodes.push({
-            id: `course-${courseId}-lesson-${i}`,
-            title: `${t('dashboard.course')} ${courseIndex + 1} - ${t('dashboard.lesson')} ${i}`,
-            type: 'lesson',
-            status,
-            estimatedMinutes: 30,
-            xpReward: 50 + (i * 10),
-            path: `/app/lessons/${courseId}-${i}`,
-          });
-        }
-
-        if (courseIndex < courseProgress.length - 1) {
-          nodes.push({
-            id: `checkpoint-${courseId}`,
-            title: t('dashboard.checkpoint'),
-            type: 'checkpoint',
-            status: percent >= 100 ? 'completed' : 'locked',
-            estimatedMinutes: 0,
-            xpReward: 200,
-          });
-        }
-      });
-    }
-
-    if (nodes.length === 0) {
-      nodes.push(
-        { id: 'welcome-1', title: t('dashboard.welcome_lesson_1'), type: 'lesson', status: 'available', estimatedMinutes: 30, xpReward: 50, path: '/app/courses' },
-        { id: 'welcome-2', title: t('dashboard.welcome_lesson_2'), type: 'lesson', status: 'locked', estimatedMinutes: 30, xpReward: 50 },
-        { id: 'welcome-3', title: t('dashboard.welcome_lesson_3'), type: 'lesson', status: 'locked', estimatedMinutes: 45, xpReward: 75 },
-        { id: 'welcome-project', title: t('dashboard.first_project'), type: 'project', status: 'locked', estimatedMinutes: 120, xpReward: 300 },
-      );
-    }
-
-    return nodes;
+    const lessons = (roadmapCourse?.modules ?? []).flatMap((m) => m.lessons ?? []);
+    return lessons.map((lesson) => ({
+      id: lesson.id,
+      title: lesson.translations[0]?.title || `${t('dashboard.lesson')} ${lesson.order}`,
+      type: lesson.is_project ? 'project' : 'lesson',
+      // An absent status means an older backend, not a locked lesson: the
+      // gate itself fails open, so the node does too.
+      status: lesson.status ?? 'available',
+      estimatedMinutes: lesson.estimated_minutes,
+      xpReward: lesson.xp_reward,
+      difficulty: lesson.difficulty,
+    }));
   };
 
   const questNodes = buildQuestNodes();
@@ -255,7 +261,13 @@ export function Dashboard() {
             <ArrowRight className="h-4 w-4" />
           </Link>
         </div>
-        <QuestRoadmap nodes={questNodes} variant="horizontal" />
+        {questNodes.length > 0 ? (
+          <QuestRoadmap nodes={questNodes} variant="horizontal" />
+        ) : (
+          <p className="text-sm text-text-tertiary py-6 text-center" data-testid="quest-board-empty">
+            {t('dashboard.no_courses_started')}
+          </p>
+        )}
       </div>
 
       <div className="grid lg:grid-cols-3 gap-6">
