@@ -5,6 +5,9 @@
 
 # --- Local databases ---
 *.db
+# SQLite's rollback journal: `*.db` does not match it, so an interrupted test
+# run used to leave backend/test_atlascode.db-journal showing as untracked.
+*.db-journal
 *.sqlite
 *.sqlite3
 
