@@ -1,13 +1,28 @@
 import asyncio
+import random
+from dataclasses import replace
 
 import pytest
 from httpx import AsyncClient
 from sqlalchemy import select, func
 
-from app.models import Lesson, LessonProgress, MissionStatusEnum, User
+from app.curriculum import ROADMAP_BY_SLUG
+from app.models import Course, Lesson, LessonProgress, MissionStatusEnum, Module, User
+from app.services.lesson_gating import unlocked_lesson_ids
 
 
 class TestLessons:
+    @pytest.fixture(autouse=True)
+    async def _unlock_lessons(self, test_user, unlock_course):
+        """Lesson gating locks everything past the first lesson of a course.
+
+        These tests predate app.services.lesson_gating and address lessons and
+        exercises by hard-coded id, several courses deep. Grant them the same
+        grandfathered access a pre-existing account gets -- see
+        conftest.unlock_course_for -- rather than softening what they assert.
+        """
+        await unlock_course(test_user)
+
     async def test_get_lesson_detail(self, client: AsyncClient, test_user):
         response = await client.get("/lessons/1", headers=test_user["headers"])
         assert response.status_code == 200
@@ -398,35 +413,482 @@ class TestSubmitCompletesLessonWithoutStart:
             await db_session.delete(extra)
             await db_session.commit()
 
-class TestLessonLockIsNotEnforced:
-    """Pins the premise behind *not* adding a lock check to submit.
+#: The gate is exercised against python-basics throughout: lessons 1..17 in
+#: curriculum order, so a lesson id doubles as a readable index (lesson 1 is
+#: index 0). Resolved by slug rather than assumed wherever a test needs the
+#: whole sequence.
+GATED_COURSE_SLUG = "python-basics"
 
-    No code path can put a lesson progress row into locked: the single
-    creation site always passes an explicit ready or in_progress, so the
-    model default=locked is unreachable, and both GET /lessons/{id} and
-    /start clear the status anyway. A lock check on submit would therefore be
-    dead code. If lesson gating is ever built, this test should fail and send
-    its author to lesson_completion_findings.md finding #2, still open.
+
+async def _me_id(client, test_user) -> int:
+    return (await client.get("/auth/me", headers=test_user["headers"])).json()["id"]
+
+
+async def _sequence(db_session, slug=GATED_COURSE_SLUG) -> list[int]:
+    """Lesson ids of `slug`, in the same order the gate indexes them."""
+    result = await db_session.execute(
+        select(Lesson.id)
+        .join(Module, Lesson.module_id == Module.id)
+        .join(Course, Module.course_id == Course.id)
+        .where(Course.slug == slug)
+        .order_by(Module.order, Lesson.order, Lesson.id)
+    )
+    return list(result.scalars().all())
+
+
+async def _set_rows(db_session, user_id, pairs):
+    """Make this user's progress rows be exactly `pairs` of (lesson_id, status)."""
+    await db_session.execute(
+        LessonProgress.__table__.delete().where(LessonProgress.user_id == user_id)
+    )
+    for lesson_id, status in pairs:
+        db_session.add(
+            LessonProgress(user_id=user_id, lesson_id=lesson_id, status=status)
+        )
+    await db_session.commit()
+
+
+class TestLessonLockingIsEnforced:
+    """Sequential lesson unlocking, as enforced by app.services.lesson_gating.
+
+    Replaces TestLessonLockIsNotEnforced, which pinned the opposite premise --
+    that no lock existed, so a check on submit would be dead code. Its
+    docstring told a future author to go read lesson_completion_findings.md
+    finding #2 if it ever failed; this class is that finding being closed.
+
+    The rule: index a course's lessons 0..N-1, then
+    ceiling = max(last completed + 1, last touched), and lesson i is open when
+    i <= max(ceiling, 0). The second term is what grandfathers accounts that
+    predate gating. It is `last touched`, not `last touched + 1`, so merely
+    opening or starting a lesson never opens the one after it.
     """
 
-    async def test_no_endpoint_produces_a_locked_lesson_progress_row(
+    async def test_first_lesson_of_a_course_is_always_open(
+        self, client: AsyncClient, test_user
+    ):
+        response = await client.get("/lessons/1", headers=test_user["headers"])
+        assert response.status_code == 200
+
+    async def test_second_lesson_is_forbidden_before_the_first_is_completed(
+        self, client: AsyncClient, test_user
+    ):
+        response = await client.get("/lessons/2", headers=test_user["headers"])
+        assert response.status_code == 403
+        assert "locked" in response.json()["detail"].lower()
+
+    async def test_every_gated_endpoint_refuses_a_locked_lesson(
+        self, client: AsyncClient, test_user
+    ):
+        """All five gated routes -- and /run staying open on purpose."""
+        headers = test_user["headers"]
+        assert (await client.get("/lessons/2", headers=headers)).status_code == 403
+        assert (
+            await client.get("/lessons/2/progress", headers=headers)
+        ).status_code == 403
+        assert (await client.post("/lessons/2/start", headers=headers)).status_code == 403
+        # Exercise 4 belongs to lesson 2.
+        assert (await client.get("/exercises/4", headers=headers)).status_code == 403
+        submit = await client.post(
+            "/exercises/4/submit",
+            headers=headers,
+            json={"exercise_id": 4, "answer": "whatever"},
+        )
+        assert submit.status_code == 403
+
+        # /run is ungated by design: it executes code and awards nothing.
+        run = await client.post(
+            "/exercises/4/run",
+            headers=headers,
+            json={"exercise_id": 4, "code": "print(1)"},
+        )
+        assert run.status_code != 403
+
+    async def test_a_403_creates_no_progress_row(
         self, client: AsyncClient, test_user, db_session
     ):
-        for path in ("/lessons/2/progress", "/lessons/3/progress"):
-            assert (await client.get(path, headers=test_user["headers"])).status_code == 200
-        assert (
-            await client.post("/lessons/2/start", headers=test_user["headers"])
-        ).status_code == 200
+        """The refusal must land before get_or_create_lesson_progress.
 
-        user = await db_session.execute(
-            select(User).where(User.email == test_user["data"]["email"])
-        )
-        user_id = user.scalar_one().id
+        A progress row is itself an input to the gate, so a 403 that still
+        wrote one would be handing out the access it just refused -- and the
+        retry at the end of this test would succeed.
+        """
+        headers = test_user["headers"]
+        user_id = await _me_id(client, test_user)
+
+        assert (await client.get("/lessons/2", headers=headers)).status_code == 403
+        assert (
+            await client.get("/lessons/2/progress", headers=headers)
+        ).status_code == 403
+        assert (await client.post("/lessons/2/start", headers=headers)).status_code == 403
+        assert (await client.get("/exercises/4", headers=headers)).status_code == 403
+
         db_session.expire_all()
-        statuses = await db_session.execute(
-            select(LessonProgress.status).where(LessonProgress.user_id == user_id)
+        count = await db_session.execute(
+            select(func.count())
+            .select_from(LessonProgress)
+            .where(LessonProgress.user_id == user_id, LessonProgress.lesson_id == 2)
         )
-        assert MissionStatusEnum.locked not in set(statuses.scalars().all())
+        assert count.scalar() == 0
+
+        assert (await client.get("/lessons/2", headers=headers)).status_code == 403
+
+    async def test_completing_a_lesson_unlocks_the_next_one(
+        self, client: AsyncClient, test_user, db_session
+    ):
+        headers = test_user["headers"]
+        user_id = await _me_id(client, test_user)
+        assert (await client.get("/lessons/2", headers=headers)).status_code == 403
+
+        await _set_rows(db_session, user_id, [(1, MissionStatusEnum.completed)])
+
+        assert (await client.get("/lessons/2", headers=headers)).status_code == 200
+        # The next one, and no further.
+        assert (await client.get("/lessons/3", headers=headers)).status_code == 403
+
+    async def test_starting_a_lesson_does_not_unlock_the_next_one(
+        self, client: AsyncClient, test_user
+    ):
+        headers = test_user["headers"]
+        assert (await client.post("/lessons/1/start", headers=headers)).status_code == 200
+        assert (await client.get("/lessons/2", headers=headers)).status_code == 403
+
+    async def test_opening_a_lesson_does_not_unlock_the_one_after_it(
+        self, client: AsyncClient, test_user, db_session
+    ):
+        headers = test_user["headers"]
+        user_id = await _me_id(client, test_user)
+        await _set_rows(db_session, user_id, [(1, MissionStatusEnum.completed)])
+
+        # Lesson 2 is open. Opening it, reading its progress and starting it
+        # all take a row at index 1 -- none of which may reach lesson 3.
+        assert (await client.get("/lessons/2", headers=headers)).status_code == 200
+        assert (
+            await client.get("/lessons/2/progress", headers=headers)
+        ).status_code == 200
+        assert (await client.post("/lessons/2/start", headers=headers)).status_code == 200
+        assert (await client.get("/lessons/3", headers=headers)).status_code == 403
+
+    async def test_a_pre_existing_progress_row_grandfathers_access(
+        self, client: AsyncClient, test_user, db_session
+    ):
+        """An account already mid-course when gating arrives keeps what it had."""
+        headers = test_user["headers"]
+        user_id = await _me_id(client, test_user)
+        await _set_rows(db_session, user_id, [(10, MissionStatusEnum.ready)])
+
+        for lesson_id in (1, 5, 9, 10):
+            assert (
+                await client.get(f"/lessons/{lesson_id}", headers=headers)
+            ).status_code == 200, lesson_id
+        assert (await client.get("/lessons/11", headers=headers)).status_code == 403
+
+    async def test_an_ungated_course_skips_the_check(
+        self, client: AsyncClient, test_user, monkeypatch
+    ):
+        entry = ROADMAP_BY_SLUG[GATED_COURSE_SLUG]
+        monkeypatch.setitem(
+            ROADMAP_BY_SLUG, GATED_COURSE_SLUG, replace(entry, gated=False)
+        )
+        response = await client.get("/lessons/12", headers=test_user["headers"])
+        assert response.status_code == 200
+
+    async def test_a_course_missing_from_the_roadmap_fails_open(
+        self, client: AsyncClient, test_user, monkeypatch
+    ):
+        """An unknown slug is ungated, so an unplaced course can't be bricked.
+
+        test_every_seeded_course_is_on_the_roadmap_and_gated is what keeps
+        this escape hatch from quietly swallowing a real course.
+        """
+        monkeypatch.delitem(ROADMAP_BY_SLUG, GATED_COURSE_SLUG)
+        response = await client.get("/lessons/12", headers=test_user["headers"])
+        assert response.status_code == 200
+
+    async def test_a_project_lesson_is_gated_like_any_other(
+        self, client: AsyncClient, test_user, db_session
+    ):
+        """is_project earns no exemption: it occupies an index and obeys the rule.
+
+        Project *missions* -- the separate `projects` table behind /projects --
+        keep their own prerequisite check in app.api.projects. Different
+        object, different gate.
+        """
+        module_id = (
+            await db_session.execute(
+                select(Module.id)
+                .join(Course, Module.course_id == Course.id)
+                .where(Course.slug == GATED_COURSE_SLUG)
+                .order_by(Module.order.desc())
+                .limit(1)
+            )
+        ).scalar_one()
+
+        extra = Lesson(
+            module_id=module_id,
+            slug="gating-project-probe",
+            order=9999,
+            is_project=True,
+            xp_reward=0,
+        )
+        db_session.add(extra)
+        await db_session.commit()
+        await db_session.refresh(extra)
+        try:
+            sequence = await _sequence(db_session)
+            assert sequence[-1] == extra.id, "the probe must sort last"
+
+            response = await client.get(
+                f"/lessons/{extra.id}", headers=test_user["headers"]
+            )
+            assert response.status_code == 403
+        finally:
+            # Leave the shared session-scoped seed as it was found.
+            await db_session.delete(extra)
+            await db_session.commit()
+
+    async def test_unlocked_set_matches_the_rule_for_random_completion_sets(
+        self, client: AsyncClient, test_user, db_session
+    ):
+        """Property check: the service agrees with the rule, restated here.
+
+        The expectation is recomputed from the rule rather than by calling the
+        gate's own `_ceiling`, so a change to the formula has to be made twice
+        before it can pass unnoticed.
+        """
+        user_id = await _me_id(client, test_user)
+        sequence = await _sequence(db_session)
+        course_id = (
+            await db_session.execute(
+                select(Course.id).where(Course.slug == GATED_COURSE_SLUG)
+            )
+        ).scalar_one()
+        all_indexes = list(range(len(sequence)))
+        # Several seeds rather than one: a single fixed seed only ever covers
+        # the one walk it happens to generate.
+        seeds = (20261106, 7, 101, 4242, 99991)
+
+        for seed in seeds:
+            rng = random.Random(seed)
+            for _trial in range(6):
+                completed = set(rng.sample(all_indexes, rng.randint(0, 4)))
+                touched = set(rng.sample(all_indexes, rng.randint(0, 4))) | completed
+
+                await _set_rows(
+                    db_session,
+                    user_id,
+                    [
+                        (
+                            sequence[i],
+                            MissionStatusEnum.completed
+                            if i in completed
+                            else MissionStatusEnum.ready,
+                        )
+                        for i in sorted(touched)
+                    ],
+                )
+
+                last_completed = max(completed) if completed else -1
+                last_touched = max(touched) if touched else -1
+                ceiling = max(max(last_completed + 1, last_touched), 0)
+                expected = {
+                    lesson_id for i, lesson_id in enumerate(sequence) if i <= ceiling
+                }
+
+                actual = await unlocked_lesson_ids(db_session, user_id, course_id)
+                assert actual == expected, (
+                    seed,
+                    sorted(completed),
+                    sorted(touched),
+                )
+
+        await _set_rows(db_session, user_id, [])
+
+    async def test_every_seeded_course_is_on_the_roadmap_and_gated(self, db_session):
+        """Fail-open must never apply to a real course.
+
+        `_slug_is_gated` treats an unknown slug as ungated so a course that
+        isn't placed on the roadmap yet can't be made unreachable. That is
+        only safe while every seeded course really is on the roadmap -- this
+        is the check that stops the escape hatch becoming the behaviour.
+        """
+        slugs = list((await db_session.execute(select(Course.slug))).scalars().all())
+        assert slugs, "no seeded courses"
+        missing = [slug for slug in slugs if slug not in ROADMAP_BY_SLUG]
+        assert missing == [], f"not on the roadmap, so silently ungated: {missing}"
+        ungated = [slug for slug in slugs if not ROADMAP_BY_SLUG[slug].gated]
+        assert ungated == [], f"seeded but not gated: {ungated}"
+
+
+class TestLessonLockingAcrossModulesAndCourses:
+    """The sequence is per *course*, so module boundaries are invisible to it.
+
+    A course's lessons are indexed 0..N-1 across all its modules in
+    (module.order, lesson.order, lesson.id) order, which means the first
+    lesson of module 2 is simply the next index after the last lesson of
+    module 1 -- it gets no special treatment, and crossing a module must not
+    reset or skip the ceiling.
+    """
+
+    async def test_first_lesson_of_the_second_module_waits_for_the_first_module(
+        self, client: AsyncClient, test_user, db_session
+    ):
+        """python-basics: module 1 `getting-started` is lessons 1-5, module 2
+        `control-flow` starts at lesson 6."""
+        headers = test_user["headers"]
+        user_id = await _me_id(client, test_user)
+
+        modules = (
+            await db_session.execute(
+                select(Module.slug)
+                .join(Course, Module.course_id == Course.id)
+                .where(Course.slug == GATED_COURSE_SLUG)
+                .order_by(Module.order)
+            )
+        ).scalars().all()
+        assert modules[:2] == ["getting-started", "control-flow"], modules
+
+        # Finish module 1 up to but not including its final lesson.
+        await _set_rows(
+            db_session,
+            user_id,
+            [(lesson_id, MissionStatusEnum.completed) for lesson_id in (1, 2, 3, 4)],
+        )
+        # Lesson 5 (last of module 1) is open; lesson 6 (first of module 2) is not.
+        assert (await client.get("/lessons/5", headers=headers)).status_code == 200
+        assert (await client.get("/lessons/6", headers=headers)).status_code == 403
+
+        # Completing the last lesson of module 1 opens the first of module 2.
+        await _set_rows(
+            db_session,
+            user_id,
+            [(lesson_id, MissionStatusEnum.completed) for lesson_id in (1, 2, 3, 4, 5)],
+        )
+        assert (await client.get("/lessons/6", headers=headers)).status_code == 200
+        # And no further: lesson 7 stays shut.
+        assert (await client.get("/lessons/7", headers=headers)).status_code == 403
+
+    async def test_a_second_course_walks_start_to_end(
+        self, client: AsyncClient, test_user, db_session
+    ):
+        """Same walk on math-for-cs, which is not python-basics.
+
+        Three lessons across two modules, so it also crosses a module
+        boundary -- and its own first lesson is open regardless of how much
+        of python-basics the student has done, because gating is per course.
+        """
+        headers = test_user["headers"]
+        user_id = await _me_id(client, test_user)
+        sequence = await _sequence(db_session, "math-for-cs")
+        assert len(sequence) >= 3, sequence
+
+        await _set_rows(db_session, user_id, [])
+
+        # Nothing done anywhere: the course's own first lesson is open.
+        assert (
+            await client.get(f"/lessons/{sequence[0]}", headers=headers)
+        ).status_code == 200
+        assert (
+            await client.get(f"/lessons/{sequence[1]}", headers=headers)
+        ).status_code == 403
+
+        completed = []
+        for i in range(len(sequence) - 1):
+            completed.append((sequence[i], MissionStatusEnum.completed))
+            await _set_rows(db_session, user_id, completed)
+            assert (
+                await client.get(f"/lessons/{sequence[i + 1]}", headers=headers)
+            ).status_code == 200, sequence[i + 1]
+
+        # Walked to the end: every lesson in the course is now reachable.
+        for lesson_id in sequence:
+            assert (
+                await client.get(f"/lessons/{lesson_id}", headers=headers)
+            ).status_code == 200, lesson_id
+
+        await _set_rows(db_session, user_id, [])
+
+    async def test_tied_order_values_sequence_by_lesson_id_and_stay_stable(
+        self, client: AsyncClient, test_user, db_session, monkeypatch
+    ):
+        """Ties in both order columns must resolve by Lesson.id, repeatably.
+
+        `Module.order` and `Lesson.order` are plain `default=0` integers with
+        no uniqueness, so a real curriculum can tie. Without Lesson.id as the
+        final tie-break the database may return tied rows in any order, and a
+        lesson's index -- hence whether it is locked -- could differ between
+        two requests. Built as throwaway rows because no seeded course ties.
+        """
+        from app.curriculum import RoadmapEntry
+
+        slug = "gating-tie-probe"
+        course = Course(slug=slug, order=9999, stage=1, track="probe")
+        db_session.add(course)
+        await db_session.commit()
+        await db_session.refresh(course)
+
+        created = [course]
+        try:
+            # Two modules sharing one order, each with two lessons sharing one
+            # order: every comparison before Lesson.id is a tie.
+            lesson_ids = []
+            for _ in range(2):
+                module = Module(course_id=course.id, slug=f"m{len(created)}", order=1)
+                db_session.add(module)
+                await db_session.commit()
+                await db_session.refresh(module)
+                created.append(module)
+                for n in range(2):
+                    lesson = Lesson(
+                        module_id=module.id,
+                        slug=f"l{len(created)}-{n}",
+                        order=1,
+                        xp_reward=0,
+                    )
+                    db_session.add(lesson)
+                    await db_session.commit()
+                    await db_session.refresh(lesson)
+                    created.append(lesson)
+                    lesson_ids.append(lesson.id)
+
+            # The probe course is not on the roadmap, so it would fail open.
+            # Register it as gated so the ordering is actually exercised.
+            monkeypatch.setitem(
+                ROADMAP_BY_SLUG,
+                slug,
+                RoadmapEntry(slug, 1, "probe", "?", "beginner", 1, None, True),
+            )
+
+            user_id = await _me_id(client, test_user)
+            await _set_rows(db_session, user_id, [])
+
+            # Deterministic: ties broken by ascending Lesson.id.
+            sequence = await _sequence(db_session, slug)
+            assert sequence == sorted(lesson_ids), (sequence, sorted(lesson_ids))
+
+            # Stable: repeated calls agree with each other and with the rule.
+            first_call = await unlocked_lesson_ids(db_session, user_id, course.id)
+            for _ in range(4):
+                assert (
+                    await unlocked_lesson_ids(db_session, user_id, course.id)
+                ) == first_call
+            assert first_call == {sorted(lesson_ids)[0]}
+
+            # And the gate agrees over HTTP: lowest id open, next one shut.
+            headers = test_user["headers"]
+            ordered = sorted(lesson_ids)
+            assert (
+                await client.get(f"/lessons/{ordered[0]}", headers=headers)
+            ).status_code == 200
+            assert (
+                await client.get(f"/lessons/{ordered[1]}", headers=headers)
+            ).status_code == 403
+        finally:
+            # Leave the shared session-scoped seed as it was found. Children
+            # first: Lesson -> Module -> Course.
+            await _set_rows(db_session, await _me_id(client, test_user), [])
+            for row in reversed(created):
+                await db_session.delete(row)
+            await db_session.commit()
 
 
 class TestMissingLessonIsNotFound:

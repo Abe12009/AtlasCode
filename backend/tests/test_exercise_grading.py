@@ -54,6 +54,17 @@ async def get_xp(client: AsyncClient, headers: dict) -> int:
 
 
 class TestMultipleChoiceGrading:
+    @pytest.fixture(autouse=True)
+    async def _unlock_lessons(self, test_user, unlock_course):
+        """Lesson gating locks everything past the first lesson of a course.
+
+        These tests predate app.services.lesson_gating and address lessons and
+        exercises by hard-coded id, several courses deep. Grant them the same
+        grandfathered access a pre-existing account gets -- see
+        conftest.unlock_course_for -- rather than softening what they assert.
+        """
+        await unlock_course(test_user)
+
     async def test_correct_option_is_correct_and_awards_xp(
         self, client: AsyncClient, test_user, db_session
     ):
@@ -158,6 +169,17 @@ class TestMultipleChoiceGrading:
 
 
 class TestApiDoesNotLeakAnswers:
+    @pytest.fixture(autouse=True)
+    async def _unlock_lessons(self, test_user, unlock_course):
+        """Lesson gating locks everything past the first lesson of a course.
+
+        These tests predate app.services.lesson_gating and address lessons and
+        exercises by hard-coded id, several courses deep. Grant them the same
+        grandfathered access a pre-existing account gets -- see
+        conftest.unlock_course_for -- rather than softening what they assert.
+        """
+        await unlock_course(test_user)
+
     async def test_lesson_payload_never_reveals_the_correct_option(
         self, client: AsyncClient, test_user, db_session
     ):
@@ -340,6 +362,17 @@ class TestPerAssertionTestResults:
     against execute_code() in test_code_executor.py -- these confirm the
     schema/endpoint plumbing actually carries the field through for real."""
 
+    @pytest.fixture(autouse=True)
+    async def _unlock_lessons(self, test_user, unlock_course):
+        """Lesson gating locks everything past the first lesson of a course.
+
+        These tests predate app.services.lesson_gating and address lessons and
+        exercises by hard-coded id, several courses deep. Grant them the same
+        grandfathered access a pre-existing account gets -- see
+        conftest.unlock_course_for -- rather than softening what they assert.
+        """
+        await unlock_course(test_user)
+
     async def test_submit_correct_solution_reports_a_passing_checklist_row(
         self, client: AsyncClient, test_user
     ):
@@ -399,6 +432,17 @@ class TestPerAssertionTestResults:
 
 
 class TestLessonCompletionAndNotifications:
+    @pytest.fixture(autouse=True)
+    async def _unlock_lessons(self, test_user, unlock_course):
+        """Lesson gating locks everything past the first lesson of a course.
+
+        These tests predate app.services.lesson_gating and address lessons and
+        exercises by hard-coded id, several courses deep. Grant them the same
+        grandfathered access a pre-existing account gets -- see
+        conftest.unlock_course_for -- rather than softening what they assert.
+        """
+        await unlock_course(test_user)
+
     async def test_multiple_choice_completion_completes_the_lesson_and_notifies(
         self, client: AsyncClient, test_user, db_session
     ):

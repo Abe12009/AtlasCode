@@ -4,8 +4,9 @@ from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 from sqlalchemy.orm import declarative_base
 from app.main import app
+from sqlalchemy import select
 from app.db.session import get_db
-from app.models import Base
+from app.models import Base, Course, LessonProgress, MissionStatusEnum, User
 from app.core.config import get_settings
 
 settings = get_settings()
@@ -184,3 +185,79 @@ async def second_user(client):
     assert response.status_code == 200
     token = response.json()["access_token"]
     return {"token": token, "headers": {"Authorization": f"Bearer {token}"}, "data": user_data}
+
+
+async def _resolve_user_id(session, user) -> int:
+    """Accept whatever a test already has: the `test_user` dict, an email, or an id."""
+    if isinstance(user, int):
+        return user
+    email = user["data"]["email"] if isinstance(user, dict) else user
+    result = await session.execute(select(User.id).where(User.email == email))
+    return result.scalar_one()
+
+
+async def unlock_course_for(user, course=None) -> None:
+    """Grandfather `user` into a gated course, the way a pre-existing account is.
+
+    Lesson gating (app.services.lesson_gating) reads the user's own
+    LessonProgress rows: the unlock ceiling is
+    `max(last completed + 1, last touched)`, so a single row against a
+    course's *final* lesson lifts the ceiling to the end of that course and
+    every lesson in it is reachable. That is exactly the retroactive-safety
+    path the gate is built around, which is why tests written before gating
+    existed can be fixed by granting it rather than by relaxing what they
+    assert.
+
+    `course` is a Course id, or None for every course -- most tests here are
+    parametrised across lesson ids from several courses, so None is the usual
+    call. The row is created with `ready`, never `completed`: it must not
+    inflate completed_lessons, course roll-ups or XP, all of which these
+    tests measure.
+
+    The sequence comes from the gate's own `_course_sequences`, deliberately,
+    so "last lesson" here cannot drift from the gate's idea of it -- the two
+    share one ordering rule (module.order, lesson.order, lesson.id).
+    """
+    from app.services.lesson_gating import _course_sequences
+
+    async with TestAsyncSessionMaker() as session:
+        user_id = await _resolve_user_id(session, user)
+
+        if course is None:
+            course_ids = list((await session.execute(select(Course.id))).scalars().all())
+        else:
+            course_ids = [course]
+
+        sequences = await _course_sequences(session, course_ids)
+        last_lesson_ids = [seq[-1] for seq in sequences.values() if seq]
+        if not last_lesson_ids:
+            return
+
+        existing = set(
+            (
+                await session.execute(
+                    select(LessonProgress.lesson_id).where(
+                        LessonProgress.user_id == user_id,
+                        LessonProgress.lesson_id.in_(last_lesson_ids),
+                    )
+                )
+            )
+            .scalars()
+            .all()
+        )
+        for lesson_id in last_lesson_ids:
+            if lesson_id not in existing:
+                session.add(
+                    LessonProgress(
+                        user_id=user_id,
+                        lesson_id=lesson_id,
+                        status=MissionStatusEnum.ready,
+                    )
+                )
+        await session.commit()
+
+
+@pytest.fixture
+def unlock_course():
+    """`unlock_course_for` as a fixture, for tests that prefer injection."""
+    return unlock_course_for

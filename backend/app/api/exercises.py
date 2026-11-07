@@ -21,6 +21,7 @@ from app.services.code_executor import execute_code, validate_python_code
 from app.services.exercise_grading import grade_exercise, resolve_strategy, STRATEGY_SANDBOX
 from app.services.notifications import create_notification
 from app.services.lesson_progress import get_or_create_lesson_progress
+from app.services.lesson_gating import is_lesson_unlocked
 from app.services.stats import level_for_xp, record_activity
 
 router = APIRouter(prefix="/exercises", tags=["exercises"])
@@ -39,6 +40,27 @@ def _submitted_answer_text(request) -> str:
     return request.code or ""
 
 
+LOCKED_DETAIL = (
+    "Lesson is locked. Complete the preceding lesson in this course first."
+)
+
+
+async def _require_lesson_unlocked(db: AsyncSession, user_id: int, exercise: Exercise) -> None:
+    """403 when the exercise's lesson is not unlocked for this user.
+
+    Must run before get_or_create_lesson_progress in /submit: the row that
+    helper writes is itself an input to the gate, so checking afterwards would
+    grant the access being refused. /run is deliberately not gated -- it only
+    executes code against the sandbox, awards nothing and writes nothing.
+    """
+    lesson = exercise.lesson
+    if lesson is None:
+        # No lesson to place in a sequence; nothing to enforce.
+        return
+    if not await is_lesson_unlocked(db, user_id, lesson):
+        raise HTTPException(status_code=403, detail=LOCKED_DETAIL)
+
+
 @router.get("/{exercise_id}", response_model=ExerciseResponse)
 async def get_exercise(
     exercise_id: int,
@@ -49,6 +71,7 @@ async def get_exercise(
     query = select(Exercise).options(
         selectinload(Exercise.translations),
         selectinload(Exercise.options).selectinload(ExerciseOption.translations),
+        selectinload(Exercise.lesson),
     ).where(Exercise.id == exercise_id)
 
     result = await db.execute(query)
@@ -56,6 +79,8 @@ async def get_exercise(
 
     if not exercise:
         raise HTTPException(status_code=404, detail="Exercise not found")
+
+    await _require_lesson_unlocked(db, current_user.id, exercise)
 
     exercise.translations = [t for t in exercise.translations if t.language == language]
     exercise.options = [o for o in exercise.options]
@@ -139,6 +164,8 @@ async def submit_exercise(
 
     if not exercise:
         raise HTTPException(status_code=404, detail="Exercise not found")
+
+    await _require_lesson_unlocked(db, current_user.id, exercise)
 
     # Every type is graded against its own stored expected answer. Code
     # exercises still go through the sandbox unchanged. Offloaded to a

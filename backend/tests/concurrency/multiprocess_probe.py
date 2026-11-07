@@ -64,7 +64,46 @@ def wait_for_health(port: int, timeout: float = 90.0) -> bool:
     return False
 
 
-async def drive(port: int, clients: int) -> dict:
+def unlock_lessons_for(db_path: str, user_id: int) -> None:
+    """Grandfather this probe's user past lesson gating.
+
+    app.services.lesson_gating locks every lesson past the first of a course
+    until the previous one is completed, so the endpoints this probe races --
+    /lessons/2/progress and /lessons/3/start in particular -- would answer 403
+    and the probe would be measuring the concurrency of a refusal. The gate
+    reads the user's own LessonProgress rows (ceiling =
+    max(last completed + 1, last touched)), so one `ready` row against a
+    course's final lesson reopens the whole course, which is the same
+    retroactive-safety path tests/conftest.py:unlock_course_for uses.
+
+    Written with plain sqlite3 rather than over HTTP because there is no
+    endpoint that grants this, and done once while the server is idle, before
+    any concurrent phase starts -- so none of the measured traffic changes.
+    `ready`, never `completed`, so no XP or completion count is invented.
+    """
+    import sqlite3
+
+    conn = sqlite3.connect(db_path)
+    try:
+        rows = conn.execute(
+            """
+            SELECT l.id, m.course_id
+            FROM lessons l JOIN modules m ON l.module_id = m.id
+            ORDER BY m.course_id, m."order", l."order", l.id
+            """
+        ).fetchall()
+        last_by_course = {course_id: lesson_id for lesson_id, course_id in rows}
+        conn.executemany(
+            "INSERT OR IGNORE INTO lesson_progress (user_id, lesson_id, status)"
+            " VALUES (?, ?, 'ready')",
+            [(user_id, lesson_id) for lesson_id in last_by_course.values()],
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+
+async def drive(port: int, clients: int, db_path: str) -> dict:
     import uuid
 
     import httpx
@@ -85,6 +124,10 @@ async def drive(port: int, clients: int) -> dict:
         )
         register.raise_for_status()
         headers = {"Authorization": f"Bearer {register.json()['access_token']}"}
+
+        me = await client.get("/auth/me", headers=headers)
+        me.raise_for_status()
+        unlock_lessons_for(db_path, me.json()["id"])
 
         # 1. Concurrent lesson starts for the same user + lesson.
         starts = await asyncio.gather(
@@ -201,7 +244,7 @@ def main() -> int:
                 return 2
 
             print(f"Server healthy. Driving {args.clients} concurrent clients per scenario.\n")
-            report = asyncio.run(drive(port, args.clients))
+            report = asyncio.run(drive(port, args.clients, db_path))
         finally:
             proc.terminate()
             try:

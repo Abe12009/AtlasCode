@@ -8,9 +8,10 @@ from sqlalchemy.orm import selectinload
 from app.db.session import get_db
 from app.core.dependencies import get_current_user
 from app.services.lesson_progress import get_or_create_lesson_progress
+from app.services.lesson_gating import is_lesson_unlocked
 from app.models import (
     Lesson, LessonBlock, LessonBlockTranslation, Exercise, ExerciseTranslation,
-    ExerciseOption, ExerciseOptionTranslation, ExerciseTypeEnum, LessonProgress, StudentProfile,
+    ExerciseOption, ExerciseTypeEnum, StudentProfile,
     MissionStatusEnum, LanguageEnum, Module, Course
 )
 from app.schemas import LessonResponse, LessonProgressResponse, ExerciseResponse, LanguageEnum as SchemaLanguageEnum
@@ -29,17 +30,40 @@ def _extract_trace(exercise: Exercise) -> Optional[list]:
     return trace if isinstance(trace, list) else None
 
 
-async def _require_lesson(db: AsyncSession, lesson_id: int) -> None:
-    """404 on a lesson that does not exist.
+async def _require_lesson(db: AsyncSession, lesson_id: int) -> Lesson:
+    """404 on a lesson that does not exist; otherwise hand back the row.
 
     Mirrors projects.py. Both progress endpoints below go on to insert a
     progress row keyed on lesson_id, which on Postgres trips the foreign key
     and surfaces as a 500 (the test engine does not enforce FKs, so there it
     silently created an orphan row and returned 200).
+
+    Returns the Lesson rather than None so the caller can feed it straight to
+    `_require_unlocked` -- the gate needs the row's module_id, and fetching
+    the entity here costs the same query as fetching just the id did.
     """
-    result = await db.execute(select(Lesson.id).where(Lesson.id == lesson_id))
-    if not result.scalar_one_or_none():
+    result = await db.execute(select(Lesson).where(Lesson.id == lesson_id))
+    lesson = result.scalar_one_or_none()
+    if not lesson:
         raise HTTPException(status_code=404, detail="Lesson not found")
+    return lesson
+
+
+LOCKED_DETAIL = (
+    "Lesson is locked. Complete the preceding lesson in this course first."
+)
+
+
+async def _require_unlocked(db: AsyncSession, user_id: int, lesson: Lesson) -> None:
+    """403 on a lesson the user has not unlocked yet.
+
+    Call this *before* get_or_create_lesson_progress, never after: that helper
+    inserts a progress row, and a row is itself part of what the gate reads
+    (app.services.lesson_gating._ceiling), so refusing after the insert would
+    hand out the very access it is refusing.
+    """
+    if not await is_lesson_unlocked(db, user_id, lesson):
+        raise HTTPException(status_code=403, detail=LOCKED_DETAIL)
 
 
 router = APIRouter(prefix="/lessons", tags=["lessons"])
@@ -66,6 +90,8 @@ async def get_lesson(
 
     if not lesson:
         raise HTTPException(status_code=404, detail="Lesson not found")
+
+    await _require_unlocked(db, current_user.id, lesson)
 
     lesson.translations = [t for t in lesson.translations if t.language == language]
     for block in lesson.blocks:
@@ -99,16 +125,10 @@ async def get_lesson(
     lesson.course_id = course_id
     lesson.module_title = module_title
 
-    progress_query = select(LessonProgress).where(
-        LessonProgress.user_id == current_user.id,
-        LessonProgress.lesson_id == lesson_id
-    )
-    progress_result = await db.execute(progress_query)
-    progress = progress_result.scalar_one_or_none()
-
-    if progress and progress.status == MissionStatusEnum.locked:
-        progress.status = MissionStatusEnum.ready
-        await db.commit()
+    # The self-unlock that used to live here (locked -> ready on any GET) is
+    # gone: reachability is now computed from the sequence, so rewriting a
+    # row's status to advertise access was both redundant and a write on a
+    # read path.
 
     payload = LessonResponse.model_validate(lesson, from_attributes=True).model_dump(mode="json")
     for exercise_payload in payload["exercises"]:
@@ -133,7 +153,8 @@ async def get_lesson_progress(
     current_user = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
-    await _require_lesson(db, lesson_id)
+    lesson = await _require_lesson(db, lesson_id)
+    await _require_unlocked(db, current_user.id, lesson)
     return await get_or_create_lesson_progress(
         db, current_user.id, lesson_id, MissionStatusEnum.ready
     )
@@ -145,7 +166,8 @@ async def start_lesson(
     current_user = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
-    await _require_lesson(db, lesson_id)
+    lesson = await _require_lesson(db, lesson_id)
+    await _require_unlocked(db, current_user.id, lesson)
     progress = await get_or_create_lesson_progress(
         db, current_user.id, lesson_id, MissionStatusEnum.in_progress
     )

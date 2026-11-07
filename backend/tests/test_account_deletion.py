@@ -133,6 +133,17 @@ class TestDeleteAccountValidation:
 
 
 class TestDeleteAccountCascade:
+    @pytest.fixture(autouse=True)
+    async def _unlock_lessons(self, test_user, unlock_course):
+        """Lesson gating locks everything past the first lesson of a course.
+
+        These tests predate app.services.lesson_gating and address lessons and
+        exercises by hard-coded id, several courses deep. Grant them the same
+        grandfathered access a pre-existing account gets -- see
+        conftest.unlock_course_for -- rather than softening what they assert.
+        """
+        await unlock_course(test_user)
+
     async def test_deleting_an_account_purges_every_user_owned_table(
         self, client: AsyncClient, test_user, db_session
     ):
