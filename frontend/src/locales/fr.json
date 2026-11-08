@@ -550,6 +550,27 @@
     "no_achievements": "Aucun Succès pour le Moment",
     "keep_learning": "Terminez des Leçons pour Gagner des Succès"
   },
+  "leaderboard": {
+    "title": "Classement",
+    "subtitle": "XP de tous les temps sur AtlasCode",
+    "rank": "Rang",
+    "your_rank": "Votre rang",
+    "you": "Vous",
+    "not_listed": "Vous n'êtes pas dans le classement",
+    "join_explainer": "Rejoindre rend votre nom d'utilisateur, votre avatar, votre niveau et vos XP visibles par les autres apprenants connectés. Rien d'autre n'est partagé.",
+    "join": "Rejoindre le classement",
+    "joining": "Inscription…",
+    "listed": "Vous êtes dans le classement",
+    "listed_explainer": "Les autres apprenants voient votre nom d'utilisateur, votre avatar, votre niveau et vos XP.",
+    "leave": "Quitter le classement",
+    "leaving": "Retrait…",
+    "load_more": "Afficher plus",
+    "loading_more": "Chargement…",
+    "empty": "Personne n'a encore rejoint le classement. Soyez le premier.",
+    "failed_to_load": "Le classement n'a pas pu être chargé.",
+    "retry": "Réessayer",
+    "depth_notice": "Seuls les 500 premiers sont affichés. Votre propre rang reste exact."
+  },
   "errors": {
     "generic": "Quelque chose s'est mal passé. Veuillez réessayer.",
     "network_error": "Erreur réseau. Veuillez vérifier votre connexion.",
@@ -642,6 +663,8 @@
     "privacy_description": "Contrôlez si les autres utilisateurs connectés peuvent voir votre profil et vos réussites.",
     "profile_public": "Public — visible par les autres utilisateurs",
     "profile_private": "Privé — visible uniquement par vous",
+    "privacy_leaderboard_note": "Un profil public est également affiché dans le classement, où les autres apprenants voient votre nom d'utilisateur, votre avatar, votre niveau et vos XP.",
+    "privacy_leaderboard_link": "Voir le classement",
     "privacy_updated": "Paramètre de confidentialité mis à jour."
   },
   "public_profile": {

@@ -502,6 +502,21 @@ export function Profile() {
                       {t('settings.profile_public')}
                     </label>
                   </div>
+
+                  {/* "Public" has a second consequence the radio label does
+                      not mention: it also lists the account on the
+                      leaderboard. Said here, next to the switch, rather than
+                      only on the leaderboard page -- this is where the
+                      decision is actually made. */}
+                  <p className="mt-4 flex items-start gap-2 text-sm text-text-tertiary" data-testid="privacy-leaderboard-note">
+                    <Trophy className="h-4 w-4 flex-shrink-0 mt-0.5 text-yellow-400" aria-hidden="true" />
+                    <span>
+                      {t('settings.privacy_leaderboard_note')}{' '}
+                      <Link to="/app/leaderboard" className="text-primary-400 hover:text-primary-300 underline">
+                        {t('settings.privacy_leaderboard_link')}
+                      </Link>
+                    </span>
+                  </p>
                 </div>
               </Card>
 

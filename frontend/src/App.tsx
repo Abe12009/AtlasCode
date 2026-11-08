@@ -21,6 +21,7 @@ const CourseDetail = lazy(() => import('./pages/CourseDetail').then(m => ({ defa
 const LessonDetail = lazy(() => import('./pages/LessonDetail').then(m => ({ default: m.LessonDetail })));
 const Projects = lazy(() => import('./pages/Projects').then(m => ({ default: m.Projects })));
 const ProjectDetail = lazy(() => import('./pages/ProjectDetail').then(m => ({ default: m.ProjectDetail })));
+const Leaderboard = lazy(() => import('./pages/Leaderboard').then(m => ({ default: m.Leaderboard })));
 const Profile = lazy(() => import('./pages/Profile').then(m => ({ default: m.Profile })));
 const Cody = lazy(() => import('./pages/Cody').then(m => ({ default: m.Cody })));
 const PublicProfile = lazy(() => import('./pages/PublicProfile').then(m => ({ default: m.PublicProfile })));
@@ -141,6 +142,7 @@ function AppRoutes() {
         <Route path="duels/:duelId" element={<GuardedRoute><DuelArena /></GuardedRoute>} />
         <Route path="projects" element={<GuardedRoute><Projects /></GuardedRoute>} />
         <Route path="projects/:projectId" element={<GuardedRoute><ProjectDetail /></GuardedRoute>} />
+        <Route path="leaderboard" element={<GuardedRoute><Leaderboard /></GuardedRoute>} />
         <Route path="profile" element={<GuardedRoute><Profile /></GuardedRoute>} />
         <Route path="cody" element={<GuardedRoute><Cody /></GuardedRoute>} />
         <Route path="u/:username" element={<GuardedRoute><PublicProfile /></GuardedRoute>} />

@@ -550,6 +550,27 @@
     "no_achievements": "No achievements yet",
     "keep_learning": "Complete lessons to earn achievements"
   },
+  "leaderboard": {
+    "title": "Leaderboard",
+    "subtitle": "All-time XP across AtlasCode",
+    "rank": "Rank",
+    "your_rank": "Your rank",
+    "you": "You",
+    "not_listed": "You are not on the leaderboard",
+    "join_explainer": "Joining makes your username, avatar, level and XP visible to other signed-in learners. Nothing else is shared.",
+    "join": "Join the leaderboard",
+    "joining": "Joining…",
+    "listed": "You are on the leaderboard",
+    "listed_explainer": "Other learners can see your username, avatar, level and XP.",
+    "leave": "Leave the leaderboard",
+    "leaving": "Leaving…",
+    "load_more": "Load more",
+    "loading_more": "Loading…",
+    "empty": "Nobody has joined the leaderboard yet. Be the first.",
+    "failed_to_load": "The leaderboard could not be loaded.",
+    "retry": "Try again",
+    "depth_notice": "Only the top 500 are listed. Your own rank is exact."
+  },
   "errors": {
     "generic": "Something went wrong. Please try again.",
     "network_error": "Network error. Please check your connection.",
@@ -642,6 +663,8 @@
     "privacy_description": "Control whether other signed-in users can view your profile and achievements.",
     "profile_public": "Public — visible to other users",
     "profile_private": "Private — only visible to you",
+    "privacy_leaderboard_note": "A public profile is also listed on the leaderboard, where other learners see your username, avatar, level and XP.",
+    "privacy_leaderboard_link": "View the leaderboard",
     "privacy_updated": "Privacy setting updated."
   },
   "public_profile": {

@@ -488,6 +488,44 @@ class PublicProfileResponse(BaseModel):
     achievements: List[UserAchievementResponse] = []
 
 
+class LeaderboardEntry(BaseModel):
+    """One listed row. A strict subset of PublicProfileResponse.
+
+    Username, avatar, level and XP -- nothing else. No email, no real name,
+    no streak, no member_since, no achievements: a leaderboard is read by
+    every signed-in user, so it carries less than a profile page, not more.
+    """
+
+    rank: int
+    username: str
+    avatar_url: Optional[str] = None
+    avatar_image_data: Optional[str] = None
+    avatar_config: Optional[str] = None
+    avatar_type: str = "upload"
+    level: int = 1
+    xp: int = 0
+
+
+class LeaderboardMe(BaseModel):
+    """The caller's own standing, returned whether or not they are listed.
+
+    `is_listed` is what the UI needs to offer joining: an unlisted student
+    still sees their rank, they are simply not in anyone else's `entries`.
+    """
+
+    rank: int
+    xp: int = 0
+    level: int = 1
+    is_listed: bool = False
+
+
+class LeaderboardResponse(BaseModel):
+    entries: List[LeaderboardEntry] = []
+    me: LeaderboardMe
+    #: Opaque. Absent once the listing is exhausted or the depth cap is hit.
+    next_cursor: Optional[str] = None
+
+
 class CodeExecutionRequest(BaseModel):
     code: str
     test_code: Optional[str] = None
