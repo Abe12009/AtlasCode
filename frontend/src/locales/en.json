@@ -663,6 +663,8 @@
     "privacy_description": "Control whether other signed-in users can view your profile and achievements.",
     "profile_public": "Public — visible to other users",
     "profile_private": "Private — only visible to you",
+    "privacy_leaderboard_note": "A public profile is also listed on the leaderboard, where other learners see your username, avatar, level and XP.",
+    "privacy_leaderboard_link": "View the leaderboard",
     "privacy_updated": "Privacy setting updated."
   },
   "public_profile": {

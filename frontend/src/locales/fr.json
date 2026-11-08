@@ -663,6 +663,8 @@
     "privacy_description": "Contrôlez si les autres utilisateurs connectés peuvent voir votre profil et vos réussites.",
     "profile_public": "Public — visible par les autres utilisateurs",
     "profile_private": "Privé — visible uniquement par vous",
+    "privacy_leaderboard_note": "Un profil public est également affiché dans le classement, où les autres apprenants voient votre nom d'utilisateur, votre avatar, votre niveau et vos XP.",
+    "privacy_leaderboard_link": "Voir le classement",
     "privacy_updated": "Paramètre de confidentialité mis à jour."
   },
   "public_profile": {
