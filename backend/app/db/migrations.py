@@ -165,11 +165,30 @@ INDEXES: tuple[tuple[str, str], ...] = (
     ("ix_lesson_progress_completed_at", "CREATE INDEX IF NOT EXISTS ix_lesson_progress_completed_at ON lesson_progress (completed_at)"),
     ("ix_project_progress_user_id", "CREATE INDEX IF NOT EXISTS ix_project_progress_user_id ON project_progress (user_id)"),
     ("ix_project_progress_completed_at", "CREATE INDEX IF NOT EXISTS ix_project_progress_completed_at ON project_progress (completed_at)"),
-    # The leaderboard's whole ordering, as one index: app.api.leaderboard pages
-    # by (xp DESC, user_id) and counts how many listed users sort ahead of the
-    # caller. Without it both are a full scan of student_profiles on every
-    # load of a page every signed-in user can open.
-    ("ix_student_profiles_xp", "CREATE INDEX IF NOT EXISTS ix_student_profiles_xp ON student_profiles (xp DESC, user_id)"),
+    # Matches app.api.leaderboard's ordering key exactly -- an *expression*
+    # index, because the query sorts and compares on `coalesce(xp, -1)`, not
+    # on the raw column. A plain (xp DESC, user_id) index cannot serve that:
+    # SQLite's EXPLAIN QUERY PLAN showed it unused by both leaderboard
+    # queries, which is what this replaces.
+    #
+    # What it does serve, measured: the `me.rank` COUNT, which runs on every
+    # request and walks every listed user -- with this index SQLite reports
+    # `SEARCH sp USING COVERING INDEX ix_student_profiles_xp (<expr>>?)`
+    # instead of a scan.
+    #
+    # What it does NOT serve, also measured: the page's ORDER BY. That query
+    # filters on `users` (profile_visibility, is_active) and sorts on a
+    # `student_profiles` expression, so SQLite drives from `users` and falls
+    # back to `USE TEMP B-TREE FOR ORDER BY` whatever is indexed here --
+    # unchanged with 588 public users, and unchanged by adding an index on
+    # the users-side filter too. Fixing that needs the sort key and the
+    # filter in one table (denormalising visibility onto student_profiles),
+    # which is a schema change, not an index. Left as-is deliberately; the
+    # depth cap of 500 is what bounds the sort meanwhile.
+    #
+    # Expression indexes are supported by SQLite (3.9+) and PostgreSQL alike.
+    # Verified on SQLite only -- see the plans above.
+    ("ix_student_profiles_xp", "CREATE INDEX IF NOT EXISTS ix_student_profiles_xp ON student_profiles ((coalesce(xp, -1)) DESC, user_id)"),
 )
 
 
