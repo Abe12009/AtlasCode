@@ -17,6 +17,7 @@ import { QuestProgress } from './QuestProgress';
 import { QuestClear } from './QuestClear';
 import { useQuestStage } from './questStage';
 import { QUEST_STAGES, type AnyBlueprintConfig, type HookConfig } from './types';
+import { isLockedError } from '../../lib/apiError';
 import type { Lesson, LessonBlock, ExerciseSubmitResponse } from '../../types';
 
 function parseConfig<T>(block: LessonBlock | undefined): T | null {
@@ -88,7 +89,16 @@ export function MicroQuestLesson({ lesson, currentLanguage }: MicroQuestLessonPr
     queryKey: ['lesson-progress', lesson.id],
     queryFn: () => lessonsApi.getProgress(lesson.id),
   });
-  const progressSettled = progressQuery.isSuccess || progressQuery.isError;
+  // A 403 here is the sequence gate (app.services.lesson_gating), not an
+  // answer about this lesson -- so it must not count as settled. Treating it
+  // as settled is what made a locked lesson read as "known, and not
+  // completed": the stage machine would start, restore a stored stage and
+  // write a resume point for a lesson the student may not open. Locked means
+  // the quest simply never starts; the locked screen itself belongs to
+  // LessonDetail, which gates on GET /lessons/{id} before this renders.
+  const progressLocked = isLockedError(progressQuery.error);
+  const progressSettled =
+    progressQuery.isSuccess || (progressQuery.isError && !progressLocked);
   const isCompleted = progressQuery.data?.status === 'completed';
 
   const { stage, advanceTo } = useQuestStage({

@@ -19,6 +19,7 @@ import { I18nextProvider } from 'react-i18next';
 import { createTestI18n } from './i18n-test';
 import { AuthProvider } from '../contexts/AuthContext';
 import { LessonDetail } from '../pages/LessonDetail';
+import { CourseDetail } from '../pages/CourseDetail';
 import { ProjectDetail } from '../pages/ProjectDetail';
 import { VisualProgrammingPage } from '../pages/VisualProgramming';
 // Lazy, unlike the eager imports above -- DuelArena statically imports
@@ -139,6 +140,7 @@ export async function renderWithProviders(
     user?: { id: number; email: string; username: string; preferred_language: string };
     profile?: { user_id: number; xp: number; level: number; streak: number; completed_lessons: number; completed_projects: number };
     lessonId?: string;
+    courseId?: string;
     projectId?: string;
     exerciseId?: string;
     duelId?: string;
@@ -165,6 +167,8 @@ export async function renderWithProviders(
   let initialPath = '/';
   if (options?.lessonId) {
     initialPath = `/lessons/${options.lessonId}`;
+  } else if (options?.courseId) {
+    initialPath = `/courses/${options.courseId}`;
   } else if (options?.projectId) {
     initialPath = `/projects/${options.projectId}`;
   } else if (options?.exerciseId) {
@@ -176,6 +180,7 @@ export async function renderWithProviders(
   const TestRoutes = () => (
     <Routes>
       <Route path="/lessons/:lessonId" element={<LessonDetail />} />
+      <Route path="/courses/:courseId" element={<CourseDetail />} />
       <Route path="/projects/:projectId" element={<ProjectDetail />} />
       <Route path="/exercises/:exerciseId/visual" element={<VisualProgrammingPage />} />
       <Route path="/duels/:duelId" element={<React.Suspense fallback={null}><DuelArena /></React.Suspense>} />

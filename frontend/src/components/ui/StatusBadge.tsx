@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { motion } from 'framer-motion';
 import { cn } from '../../lib/utils';
 import { CheckCircle, Lock, Clock, AlertCircle } from 'lucide-react';
+import { useTranslation } from '../../hooks/useTranslation';
 
 export type Status = 'completed' | 'current' | 'available' | 'locked' | 'in_progress' | 'pending';
 
@@ -36,13 +37,17 @@ const sizeStyles = {
   lg: 'px-4 py-1.5 text-base gap-2',
 };
 
-const statusLabels: Record<Status, string> = {
-  completed: 'Completed',
-  current: 'Current',
-  available: 'Available',
-  locked: 'Locked',
-  in_progress: 'In Progress',
-  pending: 'Pending',
+/** i18n key per status. `lessons.*` rather than a new namespace because
+ * QuestNode already labels the same four states from there (`t('lessons.' +
+ * node.status)`), and two sets of words for one state is how a badge and a
+ * roadmap node start disagreeing. */
+const statusLabelKeys: Record<Status, string> = {
+  completed: 'lessons.completed',
+  current: 'lessons.current',
+  available: 'lessons.available',
+  locked: 'lessons.locked',
+  in_progress: 'lessons.in_progress',
+  pending: 'lessons.pending',
 };
 
 export function StatusBadge({
@@ -52,6 +57,7 @@ export function StatusBadge({
   className,
   ...props
 }: StatusBadgeProps) {
+  const { t } = useTranslation();
   const Icon = statusIcons[status];
 
   return (
@@ -66,7 +72,7 @@ export function StatusBadge({
       {...props}
     >
       {showIcon && <Icon className={cn('flex-shrink-0', size === 'sm' && 'h-3 w-3', size === 'md' && 'h-4 w-4', size === 'lg' && 'h-5 w-5')} aria-hidden="true" />}
-      <span>{statusLabels[status]}</span>
+      <span>{t(statusLabelKeys[status])}</span>
     </span>
   );
 }

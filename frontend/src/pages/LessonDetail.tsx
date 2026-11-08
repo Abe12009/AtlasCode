@@ -1,10 +1,10 @@
 import { useParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { lessonsApi, exercisesApi } from '../api/services';
-import { ArrowLeft, CheckCircle, Clock, Target, Code, ChevronLeft, ChevronRight, Copy, Check, RotateCcw, Terminal, Sparkles, Compass, Lightbulb } from 'lucide-react';
+import { lessonsApi, exercisesApi, coursesApi } from '../api/services';
+import { ArrowLeft, CheckCircle, Clock, Target, Code, ChevronLeft, ChevronRight, Copy, Check, RotateCcw, Terminal, Sparkles, Compass, Lightbulb, Lock, AlertTriangle } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
-import type { Exercise, ExerciseSubmitRequest, ExerciseSubmitResponse, LessonBlock } from '../types';
+import type { Course, Exercise, ExerciseSubmitRequest, ExerciseSubmitResponse, Lesson, LessonBlock } from '../types';
 import { Badge, Button, cn, Progress, Skeleton, CodeEditor, StatusBadge, XPBadge } from '../components/ui';
 import { useTranslation } from '../hooks/useTranslation';
 import { ExercisePanel } from '../components/ExercisePanel';
@@ -12,6 +12,35 @@ import { MicroQuestLesson } from '../components/microquest/MicroQuestLesson';
 import { LESSON_SHELL_HEIGHT_CLASS } from '../lib/layout';
 import { showXpToast } from '../components/XpToast';
 import { showAchievementToast } from '../components/AchievementToast';
+import { errorDetail, errorStatus, isLockedError } from '../lib/apiError';
+
+/**
+ * The course a locked lesson belongs to, and the lesson that opens it.
+ *
+ * A 403 body carries only a message, so this reads the catalog (GET /courses),
+ * which already reports a real per-lesson status. The unlocking lesson is the
+ * one in progress if there is one, else the furthest one still open -- both
+ * straight from the status the backend computed, nothing re-derived here.
+ * Returns null when the lesson belongs to no course the student can see, and
+ * the locked screen then falls back to the catalog link.
+ */
+function findLockedContext(
+  courses: Course[] | undefined,
+  lessonId: string | undefined,
+): { courseId: number; unlockingLesson: Lesson | null } | null {
+  if (!courses || !lessonId) return null;
+  const id = Number(lessonId);
+  for (const course of courses) {
+    const sequence = (course.modules ?? []).flatMap((m) => m.lessons ?? []);
+    if (!sequence.some((l) => l.id === id)) continue;
+    const unlockingLesson =
+      sequence.find((l) => l.status === 'current') ??
+      [...sequence].reverse().find((l) => l.status && l.status !== 'locked') ??
+      null;
+    return { courseId: course.id, unlockingLesson };
+  }
+  return null;
+}
 
 export function LessonDetail() {
   const { t, isRTL, currentLanguage } = useTranslation();
@@ -29,11 +58,26 @@ export function LessonDetail() {
     enabled: !!lessonId,
   });
 
+  // POST /lessons/{id}/start used to be fire-and-forget with `.catch(() => {})`,
+  // which swallowed every failure -- including the 403 that says this lesson is
+  // locked, and including a real server error, leaving the student on a lesson
+  // whose progress row was never created and no way to know.
+  // Carries the lesson it belongs to, so navigating to another lesson drops a
+  // stale failure during render -- rather than needing a synchronous
+  // setState(null) inside the effect below, which would start a second render
+  // and still show the previous lesson's error for the first one.
+  const [startFailure, setStartFailure] = useState<
+    { lessonId: string; status?: number; detail?: string } | null
+  >(null);
+
   useEffect(() => {
-    if (lessonId) {
-      lessonsApi.start(Number(lessonId)).catch(() => {});
-    }
+    if (!lessonId) return;
+    lessonsApi.start(Number(lessonId)).catch((err: unknown) => {
+      setStartFailure({ lessonId, status: errorStatus(err), detail: errorDetail(err) });
+    });
   }, [lessonId]);
+
+  const startError = startFailure?.lessonId === lessonId ? startFailure : null;
 
   const runMutation = useMutation({
     mutationFn: ({ exerciseId, code }: { exerciseId: number; code: string }) =>
@@ -65,6 +109,22 @@ export function LessonDetail() {
     },
   });
 
+  // A 403 on the lesson itself -- or on its /start -- is the sequence gate,
+  // not a missing lesson. Both are checked because either call can be the one
+  // that refuses first.
+  const isLocked = isLockedError(error) || startError?.status === 403;
+
+  // Fetched only while locked. A 403 body carries nothing but a message, so
+  // the course this lesson belongs to and the lesson that opens it have to
+  // come from the catalog, which already reports a real per-lesson status.
+  const { data: coursesForLocked } = useQuery({
+    queryKey: ['courses', currentLanguage],
+    queryFn: () => coursesApi.getAll(currentLanguage),
+    enabled: isLocked,
+  });
+
+  const lockedContext = findLockedContext(coursesForLocked, lessonId);
+
   if (isLoading) {
     return (
       <div className={cn(LESSON_SHELL_HEIGHT_CLASS, 'flex flex-col bg-bg-primary')} dir={isRTL ? 'rtl' : 'ltr'}>
@@ -95,6 +155,48 @@ export function LessonDetail() {
               </div>
             </div>
           </main>
+        </div>
+      </div>
+    );
+  }
+
+  // A locked lesson is a 403, not a 404: a pasted deep link has to say "this
+  // opens later" rather than "no such lesson", which is both wrong and
+  // unactionable. Checked before the not-found branch below, which would
+  // otherwise swallow it -- `error` is truthy for either.
+  if (isLocked) {
+    return (
+      <div className="flex flex-col items-center justify-center py-16 px-4 text-center gap-4" dir={isRTL ? 'rtl' : 'ltr'}>
+        <div className="p-4 rounded-full bg-bg-tertiary border border-border-primary/50">
+          <Lock className="h-8 w-8 text-text-tertiary" aria-hidden="true" />
+        </div>
+        <h1 className="text-xl font-semibold text-text-primary" data-testid="lesson-locked-title">
+          {t('courses.locked')}
+        </h1>
+        <p className="text-text-secondary max-w-md">{t('errors.lesson_locked')}</p>
+        <div className="flex flex-col sm:flex-row items-center gap-3">
+          {lockedContext?.unlockingLesson && (
+            <Link
+              to={`/app/lessons/${lockedContext.unlockingLesson.id}`}
+              data-testid="locked-unlocking-lesson"
+              className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary-600 btn-primary-gradient text-white font-semibold rounded-xl transition-all"
+            >
+              <span>{t('lessons.go_to_unlocking_lesson')}</span>
+            </Link>
+          )}
+          {lockedContext?.courseId ? (
+            <Link
+              to={`/app/courses/${lockedContext.courseId}`}
+              data-testid="locked-back-to-course"
+              className="text-primary-400 hover:text-primary-300"
+            >
+              {t('lessons.back_to_course')}
+            </Link>
+          ) : (
+            <Link to="/app/courses" className="text-primary-400 hover:text-primary-300">
+              {t('common.back_to_courses')}
+            </Link>
+          )}
         </div>
       </div>
     );
@@ -217,6 +319,21 @@ export function LessonDetail() {
             className="flex-1 max-w-xs"
           />
         </div>
+
+        {/* A non-403 /start failure is shown rather than swallowed: the lesson
+            itself loaded, so the student can read on, but their progress row
+            was not created and the server's own reason is worth seeing. The
+            403 case never reaches here -- it renders the locked state above. */}
+        {startError && startError.status !== 403 && (
+          <div
+            role="alert"
+            data-testid="lesson-start-error"
+            className="max-w-full mx-auto flex items-center gap-2 rounded-lg border border-warning-500/30 bg-warning-500/10 px-3 py-2 text-xs text-warning-400"
+          >
+            <AlertTriangle className="h-4 w-4 flex-shrink-0" aria-hidden="true" />
+            <span>{startError.detail || t('errors.generic')}</span>
+          </div>
+        )}
       </header>
 
       <div className="flex-1 flex overflow-hidden">
@@ -311,6 +428,7 @@ export function LessonDetail() {
                 <LessonBlockView
                   block={currentBlock}
                   index={currentBlockIndex}
+                  currentIndex={currentBlockIndex}
                   total={totalSteps}
                   onNext={goToNext}
                   onPrev={goToPrev}
@@ -390,6 +508,9 @@ export function LessonDetail() {
 interface LessonBlockViewProps {
   block: LessonBlock;
   index: number;
+  /** The step the student is on, so the badge below states this block's real
+   * position in the walk instead of a hardcoded guess. */
+  currentIndex: number;
   total: number;
   onNext: () => void;
   onPrev: () => void;
@@ -397,7 +518,7 @@ interface LessonBlockViewProps {
   hasPrev: boolean;
 }
 
-function LessonBlockView({ block, index, total, onNext, onPrev, hasPrev }: LessonBlockViewProps) {
+function LessonBlockView({ block, index, currentIndex, total, onNext, onPrev, hasPrev }: LessonBlockViewProps) {
   // The API returns the block's translations already filtered to the requested
   // language. Prefer them; fall back to the base columns for blocks that have
   // no translation row yet (the original courses store English there).
@@ -409,8 +530,17 @@ function LessonBlockView({ block, index, total, onNext, onPrev, hasPrev }: Lesso
   return (
     <div className="max-w-3xl mx-auto space-y-6 animate-fade-in">
       <div className="flex items-center gap-2">
+        {/* Same rule the sidebar uses (see the block buttons above): behind the
+            student is done, where they are is current. Never 'locked' -- the
+            sidebar lets them jump to any block freely, and gating is per
+            lesson, not per block. This component is only ever handed the
+            current block today, so in practice this reads 'current'; the
+            comparison is spelled out so it stays right if it is ever handed
+            another one. The old `index < 2 ? ... : index === 2 ? ...` compared
+            the live step against the literal 2 and so claimed the first two
+            steps of every lesson were already completed. */}
         <StatusBadge
-          status={index < 2 ? 'completed' : index === 2 ? 'current' : 'locked'}
+          status={index < currentIndex ? 'completed' : index === currentIndex ? 'current' : 'available'}
           size="sm"
         />
         <Badge variant="outline" size="sm" className="border-border-primary/50">
