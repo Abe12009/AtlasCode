@@ -457,6 +457,13 @@ class DashboardResponse(BaseModel):
     current_mission_course_title: Optional[str] = None
     current_mission_module_title: Optional[str] = None
     course_progress: List[CourseProgressResponse] = []
+    #: Where a student with no progress at all should start: the first course
+    #: in curriculum order. The quest map on the dashboard has nothing else to
+    #: go on for a brand-new account -- course_progress is empty and there is
+    #: no current mission -- and the alternative was the client fetching the
+    #: whole catalog (GET /courses, ~650KB) to read one id off it. None only
+    #: when no course is seeded at all.
+    suggested_course_id: Optional[int] = None
     recent_achievements: List[UserAchievementResponse] = []
     current_project: Optional[ProjectProgressResponse] = None
 
