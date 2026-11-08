@@ -1,7 +1,7 @@
 import { useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { coursesApi } from '../api/services';
-import { BookOpen, Clock, Target, CheckCircle, ChevronDown, ChevronLeft, Play, Code, ArrowRight, Flag, Trophy, Layers, Sparkles } from 'lucide-react';
+import { BookOpen, Clock, Target, CheckCircle, ChevronDown, ChevronLeft, Play, Code, ArrowRight, Flag, Trophy, Layers, Sparkles, Lock } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import type { Module } from '../types';
 import { useState } from 'react';
@@ -173,51 +173,107 @@ export function CourseDetail() {
                       </button>
 
                       {isExpanded && (
-                        <div className="px-5 pb-5 pl-14 space-y-2 animate-slide-down">
+                        <div className="px-5 pb-5 ps-14 space-y-2 animate-slide-down">
                           {module.lessons?.map((lesson, index) => {
-                            const lessonStatus = lesson.status || 'available';
+                            // No `|| 'available'` fallback: the backend now
+                            // reports real state on GET /courses/{id}, and
+                            // inventing "available" for a locked lesson is
+                            // exactly what made this page promise a link the
+                            // API then refused with a 403. An absent status
+                            // (older backend) is left unlabelled and
+                            // navigable rather than locked -- the gate itself
+                            // fails open, and LessonDetail explains a 403 if
+                            // one comes back anyway.
+                            const lessonStatus = lesson.status;
                             const isCompleted = lessonStatus === 'completed';
                             const isCurrent = lessonStatus === 'current';
-                            return (
-                            <Link
-                              key={lesson.id}
-                              to={`/app/lessons/${lesson.id}`}
-                              className="flex items-center gap-3 p-3 rounded-xl hover:bg-primary-500/5 transition-colors group"
-                            >
+                            const isLocked = lessonStatus === 'locked';
+
+                            const marker = (
                               <div className={cn(
                                 'flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-all',
-                                'group-hover:scale-110',
+                                !isLocked && 'group-hover:scale-110',
                                 isCompleted
                                   ? 'bg-success-500/20 text-success-400 border border-success-500/30'
                                   : isCurrent
                                   ? 'bg-primary-500/20 text-primary-400 border border-primary-500/30 animate-pulse'
                                   : 'bg-bg-tertiary text-text-tertiary border border-border-primary/50'
                               )}>
-                                {isCompleted ? <CheckCircle className="h-5 w-5" /> : index + 1}
+                                {isCompleted ? (
+                                  <CheckCircle className="h-5 w-5" />
+                                ) : isLocked ? (
+                                  <Lock className="h-4 w-4" aria-hidden="true" />
+                                ) : (
+                                  index + 1
+                                )}
                               </div>
-                              <div className="flex-1 min-w-0">
-                                <p className="font-medium text-text-primary truncate group-hover:text-primary-400 transition-colors">
-                                  {lesson.translations[0]?.title}
-                                </p>
-                                <div className="flex items-center gap-3 text-xs text-text-tertiary mt-1">
-                                  <span className="flex items-center gap-1">
-                                    <Clock className="h-3 w-3" />
-                                    <span>{lesson.estimated_minutes} {t('common.min')}</span>
-                                  </span>
-                                  <span className="flex items-center gap-1">
-                                    <Target className="h-3 w-3" />
-                                    <span>{t(`courses.difficulty_level.${lesson.difficulty}`)}</span>
-                                  </span>
-                                  <span className="flex items-center gap-1">
-                                    <Code className="h-3 w-3" />
-                                    <XPBadge xp={lesson.xp_reward} size="sm" showIcon={false} />
-                                  </span>
+                            );
+
+                            const body = (
+                              <>
+                                {marker}
+                                <div className="flex-1 min-w-0">
+                                  <p className={cn(
+                                    'font-medium truncate transition-colors',
+                                    isLocked ? 'text-text-tertiary' : 'text-text-primary group-hover:text-primary-400'
+                                  )}>
+                                    {lesson.translations[0]?.title}
+                                  </p>
+                                  <div className="flex items-center gap-3 text-xs text-text-tertiary mt-1">
+                                    <span className="flex items-center gap-1">
+                                      <Clock className="h-3 w-3" />
+                                      <span>{lesson.estimated_minutes} {t('common.min')}</span>
+                                    </span>
+                                    <span className="flex items-center gap-1">
+                                      <Target className="h-3 w-3" />
+                                      <span>{t(`courses.difficulty_level.${lesson.difficulty}`)}</span>
+                                    </span>
+                                    <span className="flex items-center gap-1">
+                                      <Code className="h-3 w-3" />
+                                      <XPBadge xp={lesson.xp_reward} size="sm" showIcon={false} />
+                                    </span>
+                                  </div>
+                                  {isLocked && (
+                                    <p className="flex items-center gap-1 text-xs text-text-tertiary mt-1">
+                                      <Lock className="h-3 w-3 flex-shrink-0" aria-hidden="true" />
+                                      <span>{t('lessons.opens_after_previous')}</span>
+                                    </p>
+                                  )}
                                 </div>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <StatusBadge status={lessonStatus} size="sm" />
-                                <Play className="h-5 w-5 text-text-tertiary group-hover:text-primary-400 transition-colors opacity-0 group-hover:opacity-100" />
-                              </div>
+                                <div className="flex items-center gap-2">
+                                  {lessonStatus && <StatusBadge status={lessonStatus} size="sm" />}
+                                  {!isLocked && (
+                                    <Play className="h-5 w-5 text-text-tertiary group-hover:text-primary-400 transition-colors opacity-0 group-hover:opacity-100" />
+                                  )}
+                                </div>
+                              </>
+                            );
+
+                            // A locked lesson is not a link: no href, no tab
+                            // stop, aria-disabled so assistive tech reads it
+                            // as unavailable rather than announcing a
+                            // destination that answers 403.
+                            if (isLocked) {
+                              return (
+                                <div
+                                  key={lesson.id}
+                                  data-testid={`lesson-row-${lesson.id}`}
+                                  aria-disabled="true"
+                                  className="flex items-center gap-3 p-3 rounded-xl opacity-60 cursor-not-allowed"
+                                >
+                                  {body}
+                                </div>
+                              );
+                            }
+
+                            return (
+                            <Link
+                              key={lesson.id}
+                              to={`/app/lessons/${lesson.id}`}
+                              data-testid={`lesson-row-${lesson.id}`}
+                              className="flex items-center gap-3 p-3 rounded-xl hover:bg-primary-500/5 transition-colors group"
+                            >
+                              {body}
                             </Link>
                             );
                           })}

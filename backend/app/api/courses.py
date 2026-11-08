@@ -5,6 +5,7 @@ from sqlalchemy import select, func
 from sqlalchemy.orm import selectinload
 from app.db.session import get_db
 from app.core.dependencies import get_current_user
+from app.services.lesson_gating import unlocked_lesson_ids, unlocked_lesson_ids_for_courses
 from app.models import (
     Course, Module, Lesson, CourseTranslation, ModuleTranslation, LessonTranslation,
     LessonBlock, LessonBlockTranslation, Exercise, ExerciseTranslation, ExerciseOption,
@@ -45,6 +46,24 @@ async def get_sections(
     return sections
 
 
+def _lesson_status(db_status: str | None, is_unlocked: bool) -> str:
+    """The UI's lesson state: completed / current / available / locked.
+
+    A real progress row always wins -- if the user has touched the lesson it
+    is theirs, whatever the gate now says -- and only the no-row case consults
+    the gate, which is where the old blanket "available" default was wrong.
+    """
+    mapped = {
+        "completed": "completed",
+        "in_progress": "current",
+        "ready": "available",
+        "locked": "locked",
+    }.get(db_status)
+    if mapped:
+        return mapped
+    return "available" if is_unlocked else "locked"
+
+
 @router.get("", response_model=List[CourseResponse])
 async def get_courses(
     language: LanguageEnum = Query(LanguageEnum.en),
@@ -63,7 +82,28 @@ async def get_courses(
     result = await db.execute(query)
     courses = result.scalars().unique().all()
 
+    # Real locked state, not a blanket "available": one bulk call for every
+    # course on the page rather than a check per lesson.
+    unlocked_by_course = await unlocked_lesson_ids_for_courses(
+        db, current_user.id, [course.id for course in courses]
+    )
+    all_lesson_ids = [
+        lesson.id for course in courses for module in course.modules for lesson in module.lessons
+    ]
+    list_progress_result = await db.execute(
+        select(LessonProgress).where(
+            LessonProgress.user_id == current_user.id,
+            LessonProgress.lesson_id.in_(all_lesson_ids),
+        )
+    ) if all_lesson_ids else None
+    status_by_lesson_id = (
+        {p.lesson_id: p.status.value for p in list_progress_result.scalars().all()}
+        if list_progress_result is not None
+        else {}
+    )
+
     for course in courses:
+        unlocked_ids = unlocked_by_course.get(course.id, set())
         course.translations = [t for t in course.translations if t.language == language]
         for module in course.modules:
             module.translations = [t for t in module.translations if t.language == language]
@@ -78,6 +118,9 @@ async def get_courses(
                     exercise.options = [o for o in exercise.options]
                     for option in exercise.options:
                         option.translations = [t for t in option.translations if t.language == language]
+                lesson.status = _lesson_status(
+                    status_by_lesson_id.get(lesson.id), lesson.id in unlocked_ids
+                )
 
     return courses
 
@@ -112,6 +155,7 @@ async def get_course(
         )
     )
     status_by_lesson_id = {p.lesson_id: p.status.value for p in progress_result.scalars().all()}
+    unlocked_ids = await unlocked_lesson_ids(db, current_user.id, course.id)
 
     course.translations = [t for t in course.translations if t.language == language]
     for module in course.modules:
@@ -127,13 +171,9 @@ async def get_course(
                 exercise.options = [o for o in exercise.options]
                 for option in exercise.options:
                     option.translations = [t for t in option.translations if t.language == language]
-            db_status = status_by_lesson_id.get(lesson.id)
-            lesson.status = {
-                "completed": "completed",
-                "in_progress": "current",
-                "ready": "available",
-                "locked": "locked",
-            }.get(db_status, "available")
+            lesson.status = _lesson_status(
+                status_by_lesson_id.get(lesson.id), lesson.id in unlocked_ids
+            )
 
     return course
 

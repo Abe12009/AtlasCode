@@ -3,6 +3,42 @@ from httpx import AsyncClient
 
 
 class TestExercises:
+    #: Ids 1..19 are the range the exercise-type probes below sweep. Every
+    #: one of them exists in the seed, so an account that can reach them all
+    #: sees 19 successful responses -- the number before lesson gating
+    #: existed. Pinned as a constant because those probes are written as
+    #: tolerant loops (`if status_code == 200`), and under gating they
+    #: quietly fell to 3 reachable ids and turned into pytest.skip instead of
+    #: failing. test_every_probed_exercise_id_is_reachable below is what makes
+    #: that narrowing loud.
+    PROBE_IDS = range(1, 20)
+    PROBE_REACHABLE = 19
+
+    @pytest.fixture(autouse=True)
+    async def _unlock_lessons(self, test_user, unlock_course):
+        """Exercises 4..19 live on lessons past the first of their course, so
+        lesson gating locks them for a new account. Grant the grandfathered
+        access a pre-existing account has."""
+        await unlock_course(test_user)
+
+    async def test_every_probed_exercise_id_is_reachable(
+        self, client: AsyncClient, test_user
+    ):
+        """The tolerant probes below must never silently shrink.
+
+        Each of them scans PROBE_IDS and skips if it finds nothing, so a
+        change that makes most ids unreachable would turn them green-by-skip
+        rather than red. This asserts the sweep still sees every id.
+        """
+        reachable = 0
+        for exercise_id in self.PROBE_IDS:
+            response = await client.get(
+                f"/exercises/{exercise_id}", headers=test_user["headers"]
+            )
+            if response.status_code == 200:
+                reachable += 1
+        assert reachable == self.PROBE_REACHABLE
+
     async def test_get_exercise_detail(self, client: AsyncClient, test_user):
         response = await client.get("/exercises/1", headers=test_user["headers"])
         assert response.status_code == 200

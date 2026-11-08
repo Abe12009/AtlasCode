@@ -75,6 +75,135 @@ class TestDashboard:
         assert dashboard["current_mission_module_title"] is None
 
 
+class TestSuggestedCourse:
+    """`suggested_course_id`: where a student with no progress should start.
+
+    The dashboard's quest map has nothing else to go on for a brand-new
+    account -- course_progress is empty and there is no current mission -- so
+    without this the map rendered empty on the first screen a new student
+    sees. The alternative was the client fetching the whole catalog
+    (GET /courses, ~650KB) to read one id off it.
+    """
+
+    async def _lowest_order_course_id(self, db_session) -> int:
+        from app.models import Course
+
+        result = await db_session.execute(
+            select(Course.id).order_by(Course.order, Course.id).limit(1)
+        )
+        return result.scalar_one()
+
+    async def test_a_new_account_is_pointed_at_the_first_course(
+        self, client: AsyncClient, second_user, db_session
+    ):
+        """second_user has no progress rows at all -- the case this exists for."""
+        response = await client.get("/dashboard", headers=second_user["headers"])
+        dashboard = response.json()
+        assert dashboard["course_progress"] == []
+        assert dashboard["current_mission"] is None
+        assert dashboard["suggested_course_id"] == await self._lowest_order_course_id(
+            db_session
+        )
+
+    async def test_an_account_with_progress_still_carries_the_field(
+        self, client: AsyncClient, test_user, db_session
+    ):
+        """It is not conditional on being new: the client decides when to use
+        it, and a field that appears and disappears is harder to type."""
+        start = await client.post("/lessons/1/start", headers=test_user["headers"])
+        assert start.status_code == 200
+
+        response = await client.get("/dashboard", headers=test_user["headers"])
+        dashboard = response.json()
+        assert dashboard["current_mission"] is not None
+        assert dashboard["suggested_course_id"] == await self._lowest_order_course_id(
+            db_session
+        )
+
+    async def test_the_suggestion_is_the_lowest_order_course(
+        self, client: AsyncClient, second_user, db_session
+    ):
+        """A course inserted ahead of the seed takes the suggestion.
+
+        Proves the field follows `Course.order` rather than `Course.id` (the
+        seeded first course is also the lowest id, so the two are
+        indistinguishable without a row like this one).
+        """
+        from app.models import Course
+
+        probe = Course(slug="suggested-probe", order=-1, stage=1, track="probe")
+        db_session.add(probe)
+        await db_session.commit()
+        await db_session.refresh(probe)
+        try:
+            response = await client.get("/dashboard", headers=second_user["headers"])
+            assert response.json()["suggested_course_id"] == probe.id
+        finally:
+            # Leave the shared session-scoped seed as it was found.
+            await db_session.delete(probe)
+            await db_session.commit()
+
+    async def test_ties_on_order_resolve_by_course_id(
+        self, client: AsyncClient, second_user, db_session
+    ):
+        """`Course.order` is a plain `default=0` column with no uniqueness, so
+        two courses can tie. Without Course.id as the tie-break the database
+        may return either, and the suggestion could differ between requests.
+        """
+        from app.models import Course
+
+        first = Course(slug="tie-probe-a", order=-5, stage=1, track="probe")
+        second = Course(slug="tie-probe-b", order=-5, stage=1, track="probe")
+        db_session.add_all([first, second])
+        await db_session.commit()
+        await db_session.refresh(first)
+        await db_session.refresh(second)
+        try:
+            lowest_id = min(first.id, second.id)
+            for _ in range(3):
+                response = await client.get(
+                    "/dashboard", headers=second_user["headers"]
+                )
+                assert response.json()["suggested_course_id"] == lowest_id
+        finally:
+            await db_session.delete(first)
+            await db_session.delete(second)
+            await db_session.commit()
+
+    async def test_null_when_there_are_no_courses(self):
+        """No catalog, no suggestion -- the client keeps its empty state.
+
+        Run against a throwaway in-memory database rather than by emptying
+        the shared one: the test database is session-scoped, and `Course`
+        cascades to modules, lessons, blocks and exercises, so deleting every
+        course to observe None would take the seed the other ~730 tests
+        depend on with it, and a restore in a `finally` would have to re-run
+        the whole seed to put it back. This builds an empty schema instead,
+        which is the same question asked of a database that genuinely has no
+        courses in it.
+        """
+        from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+
+        from app.api.dashboard import suggested_course_id
+        from app.models import Base, Course
+
+        engine = create_async_engine("sqlite+aiosqlite:///:memory:")
+        try:
+            async with engine.begin() as conn:
+                await conn.run_sync(Base.metadata.create_all)
+            maker = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
+            async with maker() as session:
+                assert await suggested_course_id(session) is None
+
+                # And it is None for want of a course, not for want of a
+                # working query: one row and the same call answers.
+                session.add(Course(slug="only", order=3, stage=1, track="probe"))
+                await session.commit()
+                assert await suggested_course_id(session) is not None
+        finally:
+            await engine.dispose()
+
+
 class TestVisualProgramming:
     async def test_compile_valid_graph(self, client: AsyncClient, test_user):
         response = await client.post("/visual/compile", headers=test_user["headers"], json={

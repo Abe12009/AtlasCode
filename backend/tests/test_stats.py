@@ -94,8 +94,13 @@ class TestDashboardWeeklyStats:
         assert weekly["has_activity"] is False
 
     async def test_completing_an_exercise_moves_the_weekly_xp_and_active_days(
-        self, client: AsyncClient, test_user, db_session
+        self, client: AsyncClient, test_user, db_session, unlock_course
     ):
+        # MCQ_ID sits on a lesson several steps into its course, which lesson
+        # gating locks for a brand-new account. Grant the grandfathered access
+        # a pre-existing account has; the XP/streak assertions are unchanged.
+        await unlock_course(test_user)
+
         from sqlalchemy import select
         from app.models import ExerciseOption
 
@@ -124,12 +129,15 @@ class TestDashboardWeeklyStats:
         assert after["has_activity"] is True
 
     async def test_a_wrong_answer_earns_no_xp_even_though_it_counts_as_showing_up(
-        self, client: AsyncClient, second_user, db_session
+        self, client: AsyncClient, second_user, db_session, unlock_course
     ):
         """A wrong submission still logs today as an active day (practising
         counts toward a streak whether or not the answer was right), but it
         must never fabricate XP or a completed lesson.
         """
+        # Same gating grant as the test above, for this test's own user.
+        await unlock_course(second_user)
+
         from sqlalchemy import select
         from app.models import ExerciseOption
 

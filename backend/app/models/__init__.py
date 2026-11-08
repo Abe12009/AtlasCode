@@ -263,7 +263,9 @@ class Course(Base):
     estimated_hours = Column(Integer, default=0)
     icon = Column(String(50), nullable=True)
     #: The course a student should finish first. Advisory, not a hard lock:
-    #: the UI surfaces it and orders around it.
+    #: the UI surfaces it and orders around it. Lesson order *within* a
+    #: course is the part that is enforced -- see RoadmapEntry.gated and
+    #: app.services.lesson_gating -- so this stays advisory on purpose.
     prerequisite_course_id = Column(Integer, ForeignKey("courses.id", ondelete="SET NULL"), nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)

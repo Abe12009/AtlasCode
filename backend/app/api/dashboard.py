@@ -22,6 +22,35 @@ from app.schemas import DashboardResponse, UserResponse, StudentProfileResponse,
 router = APIRouter(prefix="/dashboard", tags=["dashboard"])
 
 
+async def suggested_course_id(db: AsyncSession) -> Optional[int]:
+    """The first course in curriculum order, or None if none is seeded.
+
+    Where a student with no progress at all should start. The dashboard's
+    quest map has nothing else to go on for a brand-new account --
+    course_progress is empty and there is no current mission -- and the
+    alternative was the client fetching the whole catalog (GET /courses,
+    ~650KB) to read one id off it.
+
+    `Course.id` breaks a tie on `order` (a plain `default=0` column with no
+    uniqueness), so the suggestion is stable between two requests rather than
+    whatever the database happens to return first -- the same tie-break
+    app.services.lesson_gating uses to keep a lesson sequence stable.
+
+    There is no published/active filter to apply: `Course` has no such
+    column, and the curriculum's not-yet-written courses (app.curriculum
+    PLANNED_SLUGS) have no Course row at all, so they cannot be picked here.
+
+    A function rather than three inline lines so the no-courses case is
+    testable: the test database is session-scoped and shared, and `Course`
+    cascades to modules, lessons, blocks and exercises, so emptying it to
+    observe None would take the seed every other test depends on with it.
+    """
+    result = await db.execute(
+        select(Course.id).order_by(Course.order, Course.id).limit(1)
+    )
+    return result.scalar_one_or_none()
+
+
 @router.get("", response_model=DashboardResponse)
 async def get_dashboard(
     tz_offset: Optional[int] = Query(
@@ -156,6 +185,8 @@ async def get_dashboard(
                 task.translations = [t for t in task.translations if t.language == current_user.preferred_language]
         current_project = project_progress
 
+    suggested_course = await suggested_course_id(db)
+
     return {
         "user": current_user,
         "profile": profile,
@@ -164,6 +195,7 @@ async def get_dashboard(
         "current_mission_course_title": current_mission_course_title,
         "current_mission_module_title": current_mission_module_title,
         "course_progress": course_progress,
+        "suggested_course_id": suggested_course,
         "recent_achievements": recent_achievements,
         "current_project": current_project
     }

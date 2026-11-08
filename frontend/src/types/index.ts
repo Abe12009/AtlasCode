@@ -302,6 +302,9 @@ export interface DashboardData {
   current_mission_course_title: string | null;
   current_mission_module_title: string | null;
   course_progress: CourseProgress[];
+  /** Where a student with no progress at all should start: the first course
+   * in curriculum order. Null only when no course is seeded. */
+  suggested_course_id: number | null;
   recent_achievements: UserAchievement[];
   current_project: ProjectProgress | null;
 }

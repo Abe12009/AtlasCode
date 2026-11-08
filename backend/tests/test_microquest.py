@@ -90,6 +90,17 @@ class TestMicroQuestBlocksExistOnTheReferenceLesson:
 
 
 class TestLessonApiServesMicroQuestBlocks:
+    @pytest.fixture(autouse=True)
+    async def _unlock_lessons(self, test_user, unlock_course):
+        """Lesson gating locks everything past the first lesson of a course.
+
+        These tests predate app.services.lesson_gating and address lessons and
+        exercises by hard-coded id, several courses deep. Grant them the same
+        grandfathered access a pre-existing account gets -- see
+        conftest.unlock_course_for -- rather than softening what they assert.
+        """
+        await unlock_course(test_user)
+
     async def test_lesson_endpoint_returns_the_new_block_types_in_order(
         self, client: AsyncClient, test_user
     ):
@@ -150,6 +161,17 @@ class TestLessonApiServesMicroQuestBlocks:
 class TestExistingLessonsAreUnaffected:
     """A lesson with no Micro-Quest metadata must render exactly as before."""
 
+    @pytest.fixture(autouse=True)
+    async def _unlock_lessons(self, test_user, unlock_course):
+        """Lesson gating locks everything past the first lesson of a course.
+
+        These tests predate app.services.lesson_gating and address lessons and
+        exercises by hard-coded id, several courses deep. Grant them the same
+        grandfathered access a pre-existing account gets -- see
+        conftest.unlock_course_for -- rather than softening what they assert.
+        """
+        await unlock_course(test_user)
+
     @pytest.mark.parametrize("lesson_id", [1, 5, 10, 20, 50, 100, 127])
     async def test_ordinary_lessons_have_no_microquest_block_types(
         self, client: AsyncClient, test_user, lesson_id
@@ -188,6 +210,17 @@ class TestExistingLessonsAreUnaffected:
 
 class TestExerciseGradingIsUnchangedByMicroQuest:
     """Task 5's promise: the Micro-Quest layer must not touch grading."""
+
+    @pytest.fixture(autouse=True)
+    async def _unlock_lessons(self, test_user, unlock_course):
+        """Lesson gating locks everything past the first lesson of a course.
+
+        These tests predate app.services.lesson_gating and address lessons and
+        exercises by hard-coded id, several courses deep. Grant them the same
+        grandfathered access a pre-existing account gets -- see
+        conftest.unlock_course_for -- rather than softening what they assert.
+        """
+        await unlock_course(test_user)
 
     async def test_reference_exercise_grades_exactly_like_any_code_exercise(
         self, client: AsyncClient, test_user
@@ -533,6 +566,17 @@ class TestEveryBlueprintIsStructurallyValidRegardlessOfLesson:
 
 
 class TestMicroQuestApiOverEveryExerciseType:
+    @pytest.fixture(autouse=True)
+    async def _unlock_lessons(self, test_user, unlock_course):
+        """Lesson gating locks everything past the first lesson of a course.
+
+        These tests predate app.services.lesson_gating and address lessons and
+        exercises by hard-coded id, several courses deep. Grant them the same
+        grandfathered access a pre-existing account gets -- see
+        conftest.unlock_course_for -- rather than softening what they assert.
+        """
+        await unlock_course(test_user)
+
     @pytest.mark.parametrize("lesson_id", sorted(REFERENCE_QUESTS))
     async def test_lesson_endpoint_puts_the_hook_first(
         self, client: AsyncClient, test_user, lesson_id
@@ -592,6 +636,17 @@ class TestMicroQuestApiOverEveryExerciseType:
 class TestMicroQuestGradingUsesTheExistingGrader:
     """Each new quest is completed exactly the way its exercise type always
     was. Nothing about grading, XP or completion is special-cased."""
+
+    @pytest.fixture(autouse=True)
+    async def _unlock_lessons(self, test_user, unlock_course):
+        """Lesson gating locks everything past the first lesson of a course.
+
+        These tests predate app.services.lesson_gating and address lessons and
+        exercises by hard-coded id, several courses deep. Grant them the same
+        grandfathered access a pre-existing account gets -- see
+        conftest.unlock_course_for -- rather than softening what they assert.
+        """
+        await unlock_course(test_user)
 
     async def test_multiple_choice_quest_awards_real_xp_once(self, client: AsyncClient, test_user):
         # Exactly what a browser does on entering a lesson, and what
@@ -957,8 +1012,11 @@ class TestMicroQuestGradingUsesTheExistingGrader:
         assert after["id"] == before["id"], "a second progress row was created"
 
     async def test_one_students_completion_does_not_complete_it_for_another(
-        self, client: AsyncClient, test_user, second_user
+        self, client: AsyncClient, test_user, second_user, unlock_course
     ):
+        # The class fixture unlocks test_user; this test also reads the
+        # lesson as a *second* student, who needs the same grant.
+        await unlock_course(second_user)
         """The per-user isolation the frontend's storage key mirrors, proven on
         the side that actually matters."""
         await client.post(
@@ -974,6 +1032,17 @@ class TestMicroQuestGradingUsesTheExistingGrader:
 class TestMicroQuestLeaksNothing:
     """A Micro-Quest lesson goes through the same serializers as any other, so
     it must give the client no more than any other lesson does."""
+
+    @pytest.fixture(autouse=True)
+    async def _unlock_lessons(self, test_user, unlock_course):
+        """Lesson gating locks everything past the first lesson of a course.
+
+        These tests predate app.services.lesson_gating and address lessons and
+        exercises by hard-coded id, several courses deep. Grant them the same
+        grandfathered access a pre-existing account gets -- see
+        conftest.unlock_course_for -- rather than softening what they assert.
+        """
+        await unlock_course(test_user)
 
     @pytest.mark.parametrize("lesson_id", sorted(REFERENCE_QUESTS))
     async def test_lesson_response_hides_answers_and_grading_configuration(

@@ -8,9 +8,14 @@ single lesson.
 
 The progression is deliberately conventional: a student meets binary before
 Big-O, Big-O before cryptography, and programming before software engineering.
-Prerequisites are advisory. They order the roadmap and are surfaced in the UI,
-but nothing is hard-locked: a student arriving with prior knowledge is not made
-to re-take material they already know.
+
+*Course* prerequisites stay advisory: they order the roadmap and are surfaced
+in the UI, but no course is hard-locked behind another, so a student arriving
+with prior knowledge is not made to re-take a whole course they already know.
+What *is* enforced is lesson order *within* a gated course -- see
+``RoadmapEntry.gated`` and ``app.services.lesson_gating``. The two are
+deliberately different scopes: pick any course you like, then work through it
+in order.
 """
 
 from __future__ import annotations
@@ -45,6 +50,15 @@ class RoadmapEntry:
     difficulty: str
     estimated_hours: int
     prerequisite_slug: Optional[str] = None
+    #: Enforce lesson order inside this course: a lesson is reachable only
+    #: once the one before it is completed (app.services.lesson_gating).
+    #: Course-level `prerequisite_slug` above remains advisory -- this gates
+    #: only the sequence *within* the course. A slug absent from
+    #: ROADMAP_BY_SLUG is treated as ungated, so a course that is not placed
+    #: on the roadmap yet can't be locked by accident; test_curriculum's
+    #: slug-coverage test is what stops that fail-open from hiding a real
+    #: course.
+    gated: bool = True
 
 
 #: Declaration order *is* `Course.order`, so inserting a course here moves

@@ -1,3 +1,4 @@
+import pytest
 import json
 
 from httpx import AsyncClient
@@ -19,6 +20,17 @@ class TestTraceExposedOverApi:
     for a debugging exercise whose validation_config actually carries one,
     and validation_config itself (the answer key for other exercise types)
     must never be present in the response regardless."""
+
+    @pytest.fixture(autouse=True)
+    async def _unlock_lessons(self, test_user, unlock_course):
+        """Lesson gating locks everything past the first lesson of a course.
+
+        These tests predate app.services.lesson_gating and address lessons and
+        exercises by hard-coded id, several courses deep. Grant them the same
+        grandfathered access a pre-existing account gets -- see
+        conftest.unlock_course_for -- rather than softening what they assert.
+        """
+        await unlock_course(test_user)
 
     async def test_debugging_exercise_with_a_trace_exposes_it(
         self, client: AsyncClient, test_user, db_session
