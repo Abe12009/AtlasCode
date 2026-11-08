@@ -21,14 +21,22 @@ export function Dashboard() {
    *
    * 1. the course the student's current mission belongs to, else
    * 2. the first course still in progress, else
-   * 3. nothing -- the map shows an empty state instead of inventing lessons.
+   * 3. `suggested_course_id` -- the first course in curriculum order, which
+   *    is what a student who has started nothing should see, else
+   * 4. nothing -- the map shows an empty state instead of inventing lessons.
    *
-   * The dashboard endpoint puts no `course_id` on `current_mission` (see
-   * app/api/dashboard.py: it resolves only the course *title*), so rule 1
-   * matches that title against `course_progress` -- the same join the welcome
-   * subtitle below already does. A current mission whose course has no
-   * CourseProgress row yet (that row is created lazily on first visit to the
-   * course page) therefore falls through to rule 2.
+   * Rule 3 exists because rules 1 and 2 both read `course_progress`, which is
+   * empty for a brand-new account -- so the first screen a new student ever
+   * sees had a titled, empty quest board. The backend resolves the suggestion
+   * (app/api/dashboard.py `suggested_course_id`) rather than the client
+   * fetching the whole catalog to read one id off it.
+   *
+   * The dashboard endpoint puts no `course_id` on `current_mission` (it
+   * resolves only the course *title*), so rule 1 matches that title against
+   * `course_progress` -- the same join the welcome subtitle below already
+   * does. A current mission whose course has no CourseProgress row yet (that
+   * row is created lazily on first visit to the course page) therefore falls
+   * through to rule 2, and for a new account on to rule 3.
    */
   const roadmapCourseId = (() => {
     const rows = dashboard?.course_progress ?? [];
@@ -37,7 +45,11 @@ export function Dashboard() {
       const matched = rows.find((p) => p.title === missionCourseTitle);
       if (matched) return matched.course_id;
     }
-    return rows.find((p) => p.progress_percent < 100)?.course_id ?? null;
+    return (
+      rows.find((p) => p.progress_percent < 100)?.course_id ??
+      dashboard?.suggested_course_id ??
+      null
+    );
   })();
 
   /** Real lessons for that one course. Same query key as CourseDetail, so
@@ -263,11 +275,21 @@ export function Dashboard() {
         </div>
         {questNodes.length > 0 ? (
           <QuestRoadmap nodes={questNodes} variant="horizontal" />
-        ) : (
-          <p className="text-sm text-text-tertiary py-6 text-center" data-testid="quest-board-empty">
-            {t('dashboard.no_courses_started')}
+        ) : roadmapCourseId == null ? (
+          // Nothing to map (no course seeded at all, since `suggested_course_id`
+          // covers every other case), so the empty state is at least a way out:
+          // the catalog, rather than a dead sentence.
+          //
+          // Gated on `roadmapCourseId` rather than on `questNodes` alone: with
+          // a course id in hand the nodes are merely in flight, and claiming
+          // "no courses started yet" for those few hundred milliseconds is a
+          // statement that is about to be false. Blank, then the map.
+          <p className="text-sm py-6 text-center" data-testid="quest-board-empty">
+            <Link to="/app/courses" className="text-primary-400 hover:text-primary-300">
+              {t('dashboard.no_courses_started')}
+            </Link>
           </p>
-        )}
+        ) : null}
       </div>
 
       <div className="grid lg:grid-cols-3 gap-6">

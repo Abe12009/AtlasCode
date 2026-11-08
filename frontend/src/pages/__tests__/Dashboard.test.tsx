@@ -35,6 +35,10 @@ function buildDashboard(overrides: Partial<DashboardData> = {}): DashboardData {
     current_mission_course_title: null,
     current_mission_module_title: null,
     course_progress: [],
+    // Null, so these tests keep exercising what they always did: with no
+    // suggestion the quest map falls through to its empty state, as it did
+    // before the field existed.
+    suggested_course_id: null,
     recent_achievements: [],
     current_project: null,
     ...overrides,

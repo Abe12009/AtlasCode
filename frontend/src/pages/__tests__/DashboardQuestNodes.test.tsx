@@ -25,6 +25,7 @@ function dashboardData(overrides: Partial<DashboardData> = {}): DashboardData {
     current_mission_course_title: null,
     current_mission_module_title: null,
     course_progress: [],
+    suggested_course_id: null,
     recent_achievements: [],
     current_project: null,
     ...overrides,
@@ -152,15 +153,99 @@ describe('Dashboard quest nodes', () => {
     });
   });
 
-  it('shows an empty state and fetches no course when nothing is started', async () => {
-    mockedDashboard.get.mockResolvedValue(dashboardData({ course_progress: [] }));
+  it('maps the suggested course for an account with no progress at all', async () => {
+    // Rule 3. A brand-new account: no course_progress, no current mission --
+    // the case that used to render a titled, empty quest board.
+    mockedDashboard.get.mockResolvedValue(
+      dashboardData({ course_progress: [], suggested_course_id: 42 }),
+    );
+
+    await renderWithProviders(<Dashboard />, { initialLanguage: 'en' });
+
+    await waitFor(() => {
+      expect(mockedCourses.getById).toHaveBeenCalledWith(42, 'en');
+    });
+    expect(screen.queryByTestId('quest-board-empty')).not.toBeInTheDocument();
+  });
+
+  it('shows a new student lesson 1 as available and the rest locked', async () => {
+    // What rule 3 is for: the map a brand-new account actually sees.
+    mockedCourses.getById.mockResolvedValue({
+      ...courseWithLessons(),
+      modules: [
+        {
+          id: 1,
+          slug: 'getting-started',
+          order: 1,
+          translations: [{ language: 'en', title: 'Getting Started' }],
+          lessons: [
+            { id: 301, slug: 'one', order: 1, difficulty: 'beginner', estimated_minutes: 20, xp_reward: 50, is_project: false, status: 'available', translations: [{ language: 'en', title: 'First Lesson' }], blocks: [], exercises: [] },
+            { id: 302, slug: 'two', order: 2, difficulty: 'beginner', estimated_minutes: 20, xp_reward: 50, is_project: false, status: 'locked', translations: [{ language: 'en', title: 'Second Lesson' }], blocks: [], exercises: [] },
+            { id: 303, slug: 'three', order: 3, difficulty: 'beginner', estimated_minutes: 20, xp_reward: 50, is_project: false, status: 'locked', translations: [{ language: 'en', title: 'Third Lesson' }], blocks: [], exercises: [] },
+          ],
+        },
+      ],
+    } as any);
+    mockedDashboard.get.mockResolvedValue(
+      dashboardData({ course_progress: [], suggested_course_id: 42 }),
+    );
+
+    await renderWithProviders(<Dashboard />, { initialLanguage: 'en' });
+
+    await waitFor(() => {
+      expect(screen.getByLabelText('First Lesson, Available')).toBeInTheDocument();
+    });
+    expect(screen.getByLabelText('Second Lesson, Locked')).toBeInTheDocument();
+    expect(screen.getByLabelText('Third Lesson, Locked')).toBeInTheDocument();
+  });
+
+  it('prefers a started course over the suggestion', async () => {
+    mockedDashboard.get.mockResolvedValue(
+      dashboardData({ course_progress: [IN_PROGRESS_ROW], suggested_course_id: 99 }),
+    );
+
+    await renderWithProviders(<Dashboard />, { initialLanguage: 'en' });
+
+    await waitFor(() => {
+      expect(mockedCourses.getById).toHaveBeenCalledWith(42, 'en');
+    });
+    expect(mockedCourses.getById).not.toHaveBeenCalledWith(99, 'en');
+  });
+
+  it('falls back to the suggestion when every started course is finished', async () => {
+    mockedDashboard.get.mockResolvedValue(
+      dashboardData({
+        course_progress: [
+          { course_id: 7, completed_lessons: 3, total_lessons: 3, progress_percent: 100, title: 'Finished' },
+        ],
+        suggested_course_id: 42,
+      }),
+    );
+
+    await renderWithProviders(<Dashboard />, { initialLanguage: 'en' });
+
+    await waitFor(() => {
+      expect(mockedCourses.getById).toHaveBeenCalledWith(42, 'en');
+    });
+  });
+
+  it('keeps an empty state, linking to the catalog, when there is no course at all', async () => {
+    // suggested_course_id is null only when nothing is seeded, so there is
+    // genuinely nothing to map -- but the text is a way out, not a dead end.
+    mockedDashboard.get.mockResolvedValue(
+      dashboardData({ course_progress: [], suggested_course_id: null }),
+    );
 
     await renderWithProviders(<Dashboard />, { initialLanguage: 'en' });
 
     await waitFor(() => {
       expect(screen.getByTestId('quest-board-empty')).toBeInTheDocument();
     });
-    expect(screen.getByTestId('quest-board-empty')).toHaveTextContent(/No courses started yet/i);
+    const empty = screen.getByTestId('quest-board-empty');
+    expect(empty).toHaveTextContent(/No courses started yet/i);
+    const link = empty.querySelector('a');
+    expect(link).not.toBeNull();
+    expect(link).toHaveAttribute('href', '/app/courses');
     expect(mockedCourses.getById).not.toHaveBeenCalled();
   });
 
