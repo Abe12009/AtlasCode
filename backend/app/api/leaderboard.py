@@ -37,6 +37,17 @@ MAX_DEPTH = 500
 DEFAULT_LIMIT = 25
 MAX_LIMIT = 100
 
+#: Longest cursor accepted. A real one is ~20 characters; this only has to be
+#: generous enough never to reject one while refusing a payload built to be
+#: expensive to decode. Enforced by FastAPI (422) before any decoding runs.
+MAX_CURSOR_LENGTH = 128
+
+#: Every integer in a cursor must fit a signed 64-bit column. Python ints are
+#: arbitrary precision, so without this a cursor carrying 10**400 reaches the
+#: database: SQLite shrugs, but PostgreSQL rejects an out-of-range bigint and
+#: the request becomes a 500 instead of the 400 it is.
+INT64_MAX = 2**63 - 1
+
 
 def _sort_xp():
     """The ordering key: XP, with NULL strictly last.
@@ -75,21 +86,40 @@ def _encode_cursor(sort_xp: int, user_id: int, next_rank: int) -> str:
 
 
 def _decode_cursor(cursor: str) -> tuple[int, int, int]:
-    """Parse a cursor, or 400. Never trusted: it arrives from the client."""
+    """Parse a cursor, or 400. Never trusted: it arrives from the client.
+
+    Every failure mode lands on one 400: not base64, not UTF-8, the wrong
+    number of fields, not integers, or integers outside the range a real
+    cursor can hold. The range check is the load-bearing one -- the rest
+    would raise on their own, but a syntactically perfect cursor saying
+    "resume at rank -9999" used to be accepted and hand back negative rank
+    numbers, and one saying 10**400 used to reach the database.
+    """
     try:
         padding = "=" * (-len(cursor) % 4)
         sort_xp, user_id, next_rank = (
             base64.urlsafe_b64decode(cursor + padding).decode().split(":")
         )
-        return int(sort_xp), int(user_id), int(next_rank)
+        values = (int(sort_xp), int(user_id), int(next_rank))
     except (ValueError, binascii.Error, UnicodeDecodeError) as exc:
         raise HTTPException(status_code=400, detail="Invalid cursor") from exc
+
+    sort_xp_value, user_id_value, next_rank_value = values
+    # -1 is the NULL-XP sentinel (see _sort_xp), so it is the floor; ids and
+    # ranks are 1-based.
+    if not (
+        -1 <= sort_xp_value <= INT64_MAX
+        and 1 <= user_id_value <= INT64_MAX
+        and 1 <= next_rank_value <= INT64_MAX
+    ):
+        raise HTTPException(status_code=400, detail="Invalid cursor")
+    return values
 
 
 @router.get("", response_model=LeaderboardResponse)
 async def get_leaderboard(
     limit: int = Query(DEFAULT_LIMIT, ge=1, le=MAX_LIMIT),
-    cursor: Optional[str] = Query(None),
+    cursor: Optional[str] = Query(None, max_length=MAX_CURSOR_LENGTH),
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):

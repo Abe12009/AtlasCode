@@ -6,12 +6,19 @@ with ~740 other tests -- and because the board is global, so a row left
 behind would show up in someone else's page and change their ranks.
 """
 
+import base64
+
 import pytest
 from httpx import AsyncClient
 from sqlalchemy import delete, select, update
 
 from app.core.security import get_password_hash
 from app.models import StudentProfile, User
+
+
+def _b64(raw: str) -> str:
+    """Encode a cursor body the way the endpoint does, for probing."""
+    return base64.urlsafe_b64encode(raw.encode()).decode().rstrip("=")
 
 
 async def _make_user(
@@ -275,13 +282,69 @@ class TestLeaderboardPagination:
         finally:
             await _cleanup(db_session, made)
 
-    async def test_a_malformed_cursor_is_rejected(self, client: AsyncClient, test_user):
+    @pytest.mark.parametrize(
+        "label,cursor",
+        [
+            ("plain text", "not-a-cursor"),
+            ("truncated", _b64("100:5:2")[:4]),
+            ("non-base64 symbols", "!!!!@@@@"),
+            ("too few fields", _b64("100:5")),
+            ("too many fields", _b64("1:2:3:4")),
+            ("non-numeric fields", _b64("a:b:c")),
+            ("non-utf8 payload", base64.urlsafe_b64encode(bytes.fromhex("fffefd")).decode()),
+            ("whitespace", "   "),
+            # Syntactically perfect, semantically impossible. These used to be
+            # accepted and handed back negative or zero rank numbers.
+            ("negative everything", _b64("-10:-5:-3")),
+            ("negative rank", _b64("100:5:-9999")),
+            ("zero rank", _b64("100:5:0")),
+            ("zero user id", _b64("100:0:3")),
+            ("xp below the NULL sentinel", _b64("-2:5:3")),
+            # Python ints are unbounded; a bigint column is not. SQLite
+            # shrugs at 2**63, PostgreSQL raises -- which would be a 500.
+            ("just over int64", _b64(f"1:1:{2 ** 63}")),
+            ("xp over int64", _b64(f"{2 ** 63}:1:1")),
+        ],
+    )
+    async def test_a_bad_cursor_is_a_400_never_a_500(
+        self, client: AsyncClient, test_user, label, cursor
+    ):
         response = await client.get(
-            "/leaderboard", headers=test_user["headers"], params={"cursor": "not-a-cursor"}
+            "/leaderboard", headers=test_user["headers"], params={"cursor": cursor}
         )
-        assert response.status_code == 400
+        assert response.status_code == 400, f"{label}: {response.status_code}"
 
-    @pytest.mark.parametrize("limit", [0, -1, 101])
+    async def test_an_oversized_cursor_is_refused_before_decoding(
+        self, client: AsyncClient, test_user
+    ):
+        """Length is capped by FastAPI, so a payload built to be expensive to
+        decode never reaches the decoder."""
+        response = await client.get(
+            "/leaderboard", headers=test_user["headers"], params={"cursor": "A" * 5_000}
+        )
+        assert response.status_code == 422
+
+    async def test_the_sentinel_and_the_empty_cursor_are_valid(
+        self, client: AsyncClient, test_user
+    ):
+        """-1 is the NULL-XP sentinel, so it is a legitimate cursor value; an
+        empty cursor simply means the first page."""
+        assert (
+            await client.get(
+                "/leaderboard",
+                headers=test_user["headers"],
+                params={"cursor": _b64("-1:5:3")},
+            )
+        ).status_code == 200
+        assert (
+            await client.get(
+                "/leaderboard", headers=test_user["headers"], params={"cursor": ""}
+            )
+        ).status_code == 200
+
+    @pytest.mark.parametrize(
+        "limit", [0, -1, -999_999, 101, 10**9, 10**20, "abc", "", "1.5"]
+    )
     async def test_limit_is_bounded(self, client: AsyncClient, test_user, limit):
         response = await client.get(
             "/leaderboard", headers=test_user["headers"], params={"limit": limit}
@@ -390,3 +453,51 @@ class TestLeaderboardMe:
 
     async def test_unauthenticated_access_is_refused(self, client: AsyncClient):
         assert (await client.get("/leaderboard")).status_code == 401
+
+
+class TestLeaderboardIndex:
+    """The index the board's `me.rank` COUNT depends on.
+
+    `run_additive_migrations` creates indexes best-effort and swallows the
+    exception (see its `except Exception: logger.warning`), so a statement
+    that does not parse would never fail a boot, a test or a deploy -- it
+    would just quietly leave the index missing. That is exactly the failure
+    this guards.
+    """
+
+    async def test_every_index_statement_applies_to_a_fresh_schema(self):
+        from sqlalchemy import text
+        from sqlalchemy.ext.asyncio import create_async_engine
+
+        from app.db.migrations import INDEXES
+        from app.models import Base
+
+        engine = create_async_engine("sqlite+aiosqlite:///:memory:")
+        try:
+            async with engine.begin() as conn:
+                await conn.run_sync(Base.metadata.create_all)
+                for name, statement in INDEXES:
+                    # No try/except here on purpose: unlike production, a bad
+                    # statement must fail loudly.
+                    await conn.execute(text(statement))
+                existing = (
+                    await conn.execute(
+                        text("SELECT name FROM sqlite_master WHERE type='index'")
+                    )
+                ).scalars().all()
+            for name, _ in INDEXES:
+                assert name in existing, f"{name} did not get created"
+        finally:
+            await engine.dispose()
+
+    async def test_the_leaderboard_index_matches_the_query_ordering(self):
+        """An index on the raw column cannot serve an ordering on an
+        expression over it. The first version of this index was
+        `(xp DESC, user_id)` while the query sorts by `coalesce(xp, -1)`, and
+        SQLite's query planner used it for neither leaderboard query.
+        """
+        from app.db.migrations import INDEXES
+
+        statement = dict(INDEXES)["ix_student_profiles_xp"]
+        assert "coalesce(xp, -1)" in statement, statement
+        assert "user_id" in statement
