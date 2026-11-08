@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import get_settings
 from app.db.session import init_db
-from app.api import auth, courses, lessons, exercises, projects, dashboard, visual, notifications, users, cody, admin, feedback, duels, circuits, git_quest
+from app.api import auth, courses, lessons, exercises, projects, dashboard, visual, notifications, users, cody, admin, feedback, duels, circuits, git_quest, leaderboard
 
 settings = get_settings()
 
@@ -53,6 +53,7 @@ app.include_router(feedback.router)
 app.include_router(duels.router)
 app.include_router(circuits.router)
 app.include_router(git_quest.router)
+app.include_router(leaderboard.router)
 
 
 @app.on_event("startup")

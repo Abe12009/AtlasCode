@@ -165,6 +165,11 @@ INDEXES: tuple[tuple[str, str], ...] = (
     ("ix_lesson_progress_completed_at", "CREATE INDEX IF NOT EXISTS ix_lesson_progress_completed_at ON lesson_progress (completed_at)"),
     ("ix_project_progress_user_id", "CREATE INDEX IF NOT EXISTS ix_project_progress_user_id ON project_progress (user_id)"),
     ("ix_project_progress_completed_at", "CREATE INDEX IF NOT EXISTS ix_project_progress_completed_at ON project_progress (completed_at)"),
+    # The leaderboard's whole ordering, as one index: app.api.leaderboard pages
+    # by (xp DESC, user_id) and counts how many listed users sort ahead of the
+    # caller. Without it both are a full scan of student_profiles on every
+    # load of a page every signed-in user can open.
+    ("ix_student_profiles_xp", "CREATE INDEX IF NOT EXISTS ix_student_profiles_xp ON student_profiles (xp DESC, user_id)"),
 )
 
 
