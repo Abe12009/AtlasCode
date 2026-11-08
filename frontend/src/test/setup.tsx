@@ -96,6 +96,9 @@ vi.mock('../api/services', () => ({
     start: vi.fn(),
     submitTask: vi.fn(),
   },
+  leaderboardApi: {
+    get: vi.fn(),
+  },
   dashboardApi: {
     // React Query rejects an `undefined` resolution outright, so tests that
     // don't care about dashboard data (e.g. Courses, which only reads

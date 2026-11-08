@@ -309,6 +309,33 @@ export interface DashboardData {
   current_project: ProjectProgress | null;
 }
 
+/** One row of the all-time leaderboard: a strict subset of a public
+ * profile -- username, avatar, level, XP. Nothing else is sent. */
+export interface LeaderboardEntry {
+  rank: number;
+  username: string;
+  avatar_url?: string | null;
+  avatar_image_data?: string | null;
+  avatar_config?: string | null;
+  avatar_type?: string;
+  level: number;
+  xp: number;
+}
+
+/** The caller's own standing, returned whether or not they are listed. */
+export interface LeaderboardMe {
+  rank: number;
+  xp: number;
+  level: number;
+  is_listed: boolean;
+}
+
+export interface LeaderboardResponse {
+  entries: LeaderboardEntry[];
+  me: LeaderboardMe;
+  next_cursor: string | null;
+}
+
 export type NotificationType = 'welcome' | 'xp_earned' | 'lesson_completed' | 'project_completed' | 'achievement_earned';
 
 export interface Notification {

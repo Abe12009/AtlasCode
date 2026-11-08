@@ -31,6 +31,7 @@ import type {
   DuelTicketResponse,
   DuelStateResponse,
   DuelSubmitResponse,
+  LeaderboardResponse,
 } from '../types';
 
 export const authApi = {
@@ -173,6 +174,13 @@ export const projectsApi = {
       `/projects/${projectId}/submit-task`,
       { task_id: taskId, code }
     ),
+};
+
+export const leaderboardApi = {
+  /** One page of the all-time board. `cursor` comes from the previous
+   * response's `next_cursor`; absent means start at rank 1. */
+  get: (params: { limit?: number; cursor?: string } = {}) =>
+    apiClient.get<LeaderboardResponse>('/leaderboard', params),
 };
 
 export const dashboardApi = {

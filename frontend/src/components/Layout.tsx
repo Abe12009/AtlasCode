@@ -64,6 +64,7 @@ export function Layout() {
     { path: '/app/courses', label: t('navigation.courses'), icon: BookOpen, tourId: 'tour-nav-courses' },
     { path: '/app/projects', label: t('navigation.projects'), icon: FolderKanban },
     { path: '/app/duels', label: t('navigation.duels'), icon: Swords },
+    { path: '/app/leaderboard', label: t('navigation.leaderboard'), icon: Trophy },
     { path: '/app/cody', label: t('navigation.cody'), icon: CodyCharacter },
     { path: '/app/profile', label: t('navigation.profile'), icon: User },
   ];
