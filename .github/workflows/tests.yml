@@ -10,7 +10,16 @@ on:
 
 jobs:
   backend:
-    runs-on: ubuntu-latest
+    # Pinned, not `ubuntu-latest`: that label now resolves to Ubuntu 26.04,
+    # and actions/python-versions publishes no 3.12.11 build for it -- the
+    # job failed at "Set up Python" with "The version '3.12.11' with
+    # architecture 'x64' was not found for Ubuntu 26.04". The manifest has
+    # 3.12.11 for linux x64 on 22.04 and 24.04 only; 26.04 builds start at
+    # 3.12.13. The exact patch has to stay 3.12.11 to match
+    # backend/.python-version, which is what Render builds against, so the
+    # runner moves instead of the interpreter. Revisit if Render's pin moves
+    # to a 3.12.x that has a 26.04 build.
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-python@v7
