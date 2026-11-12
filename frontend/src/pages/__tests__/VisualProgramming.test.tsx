@@ -186,12 +186,47 @@ describe('Visual Programming Page', () => {
     exercisesApi.getById.mockResolvedValue(mockVisualProgrammingExercise);
     visualApi.getStarter.mockResolvedValue(null);
     visualApi.compile.mockResolvedValue({ python_code: 'print("Hello")', is_valid: true, errors: [] });
-    
+
     renderWithProviders(null, { exerciseId: '1' });
-    
+
     await waitFor(() => {
       expect(screen.getByRole('link', { name: /Course 1/i })).toBeInTheDocument();
       expect(screen.getByRole('link', { name: /Lesson 1/i })).toBeInTheDocument();
     });
+  });
+
+  /**
+   * `.bg-grid-pattern` sets `opacity` on the element (index.css), and opacity
+   * applies to the whole subtree -- so a grid class on the node layer renders
+   * every edge and node at 0.05. Measured in a browser before the fix. The
+   * grid has to stay its own childless decorative layer.
+   */
+  it('renders the canvas grid as a childless, aria-hidden layer', async () => {
+    exercisesApi.getById.mockResolvedValue(mockVisualProgrammingExercise);
+    visualApi.getStarter.mockResolvedValue(null);
+    visualApi.compile.mockResolvedValue({ python_code: 'print("Hello")', is_valid: true, errors: [] });
+
+    renderWithProviders(null, { exerciseId: '1' });
+
+    const grid = await screen.findByTestId('visual-canvas-grid');
+    expect(grid.className).toContain('bg-grid-pattern');
+    expect(grid.getAttribute('aria-hidden')).toBe('true');
+    expect(grid.children.length, 'the grid layer must stay childless').toBe(0);
+    // handleCanvasClick only clears the selection when
+    // `e.target === e.currentTarget`, so the grid must not take clicks.
+    expect(grid.className).toContain('pointer-events-none');
+  });
+
+  it('keeps the grid class off the layer that holds the nodes', async () => {
+    exercisesApi.getById.mockResolvedValue(mockVisualProgrammingExercise);
+    visualApi.getStarter.mockResolvedValue(null);
+    visualApi.compile.mockResolvedValue({ python_code: 'print("Hello")', is_valid: true, errors: [] });
+
+    renderWithProviders(null, { exerciseId: '1' });
+
+    await screen.findByTestId('visual-canvas-grid');
+    for (const el of document.querySelectorAll('.bg-grid-pattern')) {
+      expect(el.children.length, 'no .bg-grid-pattern element may wrap content').toBe(0);
+    }
   });
 });
