@@ -121,8 +121,7 @@ export function CircuitCanvas({ graph, onChange, values, inputToggles, onToggleI
         // never composite the page behind it -- but it paints its own ground
         // (`bg-bg-code/50`, a deliberate 50%) and `no-glass` would override
         // that and delete the grid with it. See index.css.
-        className="relative h-[420px] rounded-xl border border-border-primary bg-bg-code/50 bg-grid-pattern no-blur overflow-auto"
-        style={{ backgroundSize: '24px 24px' }}
+        className="relative h-[420px] rounded-xl border border-border-primary bg-bg-code/50 no-blur overflow-auto"
         onDragOver={(e) => e.preventDefault()}
         onDrop={handleDrop}
         onClick={(e) => {
@@ -138,6 +137,19 @@ export function CircuitCanvas({ graph, onChange, values, inputToggles, onToggleI
           }
         }}
       >
+        {/* The grid is its own childless layer, not a class on the canvas.
+            `.bg-grid-pattern` sets `opacity` (index.css), and opacity applies
+            to the whole subtree -- on the canvas itself it was rendering every
+            wire and node at 0.05, measured in-browser. `pointer-events-none`
+            is load-bearing: the canvas's own onClick clears the selection only
+            when `e.target === e.currentTarget`, so a grid that swallowed
+            clicks would break background-deselect. */}
+        <div
+          data-testid="circuit-canvas-grid"
+          aria-hidden="true"
+          className="absolute inset-0 bg-grid-pattern pointer-events-none"
+          style={{ backgroundSize: '24px 24px' }}
+        />
         <svg className="absolute inset-0 pointer-events-none" width="100%" height="100%">
           {graph.edges.map((edge) => {
             const source = nodeById.get(edge.source);

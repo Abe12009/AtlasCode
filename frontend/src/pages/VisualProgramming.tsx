@@ -608,7 +608,19 @@ export function VisualProgrammingPage() {
                 onDragOver={handleDragOver}
                 onDrop={handleDrop}
               >
-                <div ref={canvasRef} className="absolute inset-0 bg-grid-pattern" style={{ backgroundSize: '40px 40px' }}>
+                {/* Grid as its own childless layer, not a class on the node
+                    layer. `.bg-grid-pattern` sets `opacity` (index.css), which
+                    applies to the whole subtree -- on the node layer it was
+                    rendering every edge and node at 0.05, measured in-browser.
+                    `pointer-events-none` keeps handleCanvasClick's
+                    `e.target === e.currentTarget` check working. */}
+                <div
+                  data-testid="visual-canvas-grid"
+                  aria-hidden="true"
+                  className="absolute inset-0 bg-grid-pattern pointer-events-none"
+                  style={{ backgroundSize: '40px 40px' }}
+                />
+                <div ref={canvasRef} className="absolute inset-0">
                   {/* Edges */}
                   {state.edges.map((edge) => {
                     const sourceNode = state.nodes.find((n) => n.id === edge.source);

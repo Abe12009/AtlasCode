@@ -113,6 +113,41 @@ describe('Spatial Glass: .no-blur is the guard without the opaque ground', () =>
   });
 });
 
+/**
+ * `.bg-grid-pattern` sets `opacity` on the element (index.css), and opacity
+ * applies to the whole subtree. Put it on a container that holds content and
+ * every wire and node inside renders at 0.05 -- which is exactly what the
+ * Circuit Lab and the Visual Programming canvas were doing, measured in a
+ * browser at `ownOpacity: "0.05"` with each child at `effectiveOpacity: 0.05`.
+ *
+ * So the rule is: the grid is always its own childless, decorative layer.
+ */
+describe('Spatial Glass: the grid never wraps content', () => {
+  it('the stylesheet rule is opacity-based, which is why this matters', () => {
+    // If this ever stops being true the childless requirement can relax --
+    // but then this whole describe block should go, not just this assertion.
+    expect(cssRule('.bg-grid-pattern')).toMatch(/opacity:/);
+  });
+
+  it('the circuit lab grid is a childless, aria-hidden layer', () => {
+    render(<CircuitCanvas {...circuitProps} />);
+    const grid = screen.getByTestId('circuit-canvas-grid');
+    expect(grid.className).toContain('bg-grid-pattern');
+    expect(grid.getAttribute('aria-hidden')).toBe('true');
+    expect(grid.children.length, 'the grid layer must stay childless').toBe(0);
+    // Without this the canvas's own onClick stops clearing the selection:
+    // it only fires when `e.target === e.currentTarget`.
+    expect(grid.className).toContain('pointer-events-none');
+  });
+
+  it('the canvas itself no longer carries the grid class', () => {
+    render(<CircuitCanvas {...circuitProps} />);
+    expect(screen.getByTestId('circuit-canvas-background').className).not.toContain(
+      'bg-grid-pattern',
+    );
+  });
+});
+
 describe('Spatial Glass: list-rendered cards must not blur', () => {
   it('the default card variant is non-blurred glass', () => {
     const { container } = render(<Card>content</Card>);
