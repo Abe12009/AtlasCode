@@ -117,7 +117,11 @@ export function CircuitCanvas({ graph, onChange, values, inputToggles, onToggleI
       <div
         ref={canvasRef}
         data-testid="circuit-canvas-background"
-        className="relative h-[420px] rounded-xl border border-border-primary bg-bg-code/50 bg-grid-pattern overflow-auto"
+        // `no-blur`, not `no-glass`: the canvas is a work surface, so it must
+        // never composite the page behind it -- but it paints its own ground
+        // (`bg-bg-code/50`, a deliberate 50%) and `no-glass` would override
+        // that and delete the grid with it. See index.css.
+        className="relative h-[420px] rounded-xl border border-border-primary bg-bg-code/50 bg-grid-pattern no-blur overflow-auto"
         style={{ backgroundSize: '24px 24px' }}
         onDragOver={(e) => e.preventDefault()}
         onDrop={handleDrop}

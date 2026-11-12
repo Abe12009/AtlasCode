@@ -1216,18 +1216,37 @@ html[dir="rtl"] .prose ol {
   background-image: var(--btn-primary-gradient-hover);
 }
 
-/* Code must never sit on translucency.
+/* Work surfaces must never sit on translucency.
  *
- * The editor, the terminal and the Circuit Lab canvas stay fully opaque: a
- * glass card wrapping any of them would put the page behind it underneath
- * syntax-highlighted text, which is both unreadable and an accessibility
- * problem. Applied to the surface itself so it holds no matter what a parent
- * card does, and asserted by test (see `ui/__tests__/glass.test.ts`).
+ * Two classes, because the surfaces that need this need different amounts of
+ * it. The shared, load-bearing part is `.no-blur`: whatever else a surface
+ * wants, it must not composite the page behind it. `.no-glass` is that plus
+ * the opaque code ground.
  *
- * !important is deliberate and load-bearing here: this has to beat a glass
- * utility on the same element, and a silent regression is exactly the failure
- * this guard exists to prevent.
+ * `.no-blur` -- the invariant on its own. A surface that paints its own
+ * background (the Circuit Lab canvas: `bg-bg-code/50` for a deliberate 50%
+ * ground, `bg-grid-pattern` for the lattice) can take this and keep both.
+ * `.no-glass` could not be used there: its `background-image: none` deletes
+ * the grid and its `background-color` overrides the intended alpha, which is
+ * why the canvas was left unguarded when the glass tokens landed (see
+ * 3be0ba7 -- "the Circuit Lab phase should" cover it; this is that phase).
+ *
+ * `.no-glass` -- the composed opaque version, for code surfaces. The editor
+ * and the terminal stay fully opaque: a glass card wrapping either would put
+ * the page behind it underneath syntax-highlighted text, which is both
+ * unreadable and an accessibility problem. Applied to the surface itself so
+ * it holds no matter what a parent card does, and asserted by test (see
+ * `ui/__tests__/glass.test.tsx`).
+ *
+ * !important is deliberate and load-bearing on both: they have to beat a
+ * glass utility on the same element, and a silent regression is exactly the
+ * failure these guards exist to prevent.
  */
+.no-blur {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
 .no-glass {
   background-color: var(--color-bg-code) !important;
   background-image: none !important;

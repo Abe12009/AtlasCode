@@ -7,11 +7,35 @@ import path from 'node:path';
 import { Button } from '../Button';
 import { Card } from '../Card';
 import { CodeEditor, TerminalPanel } from '../CodeEditor';
+import { CircuitCanvas } from '../../circuitLab/CircuitCanvas';
+import type { CircuitGraph } from '../../../types';
 
 const css = readFileSync(
   path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../../index.css'),
   'utf-8',
 );
+
+/** The declaration block of a rule, by exact selector.
+ *
+ * Anchored on `selector + ' {'` so `.no-glass` cannot match `.no-glass-foo`,
+ * and so the `.no-blur` lookup does not land inside `.no-glass`'s block. */
+function cssRule(selector: string): string {
+  const start = css.indexOf(`${selector} {`);
+  if (start === -1) throw new Error(`${selector} not found in index.css`);
+  return css.slice(start, css.indexOf('}', start));
+}
+
+const EMPTY_GRAPH: CircuitGraph = { nodes: [], edges: [] };
+
+/** CircuitCanvas's required props, none of which these tests exercise. */
+const circuitProps = {
+  graph: EMPTY_GRAPH,
+  onChange: () => {},
+  values: {},
+  inputToggles: {},
+  onToggleInput: () => {},
+  errors: [],
+};
 
 /**
  * Spatial Glass guardrails.
@@ -49,12 +73,43 @@ describe('Spatial Glass: code surfaces never get translucency', () => {
   });
 
   it('.no-glass forces an opaque, unblurred surface in the stylesheet', () => {
-    const rule = css.slice(css.indexOf('.no-glass {'), css.indexOf('}', css.indexOf('.no-glass {')));
+    const rule = cssRule('.no-glass');
     expect(rule).toContain('--color-bg-code');
     // !important is load-bearing: this has to beat a glass utility on the
     // same element, and a silent regression is the failure it guards.
     expect(rule).toMatch(/background-color:[^;]*!important/);
+    expect(rule).toMatch(/background-image:\s*none\s*!important/);
     expect(rule).toMatch(/backdrop-filter:\s*none\s*!important/);
+  });
+});
+
+/**
+ * `.no-blur` is the half of the old `.no-glass` that every work surface needs:
+ * never composite the page behind it. It exists separately because the Circuit
+ * Lab canvas needs exactly that and nothing else -- it paints its own ground
+ * and its own grid, both of which `.no-glass` would overwrite.
+ */
+describe('Spatial Glass: .no-blur is the guard without the opaque ground', () => {
+  it('kills backdrop-filter and nothing else', () => {
+    const rule = cssRule('.no-blur');
+    expect(rule).toMatch(/backdrop-filter:\s*none\s*!important/);
+    expect(rule).toMatch(/-webkit-backdrop-filter:\s*none\s*!important/);
+    // The whole point of the split: it must leave the caller's own background
+    // alone, or the Circuit Lab grid and its 50% ground go with it.
+    expect(rule, '.no-blur must not touch background-color').not.toMatch(/background-color/);
+    expect(rule, '.no-blur must not touch background-image').not.toMatch(/background-image/);
+  });
+
+  it('the circuit lab canvas carries it', () => {
+    render(<CircuitCanvas {...circuitProps} />);
+    expect(screen.getByTestId('circuit-canvas-background').className).toContain('no-blur');
+  });
+
+  it('the circuit lab canvas carries no glass class', () => {
+    render(<CircuitCanvas {...circuitProps} />);
+    expect(screen.getByTestId('circuit-canvas-background').className).not.toMatch(
+      /\bglass-surface\b|\bglass-flat\b|\bglass-raised\b/,
+    );
   });
 });
 
