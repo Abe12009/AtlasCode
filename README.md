@@ -17,6 +17,10 @@ Engineering, AI & Machine Learning, Cybersecurity).
 
 **Backend**
 
+Python **3.12** is the supported version — it is what CI and Render both run
+(pinned in `backend/.python-version`). Newer interpreters mostly work, but
+only 3.12 is tested.
+
 ```bash
 cd backend
 python -m venv .venv && .venv\Scripts\activate   # or `source .venv/bin/activate` on macOS/Linux

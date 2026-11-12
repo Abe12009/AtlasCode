@@ -10,6 +10,18 @@ uvicorn[standard]==0.27.0
 # every class). This install had drifted to an unpinned 2.0.35 that happened
 # to work; pinning explicitly to the first 2.0.x release with the fix.
 sqlalchemy==2.0.36
+# Explicit because SQLAlchemy won't install it for us on a modern interpreter:
+# its own requirement is marked `python_version < "3.13"`, so a fresh
+# `pip install -r requirements.txt` on 3.13+ omits greenlet and the first query
+# dies with "ValueError: the greenlet library is required to use this function."
+# Not optional here -- app/db/session.py is create_async_engine, so every DB
+# call goes through SQLAlchemy's asyncio layer, which is built on greenlet.
+# Invisible in CI and on Render (both 3.12, per backend/.python-version), so
+# this only bites a fresh local setup on a newer Python.
+#
+# 3.5.6 ships cp312/cp313/cp314 wheels for manylinux x86_64 and win_amd64 (no
+# sdist build on any interpreter in use here) and satisfies SQLAlchemy's !=0.4.17.
+greenlet==3.5.6
 pydantic==2.12.5
 pydantic[email]==2.12.5
 pydantic-settings==2.0.0
