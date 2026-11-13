@@ -274,10 +274,17 @@
 
   /* Hover / press fills for an interactive glass surface (see
    * `.glass-interactive`). Light glass is the opaque elevated surface, so
-   * these are the same opaque steps the Button variant always intended --
-   * --color-bg-quaternary on hover, --color-bg-tertiary on press. */
-  --glass-hover: var(--color-bg-quaternary);
-  --glass-press: var(--color-bg-tertiary);
+   * these are opaque steps off it: #FFFFFF -> tertiary -> quaternary, each
+   * one darker than the last.
+   *
+   * Press MUST read at least as strong as hover. The secondary Button
+   * variant these replaced had them the other way round
+   * (`hover:bg-bg-quaternary active:bg-bg-tertiary`), which on the light
+   * ramp meant pressing made the surface *lighter* than hovering -- the
+   * press looked like a release. `outline` and `ghost` already do it in this
+   * order, and dark does too (0.10 -> 0.14 white). Pinned by test. */
+  --glass-hover: var(--color-bg-tertiary);
+  --glass-press: var(--color-bg-quaternary);
 
   /* Ambient field hues. Declared in both themes so a field element never
    * resolves to an undefined custom property; light keeps them at zero
@@ -1198,6 +1205,16 @@ html[dir="rtl"] .prose ol {
  *
  * `:not(:disabled)` so a disabled control stays inert, matching every other
  * interactive rule in this file.
+ *
+ * These beat `.glass-flat`'s resting background on specificity alone, with
+ * no `!important` and no change to how this file is layered:
+ * `.glass-interactive:hover:not(:disabled)` is (0,3,0) -- one class, plus
+ * `:hover`, plus `:not(:disabled)`, which takes the specificity of its
+ * argument -- against `.glass-flat`'s (0,1,0). Both are unlayered, so
+ * specificity is what decides.
+ *
+ * Press reads at least as strong as hover in both themes; see the
+ * --glass-hover / --glass-press declarations. Pinned by test.
  */
 .glass-interactive:hover:not(:disabled) {
   background-color: var(--glass-hover);

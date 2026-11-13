@@ -155,11 +155,28 @@ Two things were deliberately **not** deleted:
   mechanism, but in both the caller's intent is a *visible* colour, so
   deleting the utility would make the loss permanent instead of fixing it.
 
+`.glass-interactive` beats `.glass-flat`'s resting background on specificity
+alone — no `!important`, and no change to how `index.css` is layered.
+`.glass-interactive:hover:not(:disabled)` is **(0,3,0)**: one class, plus
+`:hover`, plus `:not(:disabled)`, which takes the specificity of its
+argument. `.glass-flat` is (0,1,0). Both are unlayered, so specificity
+decides.
+
 Dark's hover/press fills are translucent white rather than the opaque
 `--color-bg-quaternary` / `--color-bg-tertiary` the Button variant originally
 named: an opaque fill would stop the surface reading as glass under the
-pointer. Light keeps the original opaque steps. A deliberate deviation from
-the variant's declared intent, recorded here rather than buried.
+pointer. A deliberate deviation from the variant's declared intent, recorded
+here rather than buried.
+
+**Press always reads at least as strong as hover.** Light's fills first
+shipped inverted, because they were taken straight from the variant's own
+`hover:bg-bg-quaternary active:bg-bg-tertiary` — and on the light ramp
+tertiary (`#E4EAF3`) is *lighter* than quaternary (`#D6E0EC`), so pressing
+made the surface lighter than hovering and the press read as a release.
+Light is now `#FFFFFF -> #E4EAF3 -> #D6E0EC`, matching dark (0.10 -> 0.14
+white) and the `outline`/`ghost` variants, which always had this order. A
+test pins the ordering in both themes, and was confirmed to fail on the
+inverted values rather than merely pass on the correct ones.
 
 Verified: deleting the utilities is visually inert — login and register are
 pixel-identical before/after in both themes (0 differing pixels); dashboard

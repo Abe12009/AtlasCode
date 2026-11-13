@@ -25,6 +25,35 @@ function cssRule(selector: string): string {
   return css.slice(start, css.indexOf('}', start));
 }
 
+/** A top-level declaration block, by its opening selector or at-rule. */
+function cssBlock(opening: string): string {
+  const start = css.indexOf(`${opening} {`);
+  if (start === -1) throw new Error(`${opening} block not found in index.css`);
+  return css.slice(start, css.indexOf('\n}', start));
+}
+
+/** A custom property's declared value inside one block. */
+function tokenIn(block: string, name: string): string {
+  const m = block.match(new RegExp(`${name}\\s*:\\s*([^;]+);`));
+  if (!m) throw new Error(`${name} not declared in that block`);
+  return m[1].trim();
+}
+
+/** Resolve one level of `var(--x)` against a block of colour declarations. */
+function resolveVar(value: string, colours: string): string {
+  const m = value.match(/^var\((--[\w-]+)\)$/);
+  return m ? tokenIn(colours, m[1]) : value;
+}
+
+/** WCAG relative luminance of a #rrggbb colour. */
+function luminance(hex: string): number {
+  const h = hex.replace('#', '');
+  const ch = [0, 2, 4]
+    .map((i) => parseInt(h.slice(i, i + 2), 16) / 255)
+    .map((v) => (v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4));
+  return 0.2126 * ch[0] + 0.7152 * ch[1] + 0.0722 * ch[2];
+}
+
 const EMPTY_GRAPH: CircuitGraph = { nodes: [], edges: [] };
 
 /** CircuitCanvas's required props, none of which these tests exercise. */
@@ -279,6 +308,40 @@ describe('Spatial Glass: interactive glass has real hover and press', () => {
       const occurrences = css.match(new RegExp(`${token}:`, 'g')) ?? [];
       expect(occurrences.length, `${token} must be declared in light and dark`).toBe(2);
     }
+  });
+
+  /**
+   * Press must read at least as strong as hover, in both themes.
+   *
+   * This shipped inverted in light: the fills were inherited from the Button
+   * variant's own `hover:bg-bg-quaternary active:bg-bg-tertiary`, and on the
+   * light ramp tertiary (#E4EAF3) is LIGHTER than quaternary (#D6E0EC) -- so
+   * pressing made the surface lighter than hovering and the press read as a
+   * release. `outline` and `ghost` have always had it the other way round.
+   */
+  it('light: hover darkens off the resting surface, and press darkens further', () => {
+    const root = cssBlock(':root');
+    const palette = cssBlock('@theme');
+    const hover = luminance(resolveVar(tokenIn(root, '--glass-hover'), palette));
+    const press = luminance(resolveVar(tokenIn(root, '--glass-press'), palette));
+    // Light glass resolves --glass-base to the opaque elevated surface.
+    const rest = luminance(tokenIn(palette, '--color-bg-elevated'));
+
+    expect(hover, 'hover must be darker than the resting surface').toBeLessThan(rest);
+    expect(press, 'press must be at least as strong as hover').toBeLessThan(hover);
+  });
+
+  it('dark: press is a heavier fill than hover', () => {
+    const dark = cssBlock('[data-theme="dark"]');
+    const alpha = (value: string) => {
+      const m = value.match(/\/\s*([\d.]+)\s*\)/);
+      if (!m) throw new Error(`no alpha channel in "${value}"`);
+      return parseFloat(m[1]);
+    };
+    expect(
+      alpha(tokenIn(dark, '--glass-press')),
+      'press must be at least as strong as hover',
+    ).toBeGreaterThan(alpha(tokenIn(dark, '--glass-hover')));
   });
 
   it('only opts-in elements get the states -- never Card\'s default', () => {
