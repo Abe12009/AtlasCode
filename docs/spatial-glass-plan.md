@@ -105,6 +105,8 @@ From the audit. `F6` is confirmed in-browser; the rest are from reading.
 | F10 | Two parallel glass systems: `.glass`/`.glass-strong` are hardcoded blur, not token-driven, and blur in light mode too | `index.css:1236`, `1241`; used at `Overlay.tsx:278`, `Dropdown.tsx:160`, `CodyBubble.tsx:166`, `OnboardingTour.tsx:197` | 7 |
 | F11 | `text-quaternary` on glass is the tightest text in the system and was never measured — every phase measured `text-tertiary` instead | `index.css:42`; `StatusBadge.tsx:220` | 8 |
 | F12 | Dead code: 7 unrouted `Test*.tsx` pages, `.animate-slide-in-right`/`-out-right`, `ar.json`'s `common.or_continue_with` | `pages/Test*.tsx`; `index.css:596-602`; `locales/ar.json` | 9 |
+| F13 | Landing's "Create Free Account" CTA is `variant="secondary"` with `bg-gradient-to-r from-accent-700 to-accent-800`. Dead for the F3 reason, so the CTA renders as dark glass, not orange — measured `backgroundImage: linear-gradient(rgba(255,255,255,0.07), …)`. Unlike F3 the intent here is clearly a coloured CTA, so deleting the utility is the wrong fix | `Landing.tsx:482` | **open — needs a decision** |
+| F14 | `Courses` passes conditional paint to an `interactive` Card: `isCompleted && 'border-success-500/30 bg-success-500/5'` and `!isStarted && !isLocked && 'border-border-primary/50'`. Both dead. The completed-course green tint therefore never renders, so a real state signal is silently missing | `Courses.tsx:203`, `205` | **open — needs a decision** |
 
 Not findings, recorded so they are not re-investigated: reduced motion is
 otherwise handled correctly (`App.tsx:158` `<MotionConfig reducedMotion="user">`
@@ -133,14 +135,54 @@ Verify: `tsc -b`, `npm test`, `vite build`; browser before/after on both
 canvases in EN and AR RTL; `e2e/visual-programming.spec.ts`.
 Risk: low. `.no-glass` has two call sites, both in `CodeEditor.tsx`.
 
-### Phase 5 — close the unlayered-override holes (F3, F4)
+### Phase 5 — close the unlayered-override holes (F3, F4) — **done**
 
-Delete the dead background/border utilities at the 8 sites; fix `Button`'s
-`secondary` hover/active properly (decision 4).
+Deleted the dead background/border utilities at the 8 sites; fixed `Button`'s
+`secondary` hover/active with `.glass-interactive` (decision 4).
 
-Verify: screenshot-diff all 8 sites in both themes — these are currently
-*visually inert*, so the diff is the deliverable, not a side effect.
-Risk: medium, purely visual. Touches the 4 auth pages.
+Every site was measured in Chromium before deleting — computed style with the
+utility present and removed, **in both themes**, with a forced style flush, a
+320ms settle past Card's `transition-all`, and a per-element control
+(removing the glass class itself, which must change the paint). All 8 were
+dead in dark *and* light, so nothing was kept on light's account.
+
+Two things were deliberately **not** deleted:
+
+- `backdrop-blur-xl` on the four auth cards. It measured **live** in both
+  themes — `.glass-raised-flat` sets no `backdrop-filter` (only
+  `.glass-raised` does), so that utility is the only thing blurring them.
+- F13 and F14 (below), found by the phase-5 sweep. Both are dead by the same
+  mechanism, but in both the caller's intent is a *visible* colour, so
+  deleting the utility would make the loss permanent instead of fixing it.
+
+`.glass-interactive` beats `.glass-flat`'s resting background on specificity
+alone — no `!important`, and no change to how `index.css` is layered.
+`.glass-interactive:hover:not(:disabled)` is **(0,3,0)**: one class, plus
+`:hover`, plus `:not(:disabled)`, which takes the specificity of its
+argument. `.glass-flat` is (0,1,0). Both are unlayered, so specificity
+decides.
+
+Dark's hover/press fills are translucent white rather than the opaque
+`--color-bg-quaternary` / `--color-bg-tertiary` the Button variant originally
+named: an opaque fill would stop the surface reading as glass under the
+pointer. A deliberate deviation from the variant's declared intent, recorded
+here rather than buried.
+
+**Press always reads at least as strong as hover.** Light's fills first
+shipped inverted, because they were taken straight from the variant's own
+`hover:bg-bg-quaternary active:bg-bg-tertiary` — and on the light ramp
+tertiary (`#E4EAF3`) is *lighter* than quaternary (`#D6E0EC`), so pressing
+made the surface lighter than hovering and the press read as a release.
+Light is now `#FFFFFF -> #E4EAF3 -> #D6E0EC`, matching dark (0.10 -> 0.14
+white) and the `outline`/`ghost` variants, which always had this order. A
+test pins the ordering in both themes, and was confirmed to fail on the
+inverted values rather than merely pass on the correct ones.
+
+Verified: deleting the utilities is visually inert — login and register are
+pixel-identical before/after in both themes (0 differing pixels); dashboard
+differs by 2 and 27 pixels out of 1,440,000. Landing dark differs by 0.595%,
+but a self-diff of two runs on *identical* code differs by 0.440% with the
+same max delta, so that is the drifting hero glows, not the change.
 
 ### Phase 6 — RTL sweep (F5)
 

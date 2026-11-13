@@ -305,7 +305,7 @@ export function Dashboard() {
             const hasExtra = Boolean(story) || skills.length > 0;
 
             return (
-              <Card variant="interactive" padding="lg" className="border-primary-500/20 bg-primary-500/5">
+              <Card variant="interactive" padding="lg">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-3 min-w-0">
                     <div className="p-3 bg-primary-500/10 rounded-xl flex-shrink-0">
@@ -484,7 +484,7 @@ export function Dashboard() {
           </Card>
 
           {currentProject && (
-            <Card variant="interactive" padding="lg" className="border-primary-500/20 bg-primary-500/5">
+            <Card variant="interactive" padding="lg">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-3">
                   <div className="p-3 bg-primary-500/10 rounded-xl">
@@ -510,7 +510,7 @@ export function Dashboard() {
             </Card>
           )}
 
-          <Card variant="default" padding="lg" className="bg-gradient-to-br from-primary-900/10 via-transparent to-accent-900/10 border-primary-500/20">
+          <Card variant="default" padding="lg">
             <div className="flex items-center gap-3 mb-4">
               <div className="p-3 bg-accent-500/10 rounded-xl">
                 <Sparkles className="h-6 w-6 text-accent-400" />

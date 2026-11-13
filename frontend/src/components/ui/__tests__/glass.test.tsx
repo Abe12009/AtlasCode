@@ -25,6 +25,35 @@ function cssRule(selector: string): string {
   return css.slice(start, css.indexOf('}', start));
 }
 
+/** A top-level declaration block, by its opening selector or at-rule. */
+function cssBlock(opening: string): string {
+  const start = css.indexOf(`${opening} {`);
+  if (start === -1) throw new Error(`${opening} block not found in index.css`);
+  return css.slice(start, css.indexOf('\n}', start));
+}
+
+/** A custom property's declared value inside one block. */
+function tokenIn(block: string, name: string): string {
+  const m = block.match(new RegExp(`${name}\\s*:\\s*([^;]+);`));
+  if (!m) throw new Error(`${name} not declared in that block`);
+  return m[1].trim();
+}
+
+/** Resolve one level of `var(--x)` against a block of colour declarations. */
+function resolveVar(value: string, colours: string): string {
+  const m = value.match(/^var\((--[\w-]+)\)$/);
+  return m ? tokenIn(colours, m[1]) : value;
+}
+
+/** WCAG relative luminance of a #rrggbb colour. */
+function luminance(hex: string): number {
+  const h = hex.replace('#', '');
+  const ch = [0, 2, 4]
+    .map((i) => parseInt(h.slice(i, i + 2), 16) / 255)
+    .map((v) => (v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4));
+  return 0.2126 * ch[0] + 0.7152 * ch[1] + 0.0722 * ch[2];
+}
+
 const EMPTY_GRAPH: CircuitGraph = { nodes: [], edges: [] };
 
 /** CircuitCanvas's required props, none of which these tests exercise. */
@@ -235,5 +264,91 @@ describe('Spatial Glass: the primary gradient defers to a caller background', ()
     expect(el.className).not.toContain('btn-primary-gradient');
     // Secondary is glass, and non-blurred so it can sit inside a glass card.
     expect(el.className).toContain('glass-flat');
+  });
+});
+
+/**
+ * The secondary button's hover and press.
+ *
+ * They were `hover:bg-bg-quaternary active:bg-bg-tertiary` utilities and
+ * never painted: `.glass-flat` sets background-color unlayered in index.css,
+ * which beats `@layer utilities` whatever the specificity. Measured in
+ * Chromium with forced pseudo-states before the fix -- rest, :hover and
+ * :active were byte-identical in both themes, so the control had no pointer
+ * feedback at all.
+ *
+ * jsdom does not do this cascade, so these pin the contract: the component
+ * opts into `.glass-interactive`, and that class really does declare both
+ * states in the stylesheet.
+ */
+describe('Spatial Glass: interactive glass has real hover and press', () => {
+  it('the secondary button opts in, and carries no dead state utilities', () => {
+    render(<Button variant="secondary">Secondary</Button>);
+    const el = screen.getByRole('button');
+    expect(el.className).toContain('glass-interactive');
+    // The utilities these replaced could never win against .glass-flat, so
+    // their return would be a silent regression to no feedback at all.
+    expect(el.className).not.toMatch(/\bhover:bg-/);
+    expect(el.className).not.toMatch(/\bactive:bg-/);
+  });
+
+  it('declares a hover fill and a press fill, distinct from each other', () => {
+    const hover = cssRule('.glass-interactive:hover:not(:disabled)');
+    const press = cssRule('.glass-interactive:active:not(:disabled)');
+    expect(hover).toMatch(/background-color:\s*var\(--glass-hover\)/);
+    expect(press).toMatch(/background-color:\s*var\(--glass-press\)/);
+    expect(hover).not.toEqual(press);
+  });
+
+  it('both state tokens are defined in both themes', () => {
+    // Dark-only behaviour lives in token VALUES, not a component branch, so
+    // each token must resolve in light as well -- an undefined custom
+    // property would drop the declaration and silently restore the bug.
+    for (const token of ['--glass-hover', '--glass-press']) {
+      const occurrences = css.match(new RegExp(`${token}:`, 'g')) ?? [];
+      expect(occurrences.length, `${token} must be declared in light and dark`).toBe(2);
+    }
+  });
+
+  /**
+   * Press must read at least as strong as hover, in both themes.
+   *
+   * This shipped inverted in light: the fills were inherited from the Button
+   * variant's own `hover:bg-bg-quaternary active:bg-bg-tertiary`, and on the
+   * light ramp tertiary (#E4EAF3) is LIGHTER than quaternary (#D6E0EC) -- so
+   * pressing made the surface lighter than hovering and the press read as a
+   * release. `outline` and `ghost` have always had it the other way round.
+   */
+  it('light: hover darkens off the resting surface, and press darkens further', () => {
+    const root = cssBlock(':root');
+    const palette = cssBlock('@theme');
+    const hover = luminance(resolveVar(tokenIn(root, '--glass-hover'), palette));
+    const press = luminance(resolveVar(tokenIn(root, '--glass-press'), palette));
+    // Light glass resolves --glass-base to the opaque elevated surface.
+    const rest = luminance(tokenIn(palette, '--color-bg-elevated'));
+
+    expect(hover, 'hover must be darker than the resting surface').toBeLessThan(rest);
+    expect(press, 'press must be at least as strong as hover').toBeLessThan(hover);
+  });
+
+  it('dark: press is a heavier fill than hover', () => {
+    const dark = cssBlock('[data-theme="dark"]');
+    const alpha = (value: string) => {
+      const m = value.match(/\/\s*([\d.]+)\s*\)/);
+      if (!m) throw new Error(`no alpha channel in "${value}"`);
+      return parseFloat(m[1]);
+    };
+    expect(
+      alpha(tokenIn(dark, '--glass-press')),
+      'press must be at least as strong as hover',
+    ).toBeGreaterThan(alpha(tokenIn(dark, '--glass-hover')));
+  });
+
+  it('only opts-in elements get the states -- never Card\'s default', () => {
+    // .glass-flat is Card's default variant, so folding hover into it would
+    // light up every list-rendered card under the pointer.
+    const { container } = render(<Card>content</Card>);
+    expect(container.firstElementChild!.className).toContain('glass-flat');
+    expect(container.firstElementChild!.className).not.toContain('glass-interactive');
   });
 });
