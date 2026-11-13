@@ -1,7 +1,7 @@
 import React from 'react';
 import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import { Button } from '../Button';
@@ -264,6 +264,101 @@ describe('Spatial Glass: the primary gradient defers to a caller background', ()
     expect(el.className).not.toContain('btn-primary-gradient');
     // Secondary is glass, and non-blurred so it can sit inside a glass card.
     expect(el.className).toContain('glass-flat');
+  });
+});
+
+/**
+ * A `secondary` Button cannot paint its own background.
+ *
+ * The variant is `.glass-flat`, set unlayered in index.css, so any
+ * `bg-*`/`from-*` a caller passes loses silently -- there is no
+ * `callerPaintsBackground` escape hatch for it the way there is for
+ * `primary` and `.btn-primary-gradient`. Landing's "Create Free Account"
+ * CTA did exactly this and rendered as dark glass instead of the orange it
+ * asked for, measured as `backgroundImage: linear-gradient(rgba(255, 255,
+ * 255, 0.07), …)`. It is now the primary CTA.
+ *
+ * A source sweep rather than a render: the alternative is mounting every
+ * page that has a secondary button, and the mistake is visible in the
+ * markup.
+ */
+describe('Spatial Glass: no secondary button paints its own background', () => {
+  it('finds no `variant="secondary"` carrying a background utility', () => {
+    const srcRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..');
+    const files = readdirSync(srcRoot, { recursive: true, encoding: 'utf-8' })
+      .filter((f) => f.endsWith('.tsx') && !f.includes('__tests__'));
+
+    /** Each `<Button …>` opening tag, whole.
+     *
+     * Not a regex: a prop can itself contain a JSX element
+     * (`leftIcon={<ArrowRight />}`), so `<Button[^>]*>` stops at that inner
+     * `>` and never sees the Button's own className. Walk instead, and treat
+     * only a `>` outside `{}` as the end of the tag. */
+    const openingTags = (text: string) => {
+      const tags: string[] = [];
+      for (let i = text.indexOf('<Button'); i !== -1; i = text.indexOf('<Button', i + 1)) {
+        let depth = 0;
+        for (let j = i; j < text.length; j++) {
+          const c = text[j];
+          if (c === '{') depth++;
+          else if (c === '}') depth--;
+          else if (c === '>' && depth === 0) {
+            tags.push(text.slice(i, j + 1));
+            break;
+          }
+        }
+      }
+      return tags;
+    };
+
+    const offenders: string[] = [];
+    for (const file of files) {
+      for (const tag of openingTags(readFileSync(path.join(srcRoot, file), 'utf-8'))) {
+        if (!tag.includes('variant="secondary"')) continue;
+        if (/className="[^"]*\b(bg-(?!transparent)|from-)/.test(tag)) {
+          offenders.push(`${file}: ${tag.replace(/\s+/g, ' ').slice(0, 90)}`);
+        }
+      }
+    }
+    expect(offenders, `a secondary Button's background never paints:\n${offenders.join('\n')}`)
+      .toEqual([]);
+  });
+});
+
+/**
+ * The completed state is paint driven by an attribute, not a utility.
+ *
+ * `Courses` used to pass `border-success-500/30 bg-success-500/5` to the
+ * card. Neither painted -- `.glass-flat` sets background-color and border
+ * unlayered -- so a finished course looked identical to an untouched one.
+ */
+describe('Spatial Glass: a completed surface is state-driven', () => {
+  it('the rule paints from tokens and adds no blur', () => {
+    const rule = cssRule('.glass-flat[data-state="completed"]');
+    expect(rule).toMatch(/background-color:\s*var\(--glass-completed-tint\)/);
+    expect(rule).toMatch(/border-color:\s*var\(--glass-completed-edge\)/);
+    // A completed card is still a list-rendered card. Blur here would put
+    // every finished course back inside the budget's way.
+    expect(rule, 'the completed state must not introduce blur').not.toMatch(/backdrop-filter/);
+  });
+
+  it('both tokens are declared in both themes', () => {
+    // Dark-only behaviour lives in token VALUES. An undefined custom
+    // property drops the whole declaration, which would silently return the
+    // completed card to looking like every other one.
+    for (const token of ['--glass-completed-tint', '--glass-completed-edge']) {
+      const occurrences = css.match(new RegExp(`${token}:`, 'g')) ?? [];
+      expect(occurrences.length, `${token} must be declared in light and dark`).toBe(2);
+    }
+  });
+
+  it('light mixes the tint into the surface; dark keeps it translucent', () => {
+    // Light glass is the opaque elevated surface: a translucent tint there
+    // would make the card see-through instead of tinted.
+    const light = tokenIn(cssBlock(':root'), '--glass-completed-tint');
+    const dark = tokenIn(cssBlock('[data-theme="dark"]'), '--glass-completed-tint');
+    expect(light).toContain('var(--color-bg-elevated)');
+    expect(dark).toContain('transparent');
   });
 });
 

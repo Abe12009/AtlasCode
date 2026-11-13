@@ -4,7 +4,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Courses } from '../Courses';
 import { renderWithProviders, mockCourses } from '../../test/setup.tsx';
-import { coursesApi } from '../../api/services';
+import { coursesApi, dashboardApi } from '../../api/services';
 
 describe('Courses Page', () => {
   beforeEach(() => {
@@ -97,6 +97,61 @@ describe('Courses Page', () => {
       // unsectioned "Foundations" group heading (distinct from the course's
       // own "Python Foundations" title).
       expect(screen.getByRole('heading', { level: 2, name: 'Foundations' })).toBeInTheDocument();
+    });
+  });
+
+  /**
+   * The completed treatment is a state attribute, not a utility.
+   *
+   * It used to be `border-success-500/30 bg-success-500/5` on the Card, and
+   * neither painted: the Card's glass class sets background-color and border
+   * unlayered in index.css, so a finished course looked exactly like an
+   * untouched one. Measured in Chromium before the fix -- the completed card
+   * and a plain one returned identical computed values.
+   */
+  describe('a completed course is marked for the stylesheet', () => {
+    const completedDashboard = (completed: number, total: number) => ({
+      course_progress: [
+        { course_id: 1, completed_lessons: completed, total_lessons: total, progress_percent: (completed / total) * 100 },
+      ],
+    });
+
+    it('carries data-state="completed" when every lesson is done', async () => {
+      coursesApi.getAll.mockResolvedValue(mockCourses);
+      dashboardApi.get.mockResolvedValue(completedDashboard(3, 3));
+
+      renderWithProviders(<Courses />);
+
+      await waitFor(() => {
+        expect(document.querySelector('[data-state="completed"]')).not.toBeNull();
+      });
+    });
+
+    it('does not mark a partly-finished course', async () => {
+      coursesApi.getAll.mockResolvedValue(mockCourses);
+      dashboardApi.get.mockResolvedValue(completedDashboard(1, 3));
+
+      renderWithProviders(<Courses />);
+
+      await waitFor(() => expect(screen.getByText(/Python Foundations/i)).toBeInTheDocument());
+      expect(document.querySelector('[data-state="completed"]')).toBeNull();
+    });
+
+    it('passes no background or border utility to the card', async () => {
+      coursesApi.getAll.mockResolvedValue(mockCourses);
+      dashboardApi.get.mockResolvedValue(completedDashboard(3, 3));
+
+      renderWithProviders(<Courses />);
+      const marked = await waitFor(() => {
+        const el = document.querySelector('[data-state="completed"]');
+        expect(el).not.toBeNull();
+        return el!;
+      });
+      // Their return would be silent: they cannot beat the glass class, so
+      // nothing would change on screen and the state would stop painting.
+      expect(marked.className).not.toMatch(/\bbg-success-/);
+      expect(marked.className).not.toMatch(/\bborder-success-/);
+      expect(marked.className).not.toMatch(/\bborder-border-primary\//);
     });
   });
 });

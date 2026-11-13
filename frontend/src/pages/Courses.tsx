@@ -198,11 +198,15 @@ function CourseCard({
     <Card
       variant="interactive"
       padding="lg"
+      // The completed treatment is a state attribute, not a utility: Card's
+      // glass class sets background-color and border in index.css, unlayered,
+      // so `bg-success-500/5 border-success-500/30` never painted and the
+      // completed course looked identical to every other one. See
+      // `.glass-flat[data-state="completed"]`.
+      data-state={isCompleted ? 'completed' : undefined}
       className={cn(
         'relative overflow-hidden group h-full',
-        isCompleted && 'border-success-500/30 bg-success-500/5',
         isLocked && 'opacity-90',
-        !isStarted && !isLocked && 'border-border-primary/50',
       )}
     >
       <div className="relative">
