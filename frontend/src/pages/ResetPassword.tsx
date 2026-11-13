@@ -56,7 +56,7 @@ export function ResetPassword() {
       <div className="absolute inset-0 bg-mesh-gradient" aria-hidden="true" />
       <div className="absolute inset-0 bg-grid-pattern" aria-hidden="true" />
       <div className="relative w-full max-w-md">
-        <Card variant="elevated" padding="lg" className="bg-bg-secondary/80 backdrop-blur-xl border-border-primary/50 relative z-10">
+        <Card variant="elevated" padding="lg" className="backdrop-blur-xl relative z-10">
           <div className="text-center pb-8">
             <Link to="/" className="inline-flex items-center gap-2 mb-6" aria-label={t('common.home')}>
               <div className="relative flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-primary-500 to-accent-500">

@@ -461,7 +461,7 @@ learn_programming()`}</code></pre>
         <section id="cta" className="py-20 lg:py-28 bg-bg-primary relative overflow-hidden">
           <div className="absolute inset-0 bg-mesh-gradient" aria-hidden="true" />
           <div className="relative max-w-full mx-auto px-4 sm:px-6 lg:px-8">
-            <Card variant="elevated" padding="lg" className="bg-gradient-to-br from-primary-900/30 via-bg-secondary to-accent-900/30 border-primary-500/30 relative overflow-hidden">
+            <Card variant="elevated" padding="lg" className="relative overflow-hidden">
               <div className="absolute inset-0 bg-grid-pattern-opacity" aria-hidden="true" />
               <div className="absolute top-0 right-0 w-96 h-96 bg-accent-500/10 rounded-full blur-3xl -translate-x-1/2 translate-y-1/2" aria-hidden="true" />
               <div className="absolute bottom-0 left-0 w-72 h-72 bg-primary-500/10 rounded-full blur-3xl translate-x-1/2 -translate-y-1/2" aria-hidden="true" />
