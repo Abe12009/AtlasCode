@@ -286,6 +286,14 @@
   --glass-hover: var(--color-bg-tertiary);
   --glass-press: var(--color-bg-quaternary);
 
+  /* Completed state for a glass surface (see
+   * `.glass-flat[data-state="completed"]`). Light glass is the opaque
+   * elevated surface, so the tint has to be MIXED INTO it rather than laid
+   * over it -- a translucent green here would make the card see-through and
+   * lose the elevated white it sits on. */
+  --glass-completed-edge: color-mix(in oklab, var(--color-success-600) 45%, transparent);
+  --glass-completed-tint: color-mix(in oklab, var(--color-success-500) 7%, var(--color-bg-elevated));
+
   /* Ambient field hues. Declared in both themes so a field element never
    * resolves to an undefined custom property; light keeps them at zero
    * strength (see --field-strength) rather than redefining every stop. */
@@ -444,6 +452,21 @@
    * as the glass catching more light. */
   --glass-hover: rgb(255 255 255 / 0.10);
   --glass-press: rgb(255 255 255 / 0.14);
+
+  /* Completed state. Dark glass has `--glass-base: transparent`, so the tint
+   * is translucent here and composites over the near-black ground the way
+   * the resting fill does -- the opposite of light, where it is mixed into
+   * the opaque surface. Kept faint: the card still has to read as glass, and
+   * the tint sits under body text whose contrast is already the tightest
+   * thing in the system. */
+  --glass-completed-edge: color-mix(in oklab, var(--color-success-500) 40%, transparent);
+  /* 6%, not 10%. success-500 is far lighter than the near-black ground, so
+   * the tint LIFTS the composite and eats contrast headroom. At 10% the card
+   * body's --color-text-tertiary measured 4.68:1 -- 0.18 above the floor and
+   * the tightest value in the system. 6% keeps it at 4.99:1. The edge, the
+   * badge and the full progress bar carry the state; the tint only has to
+   * reinforce it. Re-measure composited before raising this. */
+  --glass-completed-tint: color-mix(in oklab, var(--color-success-500) 6%, transparent);
 
   --field-blue: var(--color-primary-500);
   --field-orange: var(--color-accent-500);
@@ -1186,6 +1209,30 @@ html[dir="rtl"] .prose ol {
 .glass-raised {
   backdrop-filter: var(--glass-blur);
   -webkit-backdrop-filter: var(--glass-blur);
+}
+
+/* A completed glass surface: success edge, faint success tint.
+ *
+ * A state rule, not a utility. `Courses` used to pass
+ * `border-success-500/30 bg-success-500/5` to the card, and neither painted
+ * -- `.glass-flat` sets background-color and border in this file, unlayered,
+ * so a completed course looked exactly like every other one and a real state
+ * signal was silently missing.
+ *
+ * `.glass-flat[data-state="completed"]` is (0,2,0) -- one class plus one
+ * attribute selector -- against `.glass-flat`'s (0,1,0). Both unlayered, so
+ * specificity decides; no `!important`, no `@layer`, nothing global changes.
+ *
+ * Paint only, and no backdrop-filter: a completed card is still a
+ * list-rendered card, so it stays inside the blur budget exactly as before.
+ *
+ * Scoped to `.glass-flat` because that is what Card's `default` and
+ * `interactive` variants resolve to, which is every list-rendered card. A
+ * blurred or raised variant would need its own selector added here.
+ */
+.glass-flat[data-state="completed"] {
+  background-color: var(--glass-completed-tint);
+  border-color: var(--glass-completed-edge);
 }
 
 /* Hover and press for a glass surface that is a control.

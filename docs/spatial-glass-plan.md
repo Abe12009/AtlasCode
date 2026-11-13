@@ -105,8 +105,8 @@ From the audit. `F6` is confirmed in-browser; the rest are from reading.
 | F10 | Two parallel glass systems: `.glass`/`.glass-strong` are hardcoded blur, not token-driven, and blur in light mode too | `index.css:1236`, `1241`; used at `Overlay.tsx:278`, `Dropdown.tsx:160`, `CodyBubble.tsx:166`, `OnboardingTour.tsx:197` | 7 |
 | F11 | `text-quaternary` on glass is the tightest text in the system and was never measured — every phase measured `text-tertiary` instead | `index.css:42`; `StatusBadge.tsx:220` | 8 |
 | F12 | Dead code: 7 unrouted `Test*.tsx` pages, `.animate-slide-in-right`/`-out-right`, `ar.json`'s `common.or_continue_with` | `pages/Test*.tsx`; `index.css:596-602`; `locales/ar.json` | 9 |
-| F13 | Landing's "Create Free Account" CTA is `variant="secondary"` with `bg-gradient-to-r from-accent-700 to-accent-800`. Dead for the F3 reason, so the CTA renders as dark glass, not orange — measured `backgroundImage: linear-gradient(rgba(255,255,255,0.07), …)`. Unlike F3 the intent here is clearly a coloured CTA, so deleting the utility is the wrong fix | `Landing.tsx:482` | **open — needs a decision** |
-| F14 | `Courses` passes conditional paint to an `interactive` Card: `isCompleted && 'border-success-500/30 bg-success-500/5'` and `!isStarted && !isLocked && 'border-border-primary/50'`. Both dead. The completed-course green tint therefore never renders, so a real state signal is silently missing | `Courses.tsx:203`, `205` | **open — needs a decision** |
+| F13 | Landing's "Create Free Account" CTA is `variant="secondary"` with `bg-gradient-to-r from-accent-700 to-accent-800`. Dead for the F3 reason, so the CTA renders as dark glass, not orange — measured `backgroundImage: linear-gradient(rgba(255,255,255,0.07), …)`. Unlike F3 the intent here is clearly a coloured CTA, so deleting the utility is the wrong fix | `Landing.tsx:482` | 5b — **done** |
+| F14 | `Courses` passes conditional paint to an `interactive` Card: `isCompleted && 'border-success-500/30 bg-success-500/5'` and `!isStarted && !isLocked && 'border-border-primary/50'`. Both dead. The completed-course green tint therefore never renders, so a real state signal is silently missing | `Courses.tsx:203`, `205` | 5b — **done** |
 
 Not findings, recorded so they are not re-investigated: reduced motion is
 otherwise handled correctly (`App.tsx:158` `<MotionConfig reducedMotion="user">`
@@ -183,6 +183,48 @@ pixel-identical before/after in both themes (0 differing pixels); dashboard
 differs by 2 and 27 pixels out of 1,440,000. Landing dark differs by 0.595%,
 but a self-diff of two runs on *identical* code differs by 0.440% with the
 same max delta, so that is the drifting hero glows, not the change.
+
+### Phase 5b — state paint for F13 and F14 — **done**
+
+**F13.** Landing's "Create Free Account" CTA is now the design system's
+primary gradient button, and the dead accent utility is gone. It was
+`variant="secondary"` painting its own orange: secondary resolves to
+`.glass-flat`, which sets background-color unlayered, so the gradient never
+rendered. Measured before and after, both themes:
+
+                before (dark)              before (light)        after (both)
+  background    rgba(0, 0, 0, 0)           rgb(255, 255, 255)    rgb(37, 99, 235)
+  image         glass fill 0.07 -> 0.02    none                  gradient 600 -> 800
+  label         #F8FAFC                    #101828               #FFFFFF
+
+So in dark it read as a dark glass button and in light as a plain white one
+with dark text -- in neither case a call to action. Label contrast after is
+5.50:1 at the gradient's lightest point, 8.17:1 at its darkest. Contrast was
+never the defect; identity was.
+
+**F14.** The completed course is now `data-state="completed"` plus
+`.glass-flat[data-state="completed"]` in index.css, painting from two new
+tokens declared in both themes. (0,2,0) against `.glass-flat`'s (0,1,0),
+both unlayered -- no `!important`, no `@layer`, no global change, and no
+`backdrop-filter`, so a completed card stays a non-blurred list card.
+
+Seen, not inferred: a completed course was seeded in the local dev DB and
+measured in Chromium in dark and light, en and ar, each against a control
+that strips the attribute and must revert to the plain card. It does.
+
+The dark tint is 6%, not the 10% first written. At 10% the card body's
+`--color-text-tertiary` measured **4.68:1** -- 0.18 above the floor and the
+tightest value in the system. 6% puts it at **4.99:1** at rest and **5.00:1**
+with every ambient field pinned at its 50% keyframe, which is better than the
+4.83:1 the Dashboard already carries. success-500 is far lighter than the
+near-black ground, so a green tint *lifts* the composite and eats headroom --
+the opposite of the intuition. Light is 7% mixed into the opaque surface
+(a translucent tint there would make the card see-through); its tertiary
+reads 4.92:1 against 5.19:1 on a plain card.
+
+Seeding note: the first seed picked a course whose prerequisite was unmet, so
+the card rendered "Locked" *and* completed at once. Re-seeded on a course with
+no prerequisite before measuring.
 
 ### Phase 6 — RTL sweep (F5)
 
