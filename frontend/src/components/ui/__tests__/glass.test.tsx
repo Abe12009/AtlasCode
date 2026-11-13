@@ -237,3 +237,55 @@ describe('Spatial Glass: the primary gradient defers to a caller background', ()
     expect(el.className).toContain('glass-flat');
   });
 });
+
+/**
+ * The secondary button's hover and press.
+ *
+ * They were `hover:bg-bg-quaternary active:bg-bg-tertiary` utilities and
+ * never painted: `.glass-flat` sets background-color unlayered in index.css,
+ * which beats `@layer utilities` whatever the specificity. Measured in
+ * Chromium with forced pseudo-states before the fix -- rest, :hover and
+ * :active were byte-identical in both themes, so the control had no pointer
+ * feedback at all.
+ *
+ * jsdom does not do this cascade, so these pin the contract: the component
+ * opts into `.glass-interactive`, and that class really does declare both
+ * states in the stylesheet.
+ */
+describe('Spatial Glass: interactive glass has real hover and press', () => {
+  it('the secondary button opts in, and carries no dead state utilities', () => {
+    render(<Button variant="secondary">Secondary</Button>);
+    const el = screen.getByRole('button');
+    expect(el.className).toContain('glass-interactive');
+    // The utilities these replaced could never win against .glass-flat, so
+    // their return would be a silent regression to no feedback at all.
+    expect(el.className).not.toMatch(/\bhover:bg-/);
+    expect(el.className).not.toMatch(/\bactive:bg-/);
+  });
+
+  it('declares a hover fill and a press fill, distinct from each other', () => {
+    const hover = cssRule('.glass-interactive:hover:not(:disabled)');
+    const press = cssRule('.glass-interactive:active:not(:disabled)');
+    expect(hover).toMatch(/background-color:\s*var\(--glass-hover\)/);
+    expect(press).toMatch(/background-color:\s*var\(--glass-press\)/);
+    expect(hover).not.toEqual(press);
+  });
+
+  it('both state tokens are defined in both themes', () => {
+    // Dark-only behaviour lives in token VALUES, not a component branch, so
+    // each token must resolve in light as well -- an undefined custom
+    // property would drop the declaration and silently restore the bug.
+    for (const token of ['--glass-hover', '--glass-press']) {
+      const occurrences = css.match(new RegExp(`${token}:`, 'g')) ?? [];
+      expect(occurrences.length, `${token} must be declared in light and dark`).toBe(2);
+    }
+  });
+
+  it('only opts-in elements get the states -- never Card\'s default', () => {
+    // .glass-flat is Card's default variant, so folding hover into it would
+    // light up every list-rendered card under the pointer.
+    const { container } = render(<Card>content</Card>);
+    expect(container.firstElementChild!.className).toContain('glass-flat');
+    expect(container.firstElementChild!.className).not.toContain('glass-interactive');
+  });
+});

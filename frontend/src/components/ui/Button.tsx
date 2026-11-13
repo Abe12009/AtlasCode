@@ -50,8 +50,14 @@ const variantStyles: Record<ButtonVariant, string> = {
   // and toolbars that may already be glass, and stacking a blur inside a blur
   // is the overlap the budget exists to stop. Text colour is unchanged, so
   // contrast is governed by the fill cap in --glass-fill.
+  //
+  // `glass-interactive` owns hover and press. They used to be
+  // `hover:bg-bg-quaternary active:bg-bg-tertiary` here and neither ever
+  // painted: `.glass-flat` sets background-color unlayered in index.css,
+  // which beats any Tailwind utility, so this button had no pointer feedback
+  // in either theme. Not a utility again -- the same rule would beat it.
   secondary:
-    'glass-flat text-text-primary hover:bg-bg-quaternary active:bg-bg-tertiary focus-visible:ring-border-focus',
+    'glass-flat glass-interactive text-text-primary focus-visible:ring-border-focus',
   outline:
     'border border-border-secondary bg-transparent text-text-primary hover:bg-bg-tertiary hover:border-border-tertiary active:bg-bg-quaternary focus-visible:ring-border-focus',
   ghost:

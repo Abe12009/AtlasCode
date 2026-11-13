@@ -272,6 +272,13 @@
    * are dark-only, so nothing may lighten a light-mode card. */
   --glass-tint-strength: 0;
 
+  /* Hover / press fills for an interactive glass surface (see
+   * `.glass-interactive`). Light glass is the opaque elevated surface, so
+   * these are the same opaque steps the Button variant always intended --
+   * --color-bg-quaternary on hover, --color-bg-tertiary on press. */
+  --glass-hover: var(--color-bg-quaternary);
+  --glass-press: var(--color-bg-tertiary);
+
   /* Ambient field hues. Declared in both themes so a field element never
    * resolves to an undefined custom property; light keeps them at zero
    * strength (see --field-strength) rather than redefining every stop. */
@@ -421,6 +428,15 @@
    * keeps a tinted card from eating it. Raise it only with a fresh composited
    * measurement. */
   --glass-tint-strength: 0.05;
+
+  /* Hover / press fills for an interactive glass surface. Translucent white
+   * steps rather than the opaque --color-bg-quaternary / -tertiary the Button
+   * variant originally asked for: on the near-black ground an opaque fill
+   * would stop the surface reading as glass the moment a pointer touched it.
+   * Same white the resting fill uses, two steps up, so hover and press read
+   * as the glass catching more light. */
+  --glass-hover: rgb(255 255 255 / 0.10);
+  --glass-press: rgb(255 255 255 / 0.14);
 
   --field-blue: var(--color-primary-500);
   --field-orange: var(--color-accent-500);
@@ -1163,6 +1179,32 @@ html[dir="rtl"] .prose ol {
 .glass-raised {
   backdrop-filter: var(--glass-blur);
   -webkit-backdrop-filter: var(--glass-blur);
+}
+
+/* Hover and press for a glass surface that is a control.
+ *
+ * Opt-in, NOT folded into `.glass-flat`: that class is Card's default, so
+ * every list-rendered card would otherwise light up under the pointer.
+ *
+ * These live here rather than as `hover:bg-*` utilities on the component
+ * because the utilities do not work. `.glass-flat` sets background-color in
+ * this file, unlayered, and unlayered CSS beats `@layer utilities` whatever
+ * the specificity -- so Button's `hover:bg-bg-quaternary` and
+ * `active:bg-bg-tertiary` never painted. Measured before the fix with forced
+ * pseudo-states: rest, :hover and :active were byte-identical in BOTH themes
+ * (dark rgba(0,0,0,0) + fill; light rgb(255,255,255)), i.e. the secondary
+ * button had no pointer feedback at all. The state fills are tokens so the
+ * dark/light split stays in the token values, like the rest of the system.
+ *
+ * `:not(:disabled)` so a disabled control stays inert, matching every other
+ * interactive rule in this file.
+ */
+.glass-interactive:hover:not(:disabled) {
+  background-color: var(--glass-hover);
+}
+
+.glass-interactive:active:not(:disabled) {
+  background-color: var(--glass-press);
 }
 
 /* --- Ambient fields (Spatial Glass) -----------------------------------------
