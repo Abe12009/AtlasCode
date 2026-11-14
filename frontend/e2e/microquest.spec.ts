@@ -328,6 +328,17 @@ const QUESTS: Record<string, Quest> = {
 
 const ALL_QUESTS = Object.values(QUESTS);
 
+/**
+ * Every lesson this file drives, taken from the quest table above rather than
+ * written out again, so adding a quest cannot leave its lesson locked.
+ *
+ * Sequential lesson unlocking means a brand-new account may open only the
+ * first lesson of a course, and all but three of these sit deeper than that.
+ * Without the seed every test here fails as a missing `micro-quest` testid,
+ * which is a 403 wearing a disguise.
+ */
+const QUEST_LESSON_IDS = ALL_QUESTS.map((q) => q.lessonId);
+
 function lessonPath(quest: Quest) {
   return `/app/lessons/${quest.lessonId}`;
 }
@@ -438,7 +449,7 @@ for (const quest of ALL_QUESTS) {
       page,
     }) => {
       test.setTimeout(150000);
-      await registerNewUser(page);
+      await registerNewUser(page, { unlock: QUEST_LESSON_IDS });
 
       expect(await readXp(page)).toBe(0);
 
@@ -523,7 +534,7 @@ for (const quest of ALL_QUESTS) {
 test.describe('Micro-Quest stage survives a reload', () => {
   test('a student who reached the Blueprint comes back to the Blueprint', async ({ page }) => {
     test.setTimeout(90000);
-    await registerNewUser(page);
+    await registerNewUser(page, { unlock: QUEST_LESSON_IDS });
     const quest = QUESTS.code;
 
     await openQuest(page, quest);
@@ -543,7 +554,7 @@ test.describe('Micro-Quest stage survives a reload', () => {
     page,
   }) => {
     test.setTimeout(90000);
-    await registerNewUser(page);
+    await registerNewUser(page, { unlock: QUEST_LESSON_IDS });
     const quest = QUESTS.prediction;
 
     await reachQuestStage(page, quest);
@@ -556,7 +567,7 @@ test.describe('Micro-Quest stage survives a reload', () => {
 
   test('each Micro-Quest lesson keeps its own position', async ({ page }) => {
     test.setTimeout(120000);
-    await registerNewUser(page);
+    await registerNewUser(page, { unlock: QUEST_LESSON_IDS });
 
     await reachQuestStage(page, QUESTS.code);
 
@@ -575,7 +586,7 @@ test.describe('Micro-Quest stage survives a reload', () => {
   });
 
   test('the stored value is a stage and nothing else', async ({ page }) => {
-    await registerNewUser(page);
+    await registerNewUser(page, { unlock: QUEST_LESSON_IDS });
     await openQuest(page, QUESTS.code);
     await page.getByTestId('hook-continue').click();
     await expect(page.getByTestId('blueprint')).toBeVisible();
@@ -592,7 +603,7 @@ test.describe('Micro-Quest stage storage cannot mislead the app', () => {
   }) => {
     test.setTimeout(90000);
     const health = trackPageHealth(page);
-    await registerNewUser(page);
+    await registerNewUser(page, { unlock: QUEST_LESSON_IDS });
     const quest = QUESTS.code;
 
     await openQuest(page, quest);
@@ -616,7 +627,7 @@ test.describe('Micro-Quest stage storage cannot mislead the app', () => {
   });
 
   test('a missing stored value falls back to the Hook', async ({ page }) => {
-    await registerNewUser(page);
+    await registerNewUser(page, { unlock: QUEST_LESSON_IDS });
     await openQuest(page, QUESTS.code);
     await page.getByTestId('hook-continue').click();
     await expect(page.getByTestId('blueprint')).toBeVisible();
@@ -635,7 +646,7 @@ test.describe('Micro-Quest stage storage cannot mislead the app', () => {
 
   test('a hand-written "complete" does not conjure a Quest Clear', async ({ page }) => {
     test.setTimeout(90000);
-    await registerNewUser(page);
+    await registerNewUser(page, { unlock: QUEST_LESSON_IDS });
     const quest = QUESTS.code;
 
     await reachQuestStage(page, quest);
@@ -659,7 +670,7 @@ test.describe('Micro-Quest stage storage cannot mislead the app', () => {
 
 test('one student never sees another student’s Micro-Quest position', async ({ page }) => {
   test.setTimeout(150000);
-  await registerNewUser(page);
+  await registerNewUser(page, { unlock: QUEST_LESSON_IDS });
   await reachQuestStage(page, QUESTS.code);
   const afterFirst = await storedStages(page);
   expect(Object.keys(afterFirst)).toHaveLength(1);
@@ -671,7 +682,7 @@ test('one student never sees another student’s Micro-Quest position', async ({
   await page.getByRole('menuitem', { name: 'Logout' }).click();
   await expect(page).toHaveURL(/\/login$/, { timeout: 15000 });
 
-  await registerNewUser(page);
+  await registerNewUser(page, { unlock: QUEST_LESSON_IDS });
   await page.goto('/app/lessons/9');
   await expect(page.getByTestId('micro-quest')).toBeVisible({ timeout: 15000 });
   await expect(page.getByTestId('quest-hook')).toBeVisible();
@@ -702,7 +713,7 @@ for (const language of [
 ] as const) {
   test(`every Micro-Quest renders in ${language.code}`, async ({ page }) => {
     test.setTimeout(150000);
-    await registerNewUser(page);
+    await registerNewUser(page, { unlock: QUEST_LESSON_IDS });
     await switchLanguage(page, language.label);
 
     for (const quest of ALL_QUESTS) {
@@ -766,7 +777,7 @@ for (const viewport of [
   test(`every Micro-Quest is usable at ${viewport.name}`, async ({ page }) => {
     test.setTimeout(180000);
     await page.setViewportSize({ width: viewport.width, height: viewport.height });
-    await registerNewUser(page);
+    await registerNewUser(page, { unlock: QUEST_LESSON_IDS });
 
     for (const quest of ALL_QUESTS) {
       await openQuest(page, quest);

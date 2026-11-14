@@ -1,5 +1,6 @@
 import { Page, APIResponse, expect } from '@playwright/test';
 import { resetAuthAttempts } from './reset-auth-attempts';
+import { unlockLessons } from './unlock-lessons';
 
 export function uniqueUser() {
   const id = `${Date.now()}${Math.floor(Math.random() * 10000)}`;
@@ -88,8 +89,15 @@ export async function registerNewUser(
    * the account with has_completed_onboarding=false so the tour actually
    * renders. Only the tests *about* the tour want this -- for everyone else
    * the tour's full-screen aria-modal backdrop silently eats every click.
+   *
+   * `unlock: [lessonId, ...]` seeds a LessonProgress row per lesson so the
+   * sequential gate lets this brand-new account open them. Opt-in on purpose:
+   * `lesson-locking.spec.ts` asserts the real gate and must never pass this,
+   * and a spec that does not need a deep lesson should not quietly gain
+   * progress it did not earn. See `unlock-lessons.ts` for why a `ready` row
+   * is the smallest nudge that works.
    */
-  options: { keepOnboarding?: boolean } = {},
+  options: { keepOnboarding?: boolean; unlock?: number[] } = {},
 ) {
   const user = uniqueUser();
 
@@ -135,6 +143,18 @@ export async function registerNewUser(
     if (!onboarding.ok()) {
       throw new Error(
         `registerNewUser: POST /api/auth/me/complete-onboarding returned ${onboarding.status()}`,
+      );
+    }
+  }
+
+  if (options.unlock?.length) {
+    // Loud on failure. A silent no-op here would leave the account locked and
+    // the spec would fail later as a missing element, which is exactly the
+    // confusing shape this helper exists to remove.
+    if (!unlockLessons(user.email, options.unlock)) {
+      throw new Error(
+        `registerNewUser: could not seed lesson_progress for ${options.unlock.join(', ')} ` +
+          '(no usable python or database)',
       );
     }
   }

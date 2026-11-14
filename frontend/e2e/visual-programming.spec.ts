@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { registerNewUser } from './helpers';
+import { lessonIdsForExercises, unlockLessons } from './unlock-lessons';
 
 /**
  * Regression cover for the Visual Programming white-screen.
@@ -16,12 +17,33 @@ import { registerNewUser } from './helpers';
  */
 const BROKEN_STARTER_EXERCISES = [15, 20];
 
+/**
+ * These exercises live deep inside a gated course, so a brand-new account
+ * gets 403 on them and the page sits on skeletons forever -- which surfaces
+ * as "palette never appeared", not as anything about visual programming.
+ *
+ * The lesson ids are resolved from /api/courses rather than written down,
+ * the same way `lesson-locking.spec.ts` resolves its own sequence, so a seed
+ * reorder retunes this instead of unlocking the wrong lesson.
+ */
+async function registerWithExercisesUnlocked(page: Parameters<typeof registerNewUser>[0]) {
+  const user = await registerNewUser(page);
+  const lessonIds = await lessonIdsForExercises(page, BROKEN_STARTER_EXERCISES);
+  expect(lessonIds.length, 'could not resolve a lesson for the starter exercises').toBeGreaterThan(0);
+  expect(
+    unlockLessons(user.email, lessonIds),
+    'could not seed lesson_progress (no usable python or database)',
+  ).toBe(true);
+  return user;
+}
+
+
 for (const exerciseId of BROKEN_STARTER_EXERCISES) {
   test(`visual programming exercise ${exerciseId} renders without a page error`, async ({ page }) => {
     const pageErrors: string[] = [];
     page.on('pageerror', (e) => pageErrors.push(String(e)));
 
-    await registerNewUser(page);
+    await registerWithExercisesUnlocked(page);
     await page.goto(`/app/visual/${exerciseId}`);
 
     // The palette and the canvas are the two halves of the editor; a render
@@ -43,7 +65,7 @@ test('a starter graph without positions still lays its nodes out on the canvas',
   const pageErrors: string[] = [];
   page.on('pageerror', (e) => pageErrors.push(String(e)));
 
-  await registerNewUser(page);
+  await registerWithExercisesUnlocked(page);
   await page.goto('/app/visual/15');
   await expect(page.locator('#visual-canvas-wrapper')).toBeVisible({ timeout: 15000 });
 
