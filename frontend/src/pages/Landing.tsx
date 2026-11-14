@@ -235,7 +235,7 @@ export function Landing() {
                 </p>
                 <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 mb-12">
                   <Link to="/register" className="w-full sm:w-auto">
-                    <Button size="lg" fullWidth chunky leftIcon={<ArrowRight className="h-5 w-5" />} className="bg-gradient-to-r from-accent-700 to-accent-800 hover:from-accent-800 hover:to-accent-900">
+                    <Button size="lg" fullWidth chunky leftIcon={<ArrowRight className="h-5 w-5 rtl:-scale-x-100" />} className="bg-gradient-to-r from-accent-700 to-accent-800 hover:from-accent-800 hover:to-accent-900">
                       {t('landing.hero.cta_primary')}
                     </Button>
                   </Link>
@@ -485,7 +485,7 @@ learn_programming()`}</code></pre>
                         background-color unlayered in index.css and beats any
                         utility, so the button came out dark glass. `primary`
                         is the gradient CTA the system already provides. */}
-                    <Button size="lg" fullWidth leftIcon={<ArrowRight className="h-5 w-5" />}>
+                    <Button size="lg" fullWidth leftIcon={<ArrowRight className="h-5 w-5 rtl:-scale-x-100" />}>
                       {t('landing.cta.button')}
                     </Button>
                   </Link>

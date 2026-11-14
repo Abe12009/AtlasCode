@@ -83,7 +83,7 @@ export function ExercisePanel({
           data-testid="exercise-nav-finish"
         >
           <span>{t('lessons.finish_lesson')}</span>
-          <ChevronRight className="h-4 w-4" />
+          <ChevronRight className="h-4 w-4 rtl:-scale-x-100" />
         </Link>
       )}
     </div>

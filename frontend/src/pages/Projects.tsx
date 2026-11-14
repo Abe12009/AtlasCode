@@ -189,7 +189,7 @@ export function Projects() {
                       )}
 
                       <div className="flex items-center justify-between mt-3">
-                        <ChevronRight className="h-5 w-5 text-text-tertiary transition-transform group-hover:translate-x-1 group-hover:text-primary-400" />
+                        <ChevronRight className="h-5 w-5 text-text-tertiary transition-transform ltr:group-hover:translate-x-1 rtl:group-hover:-translate-x-1 group-hover:text-primary-400 rtl:-scale-x-100" />
                       </div>
                     </div>
                   </div>

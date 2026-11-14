@@ -26,7 +26,7 @@ export function LessonHeader({ lesson }: LessonHeaderProps) {
             to="/app/courses"
             className="p-2 rounded-lg hover:bg-bg-tertiary/50 transition-colors text-text-tertiary hover:text-text-primary flex-shrink-0"
           >
-            <ArrowLeft className="h-5 w-5" />
+            <ArrowLeft className="h-5 w-5 rtl:-scale-x-100" />
           </Link>
           <div className="min-w-0">
             <p className="text-xs text-text-tertiary uppercase tracking-wide">
