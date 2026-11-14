@@ -64,7 +64,7 @@ export function CourseDetail() {
   return (
     <div className="space-y-8 animate-fade-in">
       <Link to="/app/courses" className="inline-flex items-center gap-2 text-text-tertiary hover:text-primary-400 dark:hover:text-primary-300 text-sm font-medium transition-colors">
-        <ChevronLeft className="h-4 w-4" />
+        <ChevronLeft className="h-4 w-4 rtl:-scale-x-100" />
         <span>{t('common.back_to_courses')}</span>
       </Link>
 

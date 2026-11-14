@@ -144,7 +144,7 @@ export function ProjectDetail() {
     <div className="space-y-8 animate-fade-in" dir={isRTL ? 'rtl' : 'ltr'}>
       <div className="flex items-center justify-between flex-wrap gap-4">
         <Link to="/app/projects" className="inline-flex items-center gap-2 text-text-tertiary hover:text-primary-400 dark:hover:text-primary-300 text-sm font-medium transition-colors">
-          <ChevronLeft className="h-4 w-4" />
+          <ChevronLeft className="h-4 w-4 rtl:-scale-x-100" />
           <span>{t('common.back_to_projects')}</span>
         </Link>
         <div className="flex items-center gap-2">
@@ -368,7 +368,7 @@ export function ProjectDetail() {
                               <Button
                                 variant="outline"
                                 onClick={() => { collapseTask(task.id); expandTask(project.tasks![index - 1].id); }}
-                                leftIcon={<ChevronLeft className="h-4 w-4" />}
+                                leftIcon={<ChevronLeft className="h-4 w-4 rtl:-scale-x-100" />}
                               >
                                 {t('projects.previous_task')}
                               </Button>
@@ -377,7 +377,7 @@ export function ProjectDetail() {
                               <Button
                                 variant="outline"
                                 onClick={() => { collapseTask(task.id); expandTask(project.tasks![index + 1].id); }}
-                                rightIcon={<ChevronRight className="h-4 w-4" />}
+                                rightIcon={<ChevronRight className="h-4 w-4 rtl:-scale-x-100" />}
                               >
                                 {t('projects.next_task')}
                               </Button>

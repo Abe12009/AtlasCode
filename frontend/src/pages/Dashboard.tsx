@@ -270,7 +270,7 @@ export function Dashboard() {
             className="text-sm text-primary-400 hover:text-primary-300 font-medium flex items-center gap-1"
           >
             {t('dashboard.view_all')}
-            <ArrowRight className="h-4 w-4" />
+            <ArrowRight className="h-4 w-4 rtl:-scale-x-100" />
           </Link>
         </div>
         {questNodes.length > 0 ? (
@@ -340,7 +340,7 @@ export function Dashboard() {
                   className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary-600 btn-primary-gradient text-white font-semibold rounded-xl transition-all shadow-[var(--depth-raise-top),var(--depth-raise-bottom),var(--shadow-card),var(--btn-primary-glow)]"
                 >
                   <span>{t('dashboard.continue_lesson')}</span>
-                  <ArrowRight className="h-4 w-4" />
+                  <ArrowRight className="h-4 w-4 rtl:-scale-x-100" />
                 </Link>
 
                 {hasExtra && (
@@ -392,7 +392,7 @@ export function Dashboard() {
               </h2>
               <Link to="/app/courses" className="text-sm text-primary-400 hover:text-primary-300 font-medium flex items-center gap-1">
                 {t('dashboard.view_all')}
-                <ArrowRight className="h-4 w-4" />
+                <ArrowRight className="h-4 w-4 rtl:-scale-x-100" />
               </Link>
             </div>
             <div className="space-y-4">
@@ -529,7 +529,7 @@ export function Dashboard() {
                   <BookOpen className="h-5 w-5 text-primary-400" />
                 </div>
                 <span className="font-medium text-text-primary">{t('dashboard.browse_courses')}</span>
-                <ArrowRight className="h-4 w-4 text-text-tertiary group-hover:text-primary-400 transition-colors ms-auto" />
+                <ArrowRight className="h-4 w-4 text-text-tertiary group-hover:text-primary-400 transition-colors ms-auto rtl:-scale-x-100" />
               </Link>
               <Link
                 to="/app/projects"
@@ -539,7 +539,7 @@ export function Dashboard() {
                   <FolderKanban className="h-5 w-5 text-blue-400" />
                 </div>
                 <span className="font-medium text-text-primary">{t('navigation.projects')}</span>
-                <ArrowRight className="h-4 w-4 text-text-tertiary group-hover:text-blue-400 transition-colors ms-auto" />
+                <ArrowRight className="h-4 w-4 text-text-tertiary group-hover:text-blue-400 transition-colors ms-auto rtl:-scale-x-100" />
               </Link>
               <Link
                 to="/app/profile"
@@ -549,7 +549,7 @@ export function Dashboard() {
                   <Trophy className="h-5 w-5 text-yellow-400" />
                 </div>
                 <span className="font-medium text-text-primary">{t('navigation.profile')}</span>
-                <ArrowRight className="h-4 w-4 text-text-tertiary group-hover:text-yellow-400 transition-colors ms-auto" />
+                <ArrowRight className="h-4 w-4 text-text-tertiary group-hover:text-yellow-400 transition-colors ms-auto rtl:-scale-x-100" />
               </Link>
             </div>
           </Card>

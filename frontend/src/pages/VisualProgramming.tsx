@@ -394,7 +394,7 @@ export function VisualProgrammingPage() {
       <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <Link to="/app/courses" className="inline-flex items-center gap-2 text-text-tertiary hover:text-primary-400 dark:hover:text-primary-300 text-sm font-medium transition-colors">
-            <ArrowLeft className="h-4 w-4" />
+            <ArrowLeft className="h-4 w-4 rtl:-scale-x-100" />
             <span>{t('common.back')}</span>
           </Link>
           <div className="flex items-center gap-2">
@@ -448,7 +448,7 @@ export function VisualProgrammingPage() {
                             className={cn(
                               'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-start transition-all duration-fast group',
                               CATEGORY_COLORS[category as keyof typeof CATEGORY_COLORS],
-                              'hover:shadow-lg hover:shadow-glow-primary hover:-translate-x-0.5'
+                              'hover:shadow-lg hover:shadow-glow-primary ltr:hover:-translate-x-0.5 rtl:hover:translate-x-0.5'
                             )}
                           >
                             <span className="text-2xl">{nodeType.icon}</span>

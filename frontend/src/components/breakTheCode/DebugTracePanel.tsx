@@ -102,13 +102,13 @@ export function DebugTracePanel({ code, trace }: DebugTracePanelProps) {
       </div>
 
       <div className="flex items-center justify-between">
-        <Button variant="outline" size="sm" onClick={goPrev} disabled={stepIndex === 0} leftIcon={<ChevronLeft className="h-4 w-4" />}>
+        <Button variant="outline" size="sm" onClick={goPrev} disabled={stepIndex === 0} leftIcon={<ChevronLeft className="h-4 w-4 rtl:-scale-x-100" />}>
           {t('break_the_code.prev_step')}
         </Button>
         <span className="text-sm text-text-tertiary" data-testid="trace-step-counter">
           {t('break_the_code.step_counter', { current: stepIndex + 1, total: trace.length })}
         </span>
-        <Button variant="outline" size="sm" onClick={goNext} disabled={stepIndex === trace.length - 1} rightIcon={<ChevronRight className="h-4 w-4" />}>
+        <Button variant="outline" size="sm" onClick={goNext} disabled={stepIndex === trace.length - 1} rightIcon={<ChevronRight className="h-4 w-4 rtl:-scale-x-100" />}>
           {t('break_the_code.next_step')}
         </Button>
       </div>

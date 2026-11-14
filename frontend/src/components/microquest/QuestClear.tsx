@@ -46,7 +46,7 @@ export function QuestClear({ xpEarned, lessonTitle }: QuestClearProps) {
         <Link to="/app/dashboard" className="w-full sm:w-auto">
           <Button
             className="w-full"
-            rightIcon={<ArrowRight className="h-4 w-4" />}
+            rightIcon={<ArrowRight className="h-4 w-4 rtl:-scale-x-100" />}
             data-testid="quest-clear-continue"
           >
             {t('microquest.continue_learning')}

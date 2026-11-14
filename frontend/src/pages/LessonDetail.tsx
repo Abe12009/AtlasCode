@@ -260,7 +260,7 @@ export function LessonDetail() {
               to="/app/courses"
               className="p-2 rounded-lg hover:bg-bg-tertiary/50 transition-colors text-text-tertiary hover:text-text-primary flex-shrink-0"
             >
-              <ArrowLeft className="h-5 w-5" />
+              <ArrowLeft className="h-5 w-5 rtl:-scale-x-100" />
             </Link>
             <div className="min-w-0">
               <nav
@@ -493,7 +493,7 @@ export function LessonDetail() {
                     data-testid="lesson-nav-finish"
                   >
                     <span>{t('lessons.finish_lesson')}</span>
-                    <ChevronRight className="h-4 w-4" />
+                    <ChevronRight className="h-4 w-4 rtl:-scale-x-100" />
                   </Link>
                 )}
               </div>

@@ -207,7 +207,7 @@ export function DuelArena() {
             aria-label={t('duels.exit')}
             data-testid="duel-exit"
           >
-            <ArrowLeft className="h-5 w-5" />
+            <ArrowLeft className="h-5 w-5 rtl:-scale-x-100" />
           </Link>
 
           <div className="flex items-center gap-2 font-mono text-lg font-semibold tabular-nums text-text-primary" role="timer" aria-live="off">

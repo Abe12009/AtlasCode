@@ -107,7 +107,8 @@ From the audit. `F6` is confirmed in-browser; the rest are from reading.
 | F12 | Dead code: 7 unrouted `Test*.tsx` pages, `.animate-slide-in-right`/`-out-right`, `ar.json`'s `common.or_continue_with` | `pages/Test*.tsx`; `index.css:596-602`; `locales/ar.json` | 9 |
 | F13 | Landing's "Create Free Account" CTA is `variant="secondary"` with `bg-gradient-to-r from-accent-700 to-accent-800`. Dead for the F3 reason, so the CTA renders as dark glass, not orange — measured `backgroundImage: linear-gradient(rgba(255,255,255,0.07), …)`. Unlike F3 the intent here is clearly a coloured CTA, so deleting the utility is the wrong fix | `Landing.tsx:482` | 5b — **done** |
 | F14 | `Courses` passes conditional paint to an `interactive` Card: `isCompleted && 'border-success-500/30 bg-success-500/5'` and `!isStarted && !isLocked && 'border-border-primary/50'`. Both dead. The completed-course green tint therefore never renders, so a real state signal is silently missing | `Courses.tsx:203`, `205` | 5b — **done** |
-| F15 | ~20 directional icons (arrows, chevrons) do not mirror under `dir="rtl"`. Eight sites already flip via an `isRTL` ternary (`ExercisePanel`, `MicroQuestLesson`, `LessonDetail`); the rest point the wrong way in Arabic | `Dashboard.tsx` (6), `Landing.tsx`, `Courses.tsx`, `CourseDetail.tsx`, `QuestClear.tsx`, `LegalLayout.tsx`, `LessonHeader.tsx`, `DuelArena.tsx`, `ForgotPassword.tsx`, `QuestNode.tsx`, `DebugTracePanel.tsx` | **open — own slice** |
+| F15 | ~20 directional icons (arrows, chevrons) do not mirror under `dir="rtl"`. Eight sites already flip via an `isRTL` ternary (`ExercisePanel`, `MicroQuestLesson`, `LessonDetail`); the rest point the wrong way in Arabic | `Dashboard.tsx` (6), `Landing.tsx`, `Courses.tsx`, `CourseDetail.tsx`, `QuestClear.tsx`, `LegalLayout.tsx`, `LessonHeader.tsx`, `DuelArena.tsx`, `ForgotPassword.tsx`, `QuestNode.tsx`, `DebugTracePanel.tsx` | 6b — **done** |
+| F16 | Two icons carry a direction but not a *navigation* direction: `Send` (paper plane) and `ExternalLink`. Both are metaphors, and mirroring them is a product call rather than a correctness fix, so both were left and allowlisted | `CodyChatPanel.tsx:110`, `ProjectDetail.tsx:413` | **open — your call** |
 
 Not findings, recorded so they are not re-investigated: reduced motion is
 otherwise handled correctly (`App.tsx:158` `<MotionConfig reducedMotion="user">`
@@ -276,6 +277,50 @@ scanner that reads whole `className` values (including multi-line `cn(...)`
 expressions a regex would miss) and fails on any physical utility without an
 allowlist reason. Confirmed to fail on a reintroduced `ml-6` before being
 trusted, and it found five sites the manual sweep had missed.
+
+### Phase 6b — directional icons (F15) — **done**
+
+23 icons gained `rtl:-scale-x-100`, and three horizontal hover nudges were
+paired `ltr:`/`rtl:` so the arrow slides toward the reader in both
+directions rather than away in one.
+
+**Mechanism: `rtl:-scale-x-100`,** chosen over the `isRTL` pattern. The repo
+had no single convention to follow -- it already mirrors by component swap
+(`isRTL ? <ChevronRight/> : <ChevronLeft/>`, 8 sites) *and* by rotation
+(`isRTL && 'rotate-180'`, 5 sites). The CSS variant needs no hook threaded
+into the ~15 components that lack `useTranslation`, works on icons passed as
+`leftIcon`/`rightIcon` props without touching `Button`, and is the same idiom
+as the hover-translate fix, so one mechanism covers both. The 13
+already-mirrored sites were left as they are; the guard accepts all three.
+
+Verified in the browser before building on it: `rtl:-scale-x-100` resolves to
+`scale: -1 1` under `dir="rtl"` and to `scale: none` under `ltr`, so EN is
+untouched by construction. Tailwind v4 emits `scale` as its own property, not
+inside `transform` -- reading `transform` showed `none` and briefly looked
+like the variant did nothing.
+
+Measured across six surfaces: **AR 40 of 40 declared icons flipped, EN 0 of
+40.** `ChevronDown` stayed unflipped throughout, which is the check that the
+change is not over-reaching.
+
+EN unchanged: courses and projects 0px, coursedetail and lesson 2px of
+1,440,000. Landing (0.77%) and dashboard (1163px) both sit at their
+self-diff noise floor (0.60% and 190px, same regions), i.e. the hero canvas
+and the same right-edge run-variance phase 6 saw.
+
+Out of scope and untouched, as intended: media controls, checkmarks, close,
+plus/minus, brand marks, vertical chevrons, and anything inside `dir="ltr"`.
+`LogOut` is an exit metaphor rather than a next/back affordance and is
+allowlisted. `Send` and `ExternalLink` are F16, left for a decision.
+
+Guarded by `components/__tests__/rtlDirectionalIcons.test.ts`: a brace-aware
+scanner (icons sit inside `{...}` props and ternaries, where a `<Icon[^>]*>`
+regex reads the wrong text), accepting any of the three mirroring mechanisms,
+plus a second assertion that no horizontal hover translate is left
+unqualified. Both were confirmed to fail on a reintroduced regression before
+being trusted -- and the hover assertion caught a false positive in its own
+first regex, where `(?:group-)?` let the match start inside an
+already-correct `ltr:group-hover:…`.
 
 ### Phase 7 — blur budget (F1, F2, F10)
 
