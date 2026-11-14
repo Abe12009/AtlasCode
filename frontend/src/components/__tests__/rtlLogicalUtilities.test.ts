@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync, readdirSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
+import { classNameValues } from '../../test/classNames';
 
 /**
  * The app is EN/FR/AR and mirrors under `dir="rtl"`, so spacing, alignment,
@@ -29,47 +30,6 @@ const SRC = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 /** Physical utilities that have a logical counterpart. */
 const PHYSICAL =
   /(?:^|[\s'"`])(-?(?:ml|mr|pl|pr)-[\w./[\]]+|text-(?:left|right)|-?(?:left|right)-[\w./[\]]+|border-[lr](?:-[\w./[\]]+)?|rounded-(?:[lr]|tl|tr|bl|br)(?:-[\w./[\]]+)?|-?translate-x-[\w./[\]]+)(?=$|[\s'"`])/g;
-
-/**
- * Every `className` value in a file, as source text.
- *
- * Brace-aware on purpose. A className is often `className={cn('a', flag &&
- * 'b')}` spanning several lines and containing nested braces and quotes; a
- * `className="[^"]*"` regex matches none of those and a `{[^}]*}` one stops at
- * the first inner `}`. So walk instead: quoted values read to their closing
- * quote, braced values to the brace that balances, ignoring braces that sit
- * inside a string.
- */
-function classNameValues(text: string): string[] {
-  const out: string[] = [];
-  const NEEDLE = 'className=';
-  for (let i = text.indexOf(NEEDLE); i !== -1; i = text.indexOf(NEEDLE, i + 1)) {
-    let j = i + NEEDLE.length;
-    const open = text[j];
-    if (open === '"' || open === "'") {
-      const end = text.indexOf(open, j + 1);
-      if (end !== -1) out.push(text.slice(j + 1, end));
-      continue;
-    }
-    if (open !== '{') continue;
-    let depth = 0;
-    let quote: string | null = null;
-    for (let k = j; k < text.length; k++) {
-      const c = text[k];
-      if (quote) {
-        if (c === quote && text[k - 1] !== '\\') quote = null;
-        continue;
-      }
-      if (c === '"' || c === "'" || c === '`') { quote = c; continue; }
-      if (c === '{') depth++;
-      else if (c === '}') {
-        depth--;
-        if (depth === 0) { out.push(text.slice(j + 1, k)); break; }
-      }
-    }
-  }
-  return out;
-}
 
 /** file -> utility -> why physical is correct here. */
 const ALLOWLIST: Record<string, Record<string, string>> = {

@@ -268,14 +268,20 @@ export function Modal({
       aria-describedby={description ? 'modal-description' : undefined}
     >
       <div
-        className="absolute inset-0 bg-black/50 backdrop-blur-sm animate-fade-in"
+        // No backdrop-filter on the scrim. It spans the whole viewport, so it
+        // stacked on top of everything already blurred underneath -- the fixed
+        // header and any glass card -- and took the modal state to three
+        // overlapping blurred layers against a budget of two (measured: 428 of
+        // 3240 sampled points at 3). The scrim still dims; the panel above it
+        // is still glass, which is where the frosting reads.
+        className="absolute inset-0 bg-black/50 animate-fade-in"
         aria-hidden="true"
         onClick={handleOverlayClick}
       />
       <div
         ref={contentRef}
         className={cn(
-          'glass-strong relative w-full rounded-xl shadow-modal',
+          'glass-panel relative w-full rounded-xl shadow-modal',
           'animate-scale-in',
           'max-h-[90vh] flex flex-col',
           modalSizes[size],

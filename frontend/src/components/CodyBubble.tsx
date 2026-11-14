@@ -163,7 +163,7 @@ export function CodyBubble() {
     <>
       {open && (
         <div
-          className="fixed z-[60] glass-strong rounded-2xl shadow-modal border border-border-primary flex flex-col overflow-hidden animate-scale-in"
+          className="fixed z-[60] glass-panel rounded-2xl shadow-modal border border-border-primary flex flex-col overflow-hidden animate-scale-in"
           style={{
             width: PANEL_WIDTH,
             height: PANEL_HEIGHT,

@@ -194,7 +194,7 @@ export function OnboardingTour({ onDone }: OnboardingTourProps) {
       >
         <CodyCharacter size={64} state="talking" />
 
-        <div className="w-full glass-strong rounded-xl shadow-modal border border-border-primary/50 p-4 text-center">
+        <div className="w-full glass-panel rounded-xl shadow-modal border border-border-primary/50 p-4 text-center">
           <h2 className="text-base font-bold text-text-primary">{step.title}</h2>
           <p className="mt-1.5 text-sm text-text-secondary leading-relaxed">{step.description}</p>
 
