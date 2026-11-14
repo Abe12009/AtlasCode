@@ -249,8 +249,15 @@
    * long before they read as "glow". */
   --hero-glow-strength: 0.07;
   --hero-grid-opacity: 0.022;
-  --glass-bg: rgb(255 255 255 / 0.72);
-  --glass-strong-bg: rgb(255 255 255 / 0.88);
+  /* Floating surfaces: dropdown menus (`.glass-menu`) and modal / overlay
+   * panels (`.glass-panel`). The backgrounds were always per-theme tokens;
+   * the BLUR was not -- it was hardcoded in the class and so fired in light
+   * too, against the dark-only decision every other glass surface follows.
+   * It is a token now, and `none` here. */
+  --glass-menu-bg: rgb(255 255 255 / 0.72);
+  --glass-menu-blur: none;
+  --glass-panel-bg: rgb(255 255 255 / 0.88);
+  --glass-panel-blur: none;
 
   /* --- Spatial Glass: LIGHT values ------------------------------------------
    * Glass is dark-mode-only, and that decision lives here in the token values
@@ -418,8 +425,12 @@
   --wash-mesh-accent: 0.12;
   --hero-glow-strength: 0.16;
   --hero-grid-opacity: 0.03;
-  --glass-bg: rgb(17 28 49 / 0.72);
-  --glass-strong-bg: rgb(11 17 32 / 0.9);
+  /* Unchanged from the hardcoded values these replace -- 14px for a menu,
+   * 20px for a panel -- so dark is pixel-identical across the migration. */
+  --glass-menu-bg: rgb(17 28 49 / 0.72);
+  --glass-menu-blur: blur(14px);
+  --glass-panel-bg: rgb(11 17 32 / 0.9);
+  --glass-panel-blur: blur(20px);
 
   /* --- Spatial Glass: DARK values -------------------------------------------
    * The real thing. A translucent surface over the near-black ground, so what
@@ -1360,15 +1371,22 @@ html[dir="rtl"] .prose ol {
   -webkit-backdrop-filter: none !important;
 }
 
-.glass {
-  background: var(--glass-bg);
-  backdrop-filter: blur(14px);
+/* Floating surfaces. Separate from `.glass-surface`/`.glass-raised` because
+ * their dark values differ and migrating them onto those would have repainted
+ * every dropdown and modal; these keep the values they already had.
+ *
+ * `-webkit-` alongside the standard property to match the rest of this file. */
+.glass-menu {
+  background: var(--glass-menu-bg);
+  backdrop-filter: var(--glass-menu-blur);
+  -webkit-backdrop-filter: var(--glass-menu-blur);
   border: 1px solid var(--color-border-primary);
 }
 
-.glass-strong {
-  background: var(--glass-strong-bg);
-  backdrop-filter: blur(20px);
+.glass-panel {
+  background: var(--glass-panel-bg);
+  backdrop-filter: var(--glass-panel-blur);
+  -webkit-backdrop-filter: var(--glass-panel-blur);
   border: 1px solid var(--color-border-primary);
 }
 

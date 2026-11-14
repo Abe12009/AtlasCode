@@ -9,6 +9,7 @@ import { Card } from '../Card';
 import { CodeEditor, TerminalPanel } from '../CodeEditor';
 import { CircuitCanvas } from '../../circuitLab/CircuitCanvas';
 import type { CircuitGraph } from '../../../types';
+import { classNameTokens } from '../../../test/classNames';
 
 const css = readFileSync(
   path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../../index.css'),
@@ -445,5 +446,66 @@ describe('Spatial Glass: interactive glass has real hover and press', () => {
     const { container } = render(<Card>content</Card>);
     expect(container.firstElementChild!.className).toContain('glass-flat');
     expect(container.firstElementChild!.className).not.toContain('glass-interactive');
+  });
+});
+
+/**
+ * The legacy glass classes are gone.
+ *
+ * `.glass` and `.glass-strong` hardcoded their blur -- `blur(14px)` and
+ * `blur(20px)` written into the rule rather than taken from a token -- so
+ * they blurred in light mode too, against the dark-only decision every other
+ * glass surface follows. Measured before the migration: with a dropdown open,
+ * light composited two backdrop-filter layers; after, one.
+ *
+ * Their replacements, `.glass-menu` and `.glass-panel`, keep the exact dark
+ * values (so dark is pixel-identical) and resolve the blur to `none` in light.
+ */
+describe('Spatial Glass: no legacy glass class survives', () => {
+  const srcRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..');
+  const tsxFiles = readdirSync(srcRoot, { recursive: true, encoding: 'utf-8' }).filter(
+    (f) => f.endsWith('.tsx') && !f.includes('__tests__'),
+  );
+
+  it('the stylesheet declares neither, and declares both replacements', () => {
+    // Anchored on the rule opening so `.glass-flat {` cannot satisfy it.
+    expect(css, '.glass must be gone').not.toMatch(/^\.glass \{/m);
+    expect(css, '.glass-strong must be gone').not.toMatch(/^\.glass-strong \{/m);
+    expect(css).toMatch(/^\.glass-menu \{/m);
+    expect(css).toMatch(/^\.glass-panel \{/m);
+  });
+
+  it('both replacements take their blur from a token, in both themes', () => {
+    for (const rule of ['.glass-menu', '.glass-panel']) {
+      const body = cssRule(rule);
+      expect(body, `${rule} must not hardcode a blur`).not.toMatch(/backdrop-filter:\s*blur\(/);
+      expect(body).toMatch(/backdrop-filter:\s*var\(--glass-(menu|panel)-blur\)/);
+    }
+    for (const token of ['--glass-menu-blur', '--glass-panel-blur']) {
+      const occurrences = css.match(new RegExp(`${token}:`, 'g')) ?? [];
+      expect(occurrences.length, `${token} must be declared in light and dark`).toBe(2);
+    }
+    // Light is the whole point: no blur there.
+    expect(tokenIn(cssBlock(':root'), '--glass-menu-blur')).toBe('none');
+    expect(tokenIn(cssBlock(':root'), '--glass-panel-blur')).toBe('none');
+  });
+
+  it('no component still asks for a legacy class', () => {
+    const offenders: string[] = [];
+    for (const file of tsxFiles) {
+      const text = readFileSync(path.join(srcRoot, file), 'utf-8');
+      // Whole class tokens only: `glass-flat` and `variant="glass"` are fine,
+      // a bare `glass` or `glass-strong` inside a className is not.
+      for (const token of classNameTokens(text)) {
+        if (token === 'glass' || token === 'glass-strong') {
+          offenders.push(`${file.split(path.sep).join('/')}: ${token}`);
+        }
+      }
+    }
+    expect(
+      [...new Set(offenders)].sort(),
+      'the legacy glass classes hardcode a blur that fires in light -- use ' +
+        '.glass-menu or .glass-panel:',
+    ).toEqual([]);
   });
 });

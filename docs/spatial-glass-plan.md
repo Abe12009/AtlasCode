@@ -93,7 +93,7 @@ From the audit. `F6` is confirmed in-browser; the rest are from reading.
 
 | # | Finding | Evidence | Phase |
 |---|---|---|---|
-| F1 | Modal stack exceeds the budget: header `backdrop-blur-xl` + overlay `backdrop-blur-sm` + panel `.glass-strong` blur(20px) = 3 overlapping | `Layout.tsx:134`, `Overlay.tsx:271`, `Overlay.tsx:278` | 7 |
+| F1 | Modal stack exceeds the budget: header `backdrop-blur-xl` + overlay `backdrop-blur-sm` + panel `.glass-strong` blur(20px) = 3 overlapping | `Layout.tsx:134`, `Overlay.tsx:271`, `Overlay.tsx:278` | 7 — **done** |
 | F2 | Landing code window nests `backdrop-blur-xl` directly inside `backdrop-blur-xl`; + the fixed header = 3 | `Landing.tsx:358`, `359`, `106` | 7 |
 | F3 | Background/border utilities passed to glass `Card`s are dead — unlayered `.glass-*` beats `@layer utilities`, and `twMerge` keeps both | `Dashboard.tsx:308`, `487`, `513`; `Login.tsx:73`; `Register.tsx:154`; `ResetPassword.tsx:59`; `ForgotPassword.tsx:50`; `Landing.tsx:464` | 5 |
 | F4 | `Button` `secondary` has dead `hover:`/`active:` backgrounds for the same reason; in dark mode `--glass-base` is `transparent`, so there is no hover feedback at all | `Button.tsx:54` | 5 |
@@ -102,7 +102,7 @@ From the audit. `F6` is confirmed in-browser; the rest are from reading.
 | F7 | `bg-grid-pattern-opacity` is never defined anywhere — 8 dead usages | `CourseDetail.tsx:137`; `Profile.tsx:261`, `294`, `360`; `ProjectDetail.tsx:239`; `VisualProgramming.tsx:425`, `466`; `Landing.tsx:465` | 9 |
 | F8 | Reduced motion: the global block overrides `animation-duration` but not `animation-delay`, and `.animate-fade-in` is `both` fill — delayed entrances hold at `opacity: 0` | `index.css:1408-1415`, `581`, `605`; `Landing.tsx:268`, `415`, `447` | 8 |
 | F9 | `--glass-tint-strength` is defined in both themes with a long justification and consumed by nothing | `index.css:273`, `423` | 8 |
-| F10 | Two parallel glass systems: `.glass`/`.glass-strong` are hardcoded blur, not token-driven, and blur in light mode too | `index.css:1236`, `1241`; used at `Overlay.tsx:278`, `Dropdown.tsx:160`, `CodyBubble.tsx:166`, `OnboardingTour.tsx:197` | 7 |
+| F10 | Two parallel glass systems: `.glass`/`.glass-strong` are hardcoded blur, not token-driven, and blur in light mode too | `index.css:1236`, `1241`; used at `Overlay.tsx:278`, `Dropdown.tsx:160`, `CodyBubble.tsx:166`, `OnboardingTour.tsx:197` | 7 — **done** |
 | F11 | `text-quaternary` on glass is the tightest text in the system and was never measured — every phase measured `text-tertiary` instead | `index.css:42`; `StatusBadge.tsx:220` | 8 |
 | F12 | Dead code: 7 unrouted `Test*.tsx` pages, `.animate-slide-in-right`/`-out-right`, `ar.json`'s `common.or_continue_with` | `pages/Test*.tsx`; `index.css:596-602`; `locales/ar.json` | 9 |
 | F13 | Landing's "Create Free Account" CTA is `variant="secondary"` with `bg-gradient-to-r from-accent-700 to-accent-800`. Dead for the F3 reason, so the CTA renders as dark glass, not orange — measured `backgroundImage: linear-gradient(rgba(255,255,255,0.07), …)`. Unlike F3 the intent here is clearly a coloured CTA, so deleting the utility is the wrong fix | `Landing.tsx:482` | 5b — **done** |
@@ -322,15 +322,78 @@ being trusted -- and the hover assertion caught a false positive in its own
 first regex, where `(?:group-)?` let the match start inside an
 already-correct `ltr:group-hover:…`.
 
-### Phase 7 — blur budget (F1, F2, F10)
+### Phase 7 — blur budget (F1, F10) — **done**
 
-Migrate `.glass`/`.glass-strong` onto the token system and delete them, which
-closes the modal stack and the light-mode blur leak together. Unnest
-`Landing.tsx:358/359`. Add the test that does not exist: assert the count of
-overlapping `backdrop-filter`s per page.
+Measured first, in a real browser, before changing anything. The budget is a
+per-POINT limit, so the census samples a grid and at each point counts how
+many elements under it have a computed `backdrop-filter`, via
+`elementsFromPoint` (which returns the whole hit stack, ancestors included).
 
-Verify: per-page blur census at several scroll positions, both themes.
-Risk: medium — `Overlay` and `Dropdown` are app-wide.
+                        before   after
+  dashboard                  1       1
+  courses                    1       1
+  lesson                     1       1
+  landing                    1       1
+  dashboard + modal          3       2     <- over budget
+  dashboard + dropdown       2       2
+  dashboard + cody           2       2
+  onboarding tour            2       2
+
+**F1 confirmed, with a correction.** Three layers is right -- 504 of 3240
+sampled points -- but not the trio F1 named. The two distinct 3-stacks were
+
+  div.backdrop-blur-sm | header.backdrop-blur-xl | div.glass-surface
+  div.glass-strong     | div.backdrop-blur-sm    | div.glass-surface
+
+so the third layer is a dashboard card, and the overlay scrim is the common
+term in both, not the header-plus-panel pair F1 described. One change fixes
+both: the scrim no longer carries `backdrop-blur-sm`. It still dims; the
+panel above it is still glass, which is where the frosting reads. That is a
+deliberate, visible change in dark (10.1% of the modal view) -- the budget
+cannot be met while a full-viewport blurred scrim sits over an already
+blurred header.
+
+Only that one state was over budget, so nothing else was touched.
+
+**F10 corrected as well.** Its description -- "not token-driven" -- was only
+half right: the backgrounds were already per-theme tokens. The real defect
+was narrower, that the BLUR was hardcoded in the rule (`blur(14px)`,
+`blur(20px)`) and so fired in light too, against the dark-only decision.
+`.glass` and `.glass-strong` are now `.glass-menu` and `.glass-panel`, taking
+their blur from `--glass-menu-blur` / `--glass-panel-blur`, `none` in light.
+Dark values are unchanged, deliberately: migrating them onto
+`.glass-surface`/`.glass-raised` would have repainted every dropdown and
+modal.
+
+Dark is pixel-identical across the F10 migration. dashboard and cody 0px,
+courses 0px, dropdown 7px of 1,296,000; lesson, landing and the tour each
+match their own self-diff noise floor exactly (132 vs 129, 8614 vs 8614,
+197 vs 204). The only real dark change is the modal scrim.
+
+Light now composites **1** blurred layer in every state, down from 2 with a
+modal or dropdown open -- the F10 defect, gone. Visually that is nearly
+nothing (dropdown 0px, cody 0.27%), because blurring a near-uniform light
+background looks much like not blurring it; the cost was a real compositing
+layer rather than a visible one. AR dark matches EN dark at 2 everywhere.
+
+Kept as `e2e/blur-budget.spec.ts`, which uses only surfaces a brand-new
+account can reach -- no locked lessons. Getting it to actually catch the bug
+took three corrections, each worth recording: it first passed against the
+known-bad code because Playwright's default viewport is 1280x720, where the
+dashboard reflows and the overlap never forms; then because it never set a
+theme, so it ran in light where glass does not blur at all; and the worst
+case needs a scroll, since at scroll 0 the cards sit below the fixed header.
+It now pins 1440x900 and dark, scrolls first, and asserts the modal composites
+at least two layers before asserting it composites at most two -- so it cannot
+pass vacuously. Verified against main: "dashboard + modal: 3 overlapping
+blurred layers at (52,4)".
+
+A source guard in `glass.test.tsx` fails if `.glass`/`.glass-strong` returns,
+in the stylesheet or in any className, and if either replacement hardcodes a
+blur. Confirmed to fail on a reintroduced class. Its first version had a
+false positive -- the word "glass" in a comment inside a `cn(...)` call -- so
+the shared scanner now reads only string literals, not every word in the
+expression.
 
 ### Phase 8 — reduced motion and contrast (F8, F9, F11)
 
