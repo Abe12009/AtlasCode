@@ -276,7 +276,7 @@ export function ProjectDetail() {
                               <>
                                 {index + 1}
                                 {isCurrentTask && !isCompleted && (
-                                  <span className="absolute -top-1 -right-1 bg-primary-500 text-white text-xs px-1.5 py-0.5 rounded-full">
+                                  <span className="absolute -top-1 -end-1 bg-primary-500 text-white text-xs px-1.5 py-0.5 rounded-full">
                                     {t('projects.current')}
                                   </span>
                                 )}
@@ -306,7 +306,7 @@ export function ProjectDetail() {
                       </button>
 
                       {isExpanded && (
-                        <div className="px-5 pb-5 pl-14 space-y-4 animate-slide-down">
+                        <div className="px-5 pb-5 ps-14 space-y-4 animate-slide-down">
                           <div className="prose dark:prose-invert max-w-none">
                             <p className="text-text-secondary">
                               {taskTranslation?.description}

@@ -44,7 +44,7 @@ export function XpToastHost() {
 
   return (
     <div
-      className="fixed top-20 right-4 z-[70] flex flex-col items-end gap-2 pointer-events-none"
+      className="fixed top-20 end-4 z-[70] flex flex-col items-end gap-2 pointer-events-none"
       role="status"
       aria-live="polite"
     >

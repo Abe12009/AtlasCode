@@ -138,7 +138,7 @@ export function LessonDetail() {
           </div>
         </header>
         <div className="flex-1 flex overflow-hidden">
-          <aside className="w-64 bg-bg-secondary/50 border-r border-border-primary/50 overflow-y-auto flex-shrink-0 hidden lg:block">
+          <aside className="w-64 bg-bg-secondary/50 border-e border-border-primary/50 overflow-y-auto flex-shrink-0 hidden lg:block">
             <nav className="p-4 space-y-2">
               {[1, 2, 3, 4, 5].map((i) => (
                 <div key={i} className="h-12 animate-pulse bg-bg-tertiary rounded-lg" />
@@ -337,7 +337,7 @@ export function LessonDetail() {
       </header>
 
       <div className="flex-1 flex overflow-hidden">
-        <aside className="w-64 bg-bg-secondary/50 border-r border-border-primary/50 overflow-y-auto flex-shrink-0 hidden lg:block">
+        <aside className="w-64 bg-bg-secondary/50 border-e border-border-primary/50 overflow-y-auto flex-shrink-0 hidden lg:block">
           <nav className="p-4 space-y-1.5" aria-label={t('lessons.lesson_navigation')}>
             <div className="px-2 py-2 text-xs font-semibold text-text-tertiary uppercase tracking-wider">
               {t('lessons.content')}
@@ -347,7 +347,7 @@ export function LessonDetail() {
                 key={block.id}
                 onClick={() => setCurrentBlockIndex(index)}
                 className={cn(
-                  'w-full text-left px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-fast flex items-center gap-2',
+                  'w-full text-start px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-fast flex items-center gap-2',
                   index === currentBlockIndex
                     ? 'bg-primary-500/10 text-primary-400 border border-primary-500/20'
                     : index < currentBlockIndex
@@ -388,7 +388,7 @@ export function LessonDetail() {
                     key={exercise.id}
                     onClick={() => setCurrentBlockIndex(blocks.length + index)}
                     className={cn(
-                      'w-full text-left px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-fast flex items-center gap-2',
+                      'w-full text-start px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-fast flex items-center gap-2',
                       blocks.length + index === currentBlockIndex
                         ? 'bg-primary-500/10 text-primary-400 border border-primary-500/20'
                         : index < currentBlockIndex - blocks.length

@@ -212,14 +212,14 @@ export function Landing() {
               stay in Tailwind; .hero-glow-* own only paint and animation, so
               neither layer silently overrides the other. */}
           <div className="absolute inset-0 overflow-hidden pointer-events-none z-0" aria-hidden="true">
-            <div className="hero-glow hero-glow-blue top-10 -left-16 h-[26rem] w-[26rem] sm:h-[32rem] sm:w-[32rem]" />
-            <div className="hero-glow hero-glow-orange bottom-0 -right-20 h-[24rem] w-[24rem] sm:h-[30rem] sm:w-[30rem]" />
+            <div className="hero-glow hero-glow-blue top-10 -start-16 h-[26rem] w-[26rem] sm:h-[32rem] sm:w-[32rem]" />
+            <div className="hero-glow hero-glow-orange bottom-0 -end-20 h-[24rem] w-[24rem] sm:h-[30rem] sm:w-[30rem]" />
             <div className="hero-glow hero-glow-purple top-1/3 left-1/2 h-[22rem] w-[22rem] sm:h-[28rem] sm:w-[28rem]" />
           </div>
 
           <div className="relative max-w-full mx-auto px-4 sm:px-6 lg:px-8 z-10">
             <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
-              <div className="text-center lg:text-left animate-fade-in">
+              <div className="text-center lg:text-start animate-fade-in">
                 <Badge variant="outline" size="lg" className="mb-6 border-primary-500/30 bg-primary-500/5 text-primary-400" dot dotColor="primary">
                   {t('landing.badge')}
                 </Badge>
@@ -265,7 +265,7 @@ export function Landing() {
                 <Suspense fallback={<div className="h-[420px] sm:h-[520px]" aria-hidden="true" />}>
                   <HeroGraph className="h-[420px] w-full sm:h-[520px]" />
                 </Suspense>
-                <div className="absolute -bottom-6 -right-6 lg:-bottom-8 lg:-right-8 bg-bg-primary/90 border border-border-primary/50 rounded-xl p-4 shadow-2xl backdrop-blur-xl animate-fade-in" style={{ animationDelay: '200ms' }}>
+                <div className="absolute -bottom-6 -end-6 lg:-bottom-8 lg:-end-8 bg-bg-primary/90 border border-border-primary/50 rounded-xl p-4 shadow-2xl backdrop-blur-xl animate-fade-in" style={{ animationDelay: '200ms' }}>
                   <div className="flex items-center gap-3">
                     <div className="p-2 bg-primary-500/10 rounded-lg">
                       <Trophy className="h-6 w-6 text-primary-400" />
@@ -276,7 +276,7 @@ export function Landing() {
                     </div>
                   </div>
                 </div>
-                <div className="absolute top-20 -left-10 w-64 h-64 bg-accent-500/10 rounded-full blur-3xl animate-float" style={{ animationDelay: '3s' }} />
+                <div className="absolute top-20 -start-10 w-64 h-64 bg-accent-500/10 rounded-full blur-3xl animate-float" style={{ animationDelay: '3s' }} />
               </div>
             </div>
           </div>
@@ -533,7 +533,7 @@ learn_programming()`}</code></pre>
             </div>
           </div>
           <div className="pt-8 border-t border-border-primary flex flex-col md:flex-row items-center justify-between gap-4">
-            <p className="text-sm text-text-tertiary text-center md:text-left">
+            <p className="text-sm text-text-tertiary text-center md:text-start">
               {t('footer.copyright', { year: new Date().getFullYear() })}
             </p>
             <div className="flex items-center gap-4">

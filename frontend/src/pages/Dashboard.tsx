@@ -529,7 +529,7 @@ export function Dashboard() {
                   <BookOpen className="h-5 w-5 text-primary-400" />
                 </div>
                 <span className="font-medium text-text-primary">{t('dashboard.browse_courses')}</span>
-                <ArrowRight className="h-4 w-4 text-text-tertiary group-hover:text-primary-400 transition-colors ml-auto" />
+                <ArrowRight className="h-4 w-4 text-text-tertiary group-hover:text-primary-400 transition-colors ms-auto" />
               </Link>
               <Link
                 to="/app/projects"
@@ -539,7 +539,7 @@ export function Dashboard() {
                   <FolderKanban className="h-5 w-5 text-blue-400" />
                 </div>
                 <span className="font-medium text-text-primary">{t('navigation.projects')}</span>
-                <ArrowRight className="h-4 w-4 text-text-tertiary group-hover:text-blue-400 transition-colors ml-auto" />
+                <ArrowRight className="h-4 w-4 text-text-tertiary group-hover:text-blue-400 transition-colors ms-auto" />
               </Link>
               <Link
                 to="/app/profile"
@@ -549,7 +549,7 @@ export function Dashboard() {
                   <Trophy className="h-5 w-5 text-yellow-400" />
                 </div>
                 <span className="font-medium text-text-primary">{t('navigation.profile')}</span>
-                <ArrowRight className="h-4 w-4 text-text-tertiary group-hover:text-yellow-400 transition-colors ml-auto" />
+                <ArrowRight className="h-4 w-4 text-text-tertiary group-hover:text-yellow-400 transition-colors ms-auto" />
               </Link>
             </div>
           </Card>

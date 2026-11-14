@@ -446,7 +446,7 @@ export function VisualProgrammingPage() {
                             }}
                             onDragEnd={(e) => e.preventDefault()}
                             className={cn(
-                              'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-all duration-fast group',
+                              'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-start transition-all duration-fast group',
                               CATEGORY_COLORS[category as keyof typeof CATEGORY_COLORS],
                               'hover:shadow-lg hover:shadow-glow-primary hover:-translate-x-0.5'
                             )}

@@ -97,7 +97,7 @@ From the audit. `F6` is confirmed in-browser; the rest are from reading.
 | F2 | Landing code window nests `backdrop-blur-xl` directly inside `backdrop-blur-xl`; + the fixed header = 3 | `Landing.tsx:358`, `359`, `106` | 7 |
 | F3 | Background/border utilities passed to glass `Card`s are dead — unlayered `.glass-*` beats `@layer utilities`, and `twMerge` keeps both | `Dashboard.tsx:308`, `487`, `513`; `Login.tsx:73`; `Register.tsx:154`; `ResetPassword.tsx:59`; `ForgotPassword.tsx:50`; `Landing.tsx:464` | 5 |
 | F4 | `Button` `secondary` has dead `hover:`/`active:` backgrounds for the same reason; in dark mode `--glass-base` is `transparent`, so there is no hover feedback at all | `Button.tsx:54` | 5 |
-| F5 | Physical utilities where logical belong | `Layout.tsx:85`, `195`, `338`; `Dropdown.tsx:214`; `Feedback.tsx:282`; `AchievementToast.tsx:65`; `XpToast.tsx:47`; `NotificationBell.tsx:80`; `LessonDetail.tsx:350`, `391`; `Landing.tsx:222`, `372`, `530` | 6 |
+| F5 | Physical utilities where logical belong (done in 6; the recorded list was 13 sites, the sweep found 29) | `Layout.tsx:85`, `195`, `338`; `Dropdown.tsx:214`; `Feedback.tsx:282`; `AchievementToast.tsx:65`; `XpToast.tsx:47`; `NotificationBell.tsx:80`; `LessonDetail.tsx:350`, `391`; `Landing.tsx:222`, `372`, `530` | 6 |
 | F6 | **`.bg-grid-pattern` sets `opacity` on the element, and two sites put it on a content container — the whole canvas subtree renders at 0.05** | `CircuitCanvas.tsx:120`, `VisualProgramming.tsx:611`; class at `index.css:1018-1024` | **4** |
 | F7 | `bg-grid-pattern-opacity` is never defined anywhere — 8 dead usages | `CourseDetail.tsx:137`; `Profile.tsx:261`, `294`, `360`; `ProjectDetail.tsx:239`; `VisualProgramming.tsx:425`, `466`; `Landing.tsx:465` | 9 |
 | F8 | Reduced motion: the global block overrides `animation-duration` but not `animation-delay`, and `.animate-fade-in` is `both` fill — delayed entrances hold at `opacity: 0` | `index.css:1408-1415`, `581`, `605`; `Landing.tsx:268`, `415`, `447` | 8 |
@@ -107,6 +107,7 @@ From the audit. `F6` is confirmed in-browser; the rest are from reading.
 | F12 | Dead code: 7 unrouted `Test*.tsx` pages, `.animate-slide-in-right`/`-out-right`, `ar.json`'s `common.or_continue_with` | `pages/Test*.tsx`; `index.css:596-602`; `locales/ar.json` | 9 |
 | F13 | Landing's "Create Free Account" CTA is `variant="secondary"` with `bg-gradient-to-r from-accent-700 to-accent-800`. Dead for the F3 reason, so the CTA renders as dark glass, not orange — measured `backgroundImage: linear-gradient(rgba(255,255,255,0.07), …)`. Unlike F3 the intent here is clearly a coloured CTA, so deleting the utility is the wrong fix | `Landing.tsx:482` | 5b — **done** |
 | F14 | `Courses` passes conditional paint to an `interactive` Card: `isCompleted && 'border-success-500/30 bg-success-500/5'` and `!isStarted && !isLocked && 'border-border-primary/50'`. Both dead. The completed-course green tint therefore never renders, so a real state signal is silently missing | `Courses.tsx:203`, `205` | 5b — **done** |
+| F15 | ~20 directional icons (arrows, chevrons) do not mirror under `dir="rtl"`. Eight sites already flip via an `isRTL` ternary (`ExercisePanel`, `MicroQuestLesson`, `LessonDetail`); the rest point the wrong way in Arabic | `Dashboard.tsx` (6), `Landing.tsx`, `Courses.tsx`, `CourseDetail.tsx`, `QuestClear.tsx`, `LegalLayout.tsx`, `LessonHeader.tsx`, `DuelArena.tsx`, `ForgotPassword.tsx`, `QuestNode.tsx`, `DebugTracePanel.tsx` | **open — own slice** |
 
 Not findings, recorded so they are not re-investigated: reduced motion is
 otherwise handled correctly (`App.tsx:158` `<MotionConfig reducedMotion="user">`
@@ -226,15 +227,55 @@ Seeding note: the first seed picked a course whose prerequisite was unmet, so
 the card rendered "Locked" *and* completed at once. Re-seeded on a course with
 no prerequisite before measuring.
 
-### Phase 6 — RTL sweep (F5)
 
-The 13 physical→logical swaps. Leave `dir="ltr"` code containers alone; leave
-symmetric `left-0 right-0` pairs and `left-1/2` centring alone.
+### Phase 6 — RTL sweep (F5) — **done**
 
-Verify: AR RTL pass over Dashboard, Profile settings, Leaderboard, the
-LessonDetail navigator, toasts, notification badge. Add a grep-based test so
-they do not come back — nothing currently catches them.
-Risk: low.
+29 physical->logical swaps across 14 files. F5 recorded 13 sites; a full sweep
+found 29, and one of the 13 (`Landing.tsx:372`) turned out to be correct as
+written -- it is inside a `dir="ltr"` <pre>, so it was left alone.
+
+Swapped: `ml`/`pl` -> `ms`/`ps`, `text-left` -> `text-start`, `right-N` ->
+`end-N`, `border-r` -> `border-e`, `rounded-tl`/`rounded-tr` ->
+`rounded-ss`/`rounded-se`. Beyond the F5 list this also caught the lesson
+sidebar dividers, the Cody chat bubble tails, the project panel indent and
+badge, the Overlay/DuelLobby/VisualProgramming row labels, three Dashboard
+`ml-auto` arrows, and four Landing hero decorations.
+
+Verified in a real RTL render rather than by reading. Each utility was
+measured for which physical edge it resolves to under `dir="rtl"`:
+
+  ml-6   -> ms-6        margin-left 24px   -> margin-right 24px
+  border-r -> border-e  border-right 1px   -> border-left 1px
+  rounded-tr -> rounded-se  top-right 6px  -> top-left 6px
+  -right-1 -> -end-1    right -4px         -> left -4px
+  right-4  -> end-4     right 16px         -> left 16px
+  text-left -> text-start  text-align left -> start
+
+A first pass of that measurement was misleading: Tailwind v4 only generates
+classes it finds in source, so probing `ms-6`/`border-e`/`rounded-se` before
+they existed returned no styles at all. Re-measured after the swap.
+
+EN is unchanged, as it must be -- logical and physical are identical in LTR.
+Pixel-diffed against main: lesson, duels, usermenu and cody are byte-identical;
+projects 2px; dashboard 531px and landing 3.13%, both of which a self-diff on
+*identical* code reproduces (826px and 3.08%), i.e. the hero canvas animation
+and run-to-run variance, not the change.
+
+Left physical on purpose, each with a reason in the guard's allowlist: code
+inside `dir="ltr"`; `left-1/2` centring and `left-0 right-0` pairs; the
+named-direction placement APIs in `Dropdown`/`Feedback`/`Overlay`; the logo
+mark's accent dot; `DuelArena`'s `text-right`, which pairs with
+`flex-row-reverse` and needs a live duel to verify; the Landing blobs coupled
+to a `translate-x` (Tailwind has no logical translate); and the Circuit Lab /
+Visual Programming node internals, which sit in a JS-positioned coordinate
+space where mirroring the markup would move a port away from the wire that
+attaches to it.
+
+Guarded by `components/__tests__/rtlLogicalUtilities.test.ts`: a brace-aware
+scanner that reads whole `className` values (including multi-line `cn(...)`
+expressions a regex would miss) and fails on any physical utility without an
+allowlist reason. Confirmed to fail on a reintroduced `ml-6` before being
+trusted, and it found five sites the manual sweep had missed.
 
 ### Phase 7 — blur budget (F1, F2, F10)
 
