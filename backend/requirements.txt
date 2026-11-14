@@ -22,8 +22,8 @@ sqlalchemy==2.0.36
 # 3.5.6 ships cp312/cp313/cp314 wheels for manylinux x86_64 and win_amd64 (no
 # sdist build on any interpreter in use here) and satisfies SQLAlchemy's !=0.4.17.
 greenlet==3.5.6
-pydantic==2.12.5
-pydantic[email]==2.12.5
+pydantic==2.14.3
+pydantic[email]==2.14.3
 pydantic-settings==2.0.0
 # python-jose pulls in `ecdsa` transitively, which pip-audit will keep flagging
 # for PYSEC-2026-1325 (Minerva timing attack on P-256). No fixed version exists
