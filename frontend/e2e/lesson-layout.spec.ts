@@ -2,6 +2,14 @@ import { test, expect, Page } from '@playwright/test';
 import { codeEditorRoot, lessonTitle, registerNewUser } from './helpers';
 
 /**
+ * The lessons this file opens. Sequential unlocking lets a brand-new account
+ * open only the first lesson of a course, so the Micro-Quest lessons here are
+ * 403 without a seeded progress row and the spec fails as a missing testid.
+ * Lesson 1 is index 0 and needs no help; seeding it is a harmless no-op.
+ */
+const LESSON_IDS = [1, 9, 38];
+
+/**
  * Regression coverage for the two Phase 10 bugs:
  *
  *   1. A lesson page (`h-screen` under Layout's `pt-20 pb-8` header offset)
@@ -64,7 +72,7 @@ test.describe('Lesson layout: bottom controls stay reachable at every required v
       page,
     }) => {
       await page.setViewportSize({ width: vp.width, height: vp.height });
-      await registerNewUser(page);
+      await registerNewUser(page, { unlock: LESSON_IDS });
       await page.goto('/app/lessons/9');
       await expect(page.getByTestId('micro-quest')).toBeVisible({ timeout: 15000 });
 
@@ -88,7 +96,7 @@ test.describe('Lesson layout: bottom controls stay reachable at every required v
       page,
     }) => {
       await page.setViewportSize({ width: vp.width, height: vp.height });
-      await registerNewUser(page);
+      await registerNewUser(page, { unlock: LESSON_IDS });
       await page.goto('/app/lessons/1');
       await expect(lessonTitle(page, 'What Is Programming?')).toBeVisible({ timeout: 15000 });
 
@@ -109,7 +117,7 @@ test.describe('Lesson layout: bottom controls stay reachable at every required v
     // reservation (pt-20 + pb-8 = 7rem), never the full 100vh Layout never
     // gave it.
     await page.setViewportSize({ width: 375, height: 667 });
-    await registerNewUser(page);
+    await registerNewUser(page, { unlock: LESSON_IDS });
     await page.goto('/app/lessons/9');
     await expect(page.getByTestId('micro-quest')).toBeVisible({ timeout: 15000 });
 
@@ -132,7 +140,7 @@ test.describe('Lesson layout: bottom controls stay reachable at every required v
 
 test.describe('RTL code stays left-to-right', () => {
   test('a classic lesson’s code_example renders LTR under Arabic', async ({ page }) => {
-    await registerNewUser(page);
+    await registerNewUser(page, { unlock: LESSON_IDS });
     await page.goto('/app/dashboard');
     await page.locator('button', { hasText: /English|Français|العربية/i }).first().click();
     await page.getByRole('menuitem', { name: /العربية/i }).click();
@@ -157,7 +165,7 @@ test.describe('RTL code stays left-to-right', () => {
   test('a Micro-Quest blueprint code snippet renders LTR under Arabic (spot_the_bug)', async ({
     page,
   }) => {
-    await registerNewUser(page);
+    await registerNewUser(page, { unlock: LESSON_IDS });
     await page.goto('/app/dashboard');
     await page.locator('button', { hasText: /English|Français|العربية/i }).first().click();
     await page.getByRole('menuitem', { name: /العربية/i }).click();
@@ -186,7 +194,7 @@ test.describe('RTL code stays left-to-right', () => {
   test('the code editor and terminal stay LTR under Arabic on a code_writing quest', async ({
     page,
   }) => {
-    await registerNewUser(page);
+    await registerNewUser(page, { unlock: LESSON_IDS });
     await page.goto('/app/dashboard');
     await page.locator('button', { hasText: /English|Français|العربية/i }).first().click();
     await page.getByRole('menuitem', { name: /العربية/i }).click();

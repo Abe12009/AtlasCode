@@ -58,6 +58,7 @@ test.describe('Primary user journey', () => {
     await expect(firstLessonLink).toBeVisible();
     await firstLessonLink.click();
     await expect(page).toHaveURL(/\/app\/lessons\/\d+$/);
+    const firstLessonId = Number(page.url().match(/\/app\/lessons\/(\d+)$/)![1]);
 
     // Jump directly to the first exercise via the lesson sidebar (more reliable than
     // repeatedly clicking Next through every content block).
@@ -89,7 +90,15 @@ test.describe('Primary user journey', () => {
     // solved so far, so it is "current" (in progress), not yet "Completed".
     await page.goto('/app/courses/1');
     await page.getByText('Getting Started').click();
-    await expect(page.getByText(/^Current$/i).first()).toBeVisible({ timeout: 10000 });
+    // Scoped to this lesson's own row, and matching the label the UI actually
+    // renders. `lessons.current` is "In progress" -- `/^Current$/` was the
+    // internal status value, never any on-screen text, so this assertion could
+    // not pass. Anchoring on the row also stops it matching a course-level
+    // badge that happens to say the same thing.
+    await expect(page.getByTestId(`lesson-row-${firstLessonId}`)).toContainText(
+      /in progress/i,
+      { timeout: 10000 },
+    );
 
     // A plain reload must not change XP (no accidental re-award just from viewing the page).
     await page.reload();
