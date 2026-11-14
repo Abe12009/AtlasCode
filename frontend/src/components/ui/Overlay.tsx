@@ -131,7 +131,7 @@ export function DropdownItem({
       {...props}
     >
       {icon && <span className="flex-shrink-0 h-4 w-4" aria-hidden="true">{icon}</span>}
-      <span className="flex-1 text-left">{children}</span>
+      <span className="flex-1 text-start">{children}</span>
       {shortcut && (
         <span className="flex-shrink-0 text-xs text-text-tertiary font-normal">{shortcut}</span>
       )}

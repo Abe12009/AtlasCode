@@ -82,7 +82,7 @@ export function Layout() {
         <div className="h-16 border-b border-border-primary flex items-center px-4 sm:px-6 lg:px-8 gap-6" aria-hidden="true">
           <Skeleton variant="circular" width={36} height={36} />
           <Skeleton variant="text" width={110} height={20} />
-          <div className="hidden lg:flex items-center gap-3 ml-6">
+          <div className="hidden lg:flex items-center gap-3 ms-6">
             {[1, 2, 3, 4].map((i) => (
               <Skeleton key={i} variant="rectangular" width={90} height={36} className="rounded-xl" />
             ))}
@@ -192,7 +192,7 @@ export function Layout() {
                   <span className="text-xs font-mono text-text-tertiary">Lvl.</span>
                   <span className="font-bold text-text-primary tabular-nums">{currentLevel}</span>
                 </div>
-                <div className="w-24 h-1.5 bg-bg-tertiary rounded-full overflow-hidden ml-2">
+                <div className="w-24 h-1.5 bg-bg-tertiary rounded-full overflow-hidden ms-2">
                   <div
                     className="h-full bg-gradient-to-r from-primary-500 to-accent-500 rounded-full transition-all duration-500"
                     style={{ width: `${xpProgress}%` }}
@@ -335,7 +335,7 @@ export function Layout() {
       <footer className="bg-bg-secondary border-t border-border-primary py-6 mt-auto">
         <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-            <p className="text-sm text-text-tertiary text-center md:text-left">
+            <p className="text-sm text-text-tertiary text-center md:text-start">
               {t('footer.copyright', { year: new Date().getFullYear() })}
             </p>
             <div className="flex items-center gap-6 text-sm">

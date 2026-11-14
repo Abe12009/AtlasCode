@@ -62,8 +62,8 @@ export function CodyChatPanel({ className }: CodyChatPanelProps) {
               className={cn(
                 'max-w-[80%] rounded-2xl px-3.5 py-2 text-sm whitespace-pre-wrap break-words',
                 m.role === 'user'
-                  ? 'bg-primary-500 text-white rounded-tr-sm'
-                  : 'bg-bg-secondary text-text-primary rounded-tl-sm border border-border-primary'
+                  ? 'bg-primary-500 text-white rounded-se-sm'
+                  : 'bg-bg-secondary text-text-primary rounded-ss-sm border border-border-primary'
               )}
             >
               {m.content}
@@ -74,7 +74,7 @@ export function CodyChatPanel({ className }: CodyChatPanelProps) {
         {sending && (
           <div className="flex items-start gap-2">
             <CodyCharacter size={28} state="talking" className="flex-shrink-0" aria-hidden="true" />
-            <div className="rounded-2xl rounded-tl-sm border border-border-primary bg-bg-secondary px-3.5 py-2.5">
+            <div className="rounded-2xl rounded-ss-sm border border-border-primary bg-bg-secondary px-3.5 py-2.5">
               <span className="flex gap-1" aria-label="Cody is typing">
                 <span className="h-1.5 w-1.5 rounded-full bg-text-tertiary animate-pulse-glow" />
                 <span className="h-1.5 w-1.5 rounded-full bg-text-tertiary animate-pulse-glow [animation-delay:0.15s]" />

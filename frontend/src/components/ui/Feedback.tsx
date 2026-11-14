@@ -279,7 +279,7 @@ export function Label({
     >
       {children}
       {required && (
-        <span className="text-error-500 ml-0.5" aria-hidden="true">*</span>
+        <span className="text-error-500 ms-0.5" aria-hidden="true">*</span>
       )}
     </label>
   );

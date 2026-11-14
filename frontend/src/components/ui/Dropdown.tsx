@@ -211,7 +211,7 @@ export function DropdownItem({
   return (
     <button
       className={cn(
-        'w-full flex items-center gap-3 px-3 py-2 text-sm font-medium text-left transition-colors',
+        'w-full flex items-center gap-3 px-3 py-2 text-sm font-medium text-start transition-colors',
         'hover:bg-bg-tertiary focus:bg-bg-tertiary',
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary-500',
         destructive

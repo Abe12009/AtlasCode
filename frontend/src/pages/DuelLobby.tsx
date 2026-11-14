@@ -100,7 +100,7 @@ export function DuelLobby() {
               disabled={joinMutation.isPending}
               data-testid={`duel-lobby-join-${d}`}
               className={cn(
-                'p-6 rounded-2xl border border-border-primary bg-bg-secondary hover:border-primary-500/50 hover:bg-bg-tertiary/50 transition-all text-left disabled:opacity-50',
+                'p-6 rounded-2xl border border-border-primary bg-bg-secondary hover:border-primary-500/50 hover:bg-bg-tertiary/50 transition-all text-start disabled:opacity-50',
                 joinMutation.isPending && difficulty === d && 'border-primary-500 bg-bg-tertiary/50'
               )}
             >

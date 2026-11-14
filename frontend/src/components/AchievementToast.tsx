@@ -62,7 +62,7 @@ export function AchievementToastHost() {
             <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-white/20 text-lg" aria-hidden="true">
               {toast.icon || <Award className="h-5 w-5" />}
             </span>
-            <div className="text-left">
+            <div className="text-start">
               <p className="text-xs font-semibold uppercase tracking-wide text-white/80">Achievement Unlocked</p>
               <p className="text-sm font-bold leading-tight">{toast.title}</p>
               {toast.xpReward > 0 && <p className="text-xs text-white/80">+{toast.xpReward} XP</p>}
