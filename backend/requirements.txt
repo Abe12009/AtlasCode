@@ -1,4 +1,4 @@
-fastapi==0.141.1
+fastapi==0.162.4
 # Pinned explicitly, not left to fastapi's own (unbounded) starlette>=0.46.0
 # requirement, so `pip install` always resolves to the version that actually
 # has every known CVE fixed rather than whatever satisfies the floor.
