@@ -94,21 +94,26 @@ From the audit. `F6` is confirmed in-browser; the rest are from reading.
 | # | Finding | Evidence | Phase |
 |---|---|---|---|
 | F1 | Modal stack exceeds the budget: header `backdrop-blur-xl` + overlay `backdrop-blur-sm` + panel `.glass-strong` blur(20px) = 3 overlapping | `Layout.tsx:134`, `Overlay.tsx:271`, `Overlay.tsx:278` | 7 — **done** |
-| F2 | Landing code window nests `backdrop-blur-xl` directly inside `backdrop-blur-xl`; + the fixed header = 3 | `Landing.tsx:358`, `359`, `106` | 7 |
+| F2 | Landing code window nests `backdrop-blur-xl` directly inside `backdrop-blur-xl`; + the fixed header = 3 | `Landing.tsx:358`, `359`, `106` | **still open** — re-measured in phase 8 |
 | F3 | Background/border utilities passed to glass `Card`s are dead — unlayered `.glass-*` beats `@layer utilities`, and `twMerge` keeps both | `Dashboard.tsx:308`, `487`, `513`; `Login.tsx:73`; `Register.tsx:154`; `ResetPassword.tsx:59`; `ForgotPassword.tsx:50`; `Landing.tsx:464` | 5 |
 | F4 | `Button` `secondary` has dead `hover:`/`active:` backgrounds for the same reason; in dark mode `--glass-base` is `transparent`, so there is no hover feedback at all | `Button.tsx:54` | 5 |
 | F5 | Physical utilities where logical belong (done in 6; the recorded list was 13 sites, the sweep found 29) | `Layout.tsx:85`, `195`, `338`; `Dropdown.tsx:214`; `Feedback.tsx:282`; `AchievementToast.tsx:65`; `XpToast.tsx:47`; `NotificationBell.tsx:80`; `LessonDetail.tsx:350`, `391`; `Landing.tsx:222`, `372`, `530` | 6 |
 | F6 | **`.bg-grid-pattern` sets `opacity` on the element, and two sites put it on a content container — the whole canvas subtree renders at 0.05** | `CircuitCanvas.tsx:120`, `VisualProgramming.tsx:611`; class at `index.css:1018-1024` | **4** |
 | F7 | `bg-grid-pattern-opacity` is never defined anywhere — 8 dead usages | `CourseDetail.tsx:137`; `Profile.tsx:261`, `294`, `360`; `ProjectDetail.tsx:239`; `VisualProgramming.tsx:425`, `466`; `Landing.tsx:465` | 9 |
-| F8 | Reduced motion: the global block overrides `animation-duration` but not `animation-delay`, and `.animate-fade-in` is `both` fill — delayed entrances hold at `opacity: 0` | `index.css:1408-1415`, `581`, `605`; `Landing.tsx:268`, `415`, `447` | 8 |
-| F9 | `--glass-tint-strength` is defined in both themes with a long justification and consumed by nothing | `index.css:273`, `423` | 8 |
+| F8 | Reduced motion: the global block overrides `animation-duration` but not `animation-delay`, and `.animate-fade-in` is `both` fill — delayed entrances hold at `opacity: 0` | `index.css` reduced-motion block, `581`, `605`; `Landing.tsx:268`, `415`, `447` | 8 — **done, and see F17** |
+| F9 | `--glass-tint-strength` is defined in both themes with a long justification and consumed by nothing | `index.css` | 8 — **done, removed** |
 | F10 | Two parallel glass systems: `.glass`/`.glass-strong` are hardcoded blur, not token-driven, and blur in light mode too | `index.css:1236`, `1241`; used at `Overlay.tsx:278`, `Dropdown.tsx:160`, `CodyBubble.tsx:166`, `OnboardingTour.tsx:197` | 7 — **done** |
-| F11 | `text-quaternary` on glass is the tightest text in the system and was never measured — every phase measured `text-tertiary` instead | `index.css:42`; `StatusBadge.tsx:220` | 8 |
+| F11 | `text-quaternary` on glass is the tightest text in the system and was never measured — every phase measured `text-tertiary` instead | `index.css:42`; `StatusBadge.tsx:220` | 8 — **corrected, see below** |
 | F12 | Dead code: 7 unrouted `Test*.tsx` pages, `.animate-slide-in-right`/`-out-right`, `ar.json`'s `common.or_continue_with` | `pages/Test*.tsx`; `index.css:596-602`; `locales/ar.json` | 9 |
 | F13 | Landing's "Create Free Account" CTA is `variant="secondary"` with `bg-gradient-to-r from-accent-700 to-accent-800`. Dead for the F3 reason, so the CTA renders as dark glass, not orange — measured `backgroundImage: linear-gradient(rgba(255,255,255,0.07), …)`. Unlike F3 the intent here is clearly a coloured CTA, so deleting the utility is the wrong fix | `Landing.tsx:482` | 5b — **done** |
 | F14 | `Courses` passes conditional paint to an `interactive` Card: `isCompleted && 'border-success-500/30 bg-success-500/5'` and `!isStarted && !isLocked && 'border-border-primary/50'`. Both dead. The completed-course green tint therefore never renders, so a real state signal is silently missing | `Courses.tsx:203`, `205` | 5b — **done** |
 | F15 | ~20 directional icons (arrows, chevrons) do not mirror under `dir="rtl"`. Eight sites already flip via an `isRTL` ternary (`ExercisePanel`, `MicroQuestLesson`, `LessonDetail`); the rest point the wrong way in Arabic | `Dashboard.tsx` (6), `Landing.tsx`, `Courses.tsx`, `CourseDetail.tsx`, `QuestClear.tsx`, `LegalLayout.tsx`, `LessonHeader.tsx`, `DuelArena.tsx`, `ForgotPassword.tsx`, `QuestNode.tsx`, `DebugTracePanel.tsx` | 6b — **done** |
 | F16 | Two icons carry a direction but not a *navigation* direction: `Send` (paper plane) and `ExternalLink`. Both are metaphors, and mirroring them is a product call rather than a correctness fix, so both were left and allowlisted | `CodyChatPanel.tsx:110`, `ProjectDetail.tsx:413` | **open — your call** |
+| F17 | Every `.animate-*` entrance was inert. `animation: fadeIn var(--transition-normal) var(--animate-ease) both` carried two easing functions, because `--transition-normal` is `200ms cubic-bezier(...)` — duration *and* easing — so the shorthand was invalid and the declaration dropped. Measured `animation-name: none` on all 14 Landing elements, in both motion modes | `index.css` `.animate-fade-in` and five siblings | 8 — **fixed** |
+| F18 | Five of six `StatusBadge` variants failed contrast in light: the styles were dark-mode ramp recipes (`bg-success-900/30 text-success-400`) reused unchanged. Measured completed 1.58:1 (1.02 in situ), current/available 2.30, in progress 2.38, pending 1.52. Only `locked` passed — the one variant already built from semantic tokens | `StatusBadge.tsx` `statusStyles` | 8 — **fixed** |
+| F19 | `--color-text-quaternary` failed in dark on the surfaces it actually renders on: 4.46:1 on `--color-bg-elevated` and 4.07:1 on `--color-bg-tertiary`. Its own comment only ever claimed 5.1:1 against `--color-bg-primary` | `index.css` dark block | 8 — **fixed** |
+| F20 | The dark text ramp is inverted after F19: `text-quaternary` #8695AE (luminance 0.2962) is now LIGHTER than `text-tertiary` #7C8CA5 (0.2576). Separately, `text-tertiary` already fails on `--color-bg-tertiary` at 4.41:1 — the pair `StatusBadge` `locked` actually uses (`bg-bg-tertiary text-text-tertiary`) | `index.css` dark block | **8b — options costed, not applied** |
+| F21 | Fixing the inert animations (F17) makes them fire on remount. `CodeEditor.tsx:259/262` mounts its output/error div conditionally, so the fade now replays on every code run, inside an `aria-live="polite"` region. 59 live sites across four classes; the page-level wrappers are once-per-navigation and fine | `CodeEditor.tsx:259`, `262`; `Feedback.tsx:341`, `441`; `ExerciseAnswer.tsx:17`; `Dropdown.tsx:154`; `Overlay.tsx:263/277/285`; `MicroQuestLesson.tsx:170/190/231` | **8b — watch** |
 
 Not findings, recorded so they are not re-investigated: reduced motion is
 otherwise handled correctly (`App.tsx:158` `<MotionConfig reducedMotion="user">`
@@ -395,16 +400,124 @@ false positive -- the word "glass" in a comment inside a `cn(...)` call -- so
 the shared scanner now reads only string literals, not every word in the
 expression.
 
-### Phase 8 — reduced motion and contrast (F8, F9, F11)
+### Phase 8 — reduced motion and contrast (F8, F9, F11) — **done**
 
-Neutralise `animation-delay` under `prefers-reduced-motion`; either consume
-`--glass-tint-strength` or delete it with its comment; measure `text-quaternary`
-composited on glass and adjust the token if it fails.
+Measured first, in a browser, before editing anything. Three of the four
+things this phase set out to fix turned out to be different from the finding
+that described them.
 
-Verify: browser with reduced motion forced, on Landing — content present
-immediately, not staggered. Composited-pixel contrast the way `73c7d2a` did it.
-Add the first reduced-motion e2e assertion.
-Risk: low.
+**Reduced motion (F8) — the premise was hiding a bigger bug.** F8 predicted a
+staggered entrance holding at `opacity: 0`. It does not happen, because the
+animations never ran at all: `.animate-fade-in` and its five siblings were
+written as `animation: fadeIn var(--transition-normal) var(--animate-ease)
+both`, and `--transition-normal` is `200ms cubic-bezier(...)` — duration *and*
+easing — so the shorthand carried two easing functions, was invalid, and the
+declaration was dropped. All 14 Landing elements computed
+`animation-name: none` in both motion modes (F17).
+
+Dropping the redundant `var(--animate-ease)` makes them real, which makes F8
+reachable, and `animation-delay: 0s` in the existing reduced-motion block
+fixes it. Measured under emulated reduce afterwards: every element reports
+`animation-name: fadeIn`, `animation-delay: 0s` (the inline 500ms included)
+and `opacity: 1`. Without the preference the designed stagger survives.
+
+**`--glass-tint-strength` (F9) — dead.** Two declarations, zero consumers
+anywhere in the frontend. Removed.
+
+**Contrast (F11) — the finding was aimed at the wrong place.** F11 assumed
+`text-quaternary` sits on glass. Its only glass call site is `StatusBadge`'s
+unearned branch, and both callers pass `earned={true}`, so it never renders
+there. Where it does render is code and canvas surfaces — and it failed
+there, on the surfaces its own comment never checked (F19):
+
+                       before   after
+  bg-elevated           4.46     5.43     <- the FALSE label on a circuit node
+  bg-tertiary           4.07     4.96
+  bg-primary            5.46     6.64
+  #7686A0 -> #8695AE, worst surface 4.96:1
+
+The real contrast failure was somewhere else entirely. `StatusBadge` painted
+dark-mode ramp recipes and reused them in light (F18), where five of six
+variants failed:
+
+                 light before   light after   dark (unchanged)
+  completed         1.58           6.64          11.34
+                   (1.02 in situ over the tinted card)
+  current           2.30           8.04           7.77
+  available         2.30           8.04           7.77
+  in progress       2.38           8.63           8.75
+  pending           1.52           6.61          11.81
+  locked            4.83           4.83           5.79
+
+`locked` passing was the tell: it was the only variant already built from
+semantic tokens. So the fix is per-theme `--badge-{hue}-bg/-fg` tokens, not a
+one-off class. Dark keeps its exact previous values and measures identically.
+
+Everything else re-measured after the token change, so one failure was not
+traded for another: `text-tertiary` on the completed tint is unchanged at
+5.14 dark / 4.92 light, and light `text-quaternary` is untouched at 4.83 on
+white and 4.58 on the page ground.
+
+Guards: `e2e/reduced-motion.spec.ts` (pins viewport and theme, asserts the
+animations exist, that something is still staggered, and that the emulation
+is actually on — that last precondition caught a nested
+`test.use({ reducedMotion })` doing nothing) and
+`src/components/__tests__/contrastTokens.test.ts`, which computes real WCAG
+ratios in vitest from the declared values. Every pair it asserts is opaque on
+both sides, so no renderer is needed; dark's translucent pills are measured
+in a browser instead and recorded above. Both guards were confirmed to fail
+on their bug before being trusted.
+
+**F2 is still open, and phase 7 under-measured it.** Phase 7's census reported
+Landing at 1 because it only sampled at scroll 0. Scanning the header strip
+across the whole scroll range finds **3 overlapping blurred layers** at
+scrollY 1560 — `header.backdrop-blur-xl | div.backdrop-blur-xl |
+div.backdrop-blur-xl`, the nested code window passing under the fixed header.
+Left unfixed here: it is a Landing bug under decision 3 and was not in this
+phase's brief. One line (drop the inner blur at `Landing.tsx:359`) should
+close it.
+
+### Phase 8b — carried forward from phase 8
+
+**1. F2, the Landing nested blur — measured, still unfixed.** Phase 7 recorded
+Landing at 1 overlapping blurred layer, but its census only sampled at scroll
+0. Scanning the fixed-header strip across the whole scroll range finds:
+
+    3 overlapping blurred layers, scrollY 1560, point (52, 4)
+    header.backdrop-blur-xl | div.backdrop-blur-xl | div.backdrop-blur-xl
+
+That is `Landing.tsx:358` wrapping `359`, passing under the fixed header at
+`106`. Budget is 2. Deliberately left in this branch: it is a Landing bug
+under decision 3 and was outside phase 8's brief. Dropping the inner
+`backdrop-blur-xl` at `Landing.tsx:359` should close it; the measurement
+above is the before number to beat, and `e2e/blur-budget.spec.ts` would need
+a scrolled Landing case to catch it, which it currently has not.
+
+**2. F20, the inverted dark text ramp.** `text-quaternary` is now lighter than
+`text-tertiary`. Both options were measured; neither is applied.
+
+                      bg-primary  bg-code  bg-secondary  bg-elevated  bg-tertiary
+      tertiary now       5.90      5.91       4.98          4.82        4.41 FAIL
+      A: #8FA0BA         7.58      7.59       6.40          6.20        5.66
+      B: collapse to
+         tertiary        5.90      5.91       4.98          4.82        4.41 FAIL
+
+Option A lifts tertiary to #8FA0BA: luminance 0.3453 against quaternary's
+0.2962, so the hierarchy is restored, and it also clears the pre-existing
+`bg-tertiary` failure. It touches every surface tertiary renders on,
+including the composited completed tint (5.14 dark today), so it needs its
+own re-measurement pass. Option B collapses quaternary back onto tertiary:
+the hierarchy stops being inverted but becomes flat, the `bg-tertiary`
+failure stays, and phase 8's quaternary fix is partly undone — the contrast
+guard fails on it. Recommended: A.
+
+Note the correction this uncovered: the browser probe reported the dark
+`locked` badge at 5.79:1, but that probe takes the most common pixel in a
+small pill crop and picked up the page behind it. Both sides of that pair are
+opaque, so the token computation is authoritative: **4.41:1**.
+
+**3. F21, remount-fired entrances.** See the finding; `CodeEditor`'s output
+panel is the one to watch.
 
 ### Phase 9 — trilingual audit and cleanup (F7, F12)
 
