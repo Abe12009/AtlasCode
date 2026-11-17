@@ -13,13 +13,27 @@ export interface StatusBadgeProps {
   className?: string;
 }
 
+/**
+ * Paint from per-theme tokens, not from ramp steps.
+ *
+ * These were written as dark-mode values (`bg-success-900/30
+ * text-success-400`) and reused unchanged in light, where a 400-step
+ * foreground on a pale pill is nearly invisible -- measured 1.58:1 for
+ * completed, 2.30 for current/available, 2.38 for in progress and 1.52 for
+ * pending, against a 4.5:1 floor. Five of six variants failed; `locked`
+ * passed precisely because it was already built from semantic tokens.
+ *
+ * The dark values are unchanged, so dark stays pixel-identical. See the
+ * --badge-* declarations in index.css for both themes and their ratios.
+ */
 const statusStyles = {
-  completed: 'bg-success-900/30 text-success-400 border-success-500/30',
-  current: 'bg-primary-900/30 text-primary-400 border-primary-500/30 animate-pulse-glow',
-  available: 'bg-primary-900/30 text-primary-400 border-primary-500/30',
+  completed: 'bg-[var(--badge-success-bg)] text-[var(--badge-success-fg)] border-success-500/30',
+  current:
+    'bg-[var(--badge-primary-bg)] text-[var(--badge-primary-fg)] border-primary-500/30 animate-pulse-glow',
+  available: 'bg-[var(--badge-primary-bg)] text-[var(--badge-primary-fg)] border-primary-500/30',
   locked: 'bg-bg-tertiary text-text-tertiary border-border-primary',
-  in_progress: 'bg-accent-900/30 text-accent-400 border-accent-500/30',
-  pending: 'bg-warning-900/30 text-warning-400 border-warning-500/30',
+  in_progress: 'bg-[var(--badge-accent-bg)] text-[var(--badge-accent-fg)] border-accent-500/30',
+  pending: 'bg-[var(--badge-warning-bg)] text-[var(--badge-warning-fg)] border-warning-500/30',
 };
 
 const statusIcons = {
