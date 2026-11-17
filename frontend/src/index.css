@@ -635,27 +635,27 @@ html[dir="rtl"] .prose {
 }
 
 .animate-fade-in {
-  animation: fadeIn var(--transition-normal) var(--animate-ease) both;
+  animation: fadeIn var(--transition-normal) both;
 }
 
 .animate-slide-up {
-  animation: slideUp var(--transition-slow) var(--animate-ease) both;
+  animation: slideUp var(--transition-slow) both;
 }
 
 .animate-slide-down {
-  animation: slideDown var(--transition-normal) var(--animate-ease) both;
+  animation: slideDown var(--transition-normal) both;
 }
 
 .animate-scale-in {
-  animation: scaleIn var(--transition-fast) var(--animate-ease) both;
+  animation: scaleIn var(--transition-fast) both;
 }
 
 .animate-slide-in-right {
-  animation: slideInRight var(--transition-normal) var(--animate-ease) both;
+  animation: slideInRight var(--transition-normal) both;
 }
 
 .animate-slide-out-right {
-  animation: slideOutRight var(--transition-fast) var(--animate-ease) both;
+  animation: slideOutRight var(--transition-fast) both;
 }
 
 @keyframes fadeIn {
@@ -1554,7 +1554,18 @@ html[dir="rtl"] .prose ol {
   *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
+    /* The delay has to go too, not just the duration. Every `.animate-*`
+     * entrance uses `fill-mode: both`, and `both` includes `backwards`: during
+     * the delay the element is pinned to the FIRST keyframe, which for fadeIn
+     * and scaleIn is `opacity: 0`. Collapsing only the duration therefore left
+     * a reduced-motion visitor staring at invisible content for up to 500ms
+     * and then watching it pop in staggered -- the exact effect the preference
+     * asks us not to produce. Zero delay plus a 0.01ms duration means the
+     * animation is already finished on the first frame, so every element
+     * starts and stays at its final keyframe. */
+    animation-delay: 0s !important;
     transition-duration: 0.01ms !important;
+    transition-delay: 0s !important;
     scroll-behavior: auto !important;
   }
 
