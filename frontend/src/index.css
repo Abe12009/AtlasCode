@@ -275,9 +275,6 @@
   --glass-highlight: var(--depth-raise-top);
   --glass-shadow: var(--shadow-card);
   --glass-shadow-raised: var(--shadow-elevated);
-  /* How strongly an ambient field may tint a surface. 0 in light: the fields
-   * are dark-only, so nothing may lighten a light-mode card. */
-  --glass-tint-strength: 0;
 
   /* Hover / press fills for an interactive glass surface (see
    * `.glass-interactive`). Light glass is the opaque elevated surface, so
@@ -447,13 +444,6 @@
   --glass-highlight: inset 0 1px 0 rgb(255 255 255 / 0.12);
   --glass-shadow: 0 16px 32px -12px rgb(0 0 0 / 0.6), 0 2px 6px -2px rgb(0 0 0 / 0.5);
   --glass-shadow-raised: 0 24px 48px -16px rgb(0 0 0 / 0.7), 0 4px 10px -4px rgb(0 0 0 / 0.55);
-  /* Capped deliberately. A field behind a translucent card lightens the
-   * composite locally, which makes contrast position-dependent -- the same
-   * label can pass over a dark patch and fail over a glow. text-tertiary sits
-   * at 4.82:1 on dark today, 0.32 above the floor, so this is the budget that
-   * keeps a tinted card from eating it. Raise it only with a fresh composited
-   * measurement. */
-  --glass-tint-strength: 0.05;
 
   /* Hover / press fills for an interactive glass surface. Translucent white
    * steps rather than the opaque --color-bg-quaternary / -tertiary the Button
