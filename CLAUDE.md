@@ -16,6 +16,7 @@ Working rules for this repo. Setup, deploy and seeding live in [README.md](READM
 - `.github/workflows/tests.yml` runs two jobs on a PR: `backend` (bare `pytest` from `backend/` — `pytest.ini` sets `pythonpath` and `testpaths`) and `frontend` (`npm ci`, `npx tsc -b`, `npm test`, `npx vite build`). Both must pass.
 - `security-scan.yml` runs on every PR too, but is not a required check.
 - Do not commit without an explicit instruction, and never push — the user pushes from their own terminal.
+- Never chain `git stash` with `&&`/`;`. A `push` that fails on a bad pathspec leaves the `pop` to run anyway and apply someone else's stash, which has already conflicted `package-lock.json` here. To compare against `main`, commit the WIP on a branch, or use `git worktree`/`git checkout <ref> -- <paths>`.
 
 ## Production and data
 
