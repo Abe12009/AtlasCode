@@ -50,6 +50,95 @@ async function maxBlurDepth(page: Page) {
 }
 
 /**
+ * The same count, but across the whole scroll range rather than at one offset.
+ *
+ * The budget is a per-point limit at any moment, and a fixed blurred header
+ * means the worst moment is mid-scroll: content with its own blur passes
+ * UNDER the header and the stack grows by one. Sampling only scroll 0 cannot
+ * see that, which is exactly how phase 7's census recorded Landing at 1 while
+ * it actually composites 3 at scrollY 1350.
+ *
+ * Steps are viewport/4 so nothing taller than a quarter-screen can slip
+ * between two samples, and the last step is clamped to the bottom so the
+ * range is fully covered rather than overshot.
+ */
+async function sweepMaxBlurDepth(page: Page) {
+  const { scrollHeight, innerHeight } = await page.evaluate(() => ({
+    scrollHeight: document.documentElement.scrollHeight,
+    innerHeight: window.innerHeight,
+  }));
+  const step = Math.floor(innerHeight / 4);
+  const end = Math.max(0, scrollHeight - innerHeight);
+  let best = { max: 0, worst: [] as string[], at: null as { x: number; y: number } | null };
+  let atScrollY = 0;
+  let maxScrollY = 0;
+  let samples = 0;
+
+  for (let target = 0; ; target += step) {
+    const clamped = Math.min(target, end);
+    await page.evaluate((t) => window.scrollTo(0, t), clamped);
+    await page.waitForTimeout(140);
+    const reached = await page.evaluate(() => Math.round(window.scrollY));
+    maxScrollY = Math.max(maxScrollY, reached);
+    samples += 1;
+    const here = await maxBlurDepth(page);
+    if (here.max > best.max) {
+      best = here;
+      atScrollY = reached;
+    }
+    if (clamped >= end) break;
+  }
+
+  return { ...best, atScrollY, maxScrollY, samples, scrollHeight, innerHeight };
+}
+
+/**
+ * Sweep one surface and hold it to the budget.
+ *
+ * `minRatio` is the precondition that stops the assertion passing vacuously:
+ * a page that does not scroll cannot produce the under-the-header overlap
+ * this test exists to catch, so the spec states per surface how much scroll
+ * it expects and fails if the page ever stops providing it.
+ *
+ * Only Landing gets a real ratio. Measured at 1440x900 on a brand-new
+ * account: landing 4.65, dashboard 1.60 (1.20 on a slower load -- content
+ * height moves with what has rendered, so pinning 1.5 here would be flaky),
+ * course detail 1.22, courses 1.03, lesson 1 1.08. Those three genuinely
+ * barely scroll, so `1.0` means "must scroll at all" and the sweep is held
+ * non-vacuous instead by covering the whole range and proving it sampled
+ * real glass.
+ */
+async function expectSweepWithinBudget(
+  page: Page,
+  label: string,
+  { minRatio }: { minRatio: number },
+) {
+  const r = await sweepMaxBlurDepth(page);
+  const ratio = r.scrollHeight / r.innerHeight;
+  const where = `${label} [sh=${r.scrollHeight} inner=${r.innerHeight} ratio=${ratio.toFixed(2)} samples=${r.samples}]`;
+
+  expect(
+    ratio,
+    `${where}: the page must be taller than ${minRatio}x the viewport or this sweep proves ` +
+      `nothing -- there is no scroll for a blurred layer to pass under the header in.`,
+  ).toBeGreaterThan(minRatio);
+
+  // The sweep has to have actually moved, and the sampler has to have found
+  // real glass. Either one at zero means the sweep measured nothing.
+  expect(r.maxScrollY, `${where}: the sweep never left scroll 0`).toBeGreaterThan(0);
+  expect(
+    r.max,
+    `${where}: found no backdrop-filter anywhere, so dark/glass is not actually on`,
+  ).toBeGreaterThanOrEqual(1);
+
+  expect(
+    r.max,
+    `${where}: ${r.max} overlapping blurred layers at scrollY ${r.atScrollY}, point ` +
+      `(${r.at?.x},${r.at?.y}) -- [${r.worst.join(' | ')}]. Budget is ${BUDGET}.`,
+  ).toBeLessThanOrEqual(BUDGET);
+}
+
+/**
  * Pin dark. Glass is dark-only through the token values, so in light every
  * `.glass-*` surface resolves its blur to `none` and the only backdrop-filter
  * left is the header's raw Tailwind utility. A budget test that runs in light
@@ -121,6 +210,35 @@ test.describe('Spatial Glass blur budget', () => {
     ).toBeGreaterThanOrEqual(2);
 
     await expectWithinBudget(page, 'dashboard + modal');
+  });
+
+  test('stays within budget across the whole scroll range', async ({ page }) => {
+    // The sweep is four full-page passes, each one scroll step at a time.
+    test.setTimeout(180000);
+
+    // Landing is public and is the surface the under-the-header overlap was
+    // actually measured on, so it runs before any account exists.
+    await page.goto('/');
+    await useDarkTheme(page);
+    await expectSweepWithinBudget(page, 'landing, swept', { minRatio: 1.5 });
+
+    await registerNewUser(page);
+
+    await page.goto('/app/dashboard');
+    await useDarkTheme(page);
+    await expectSweepWithinBudget(page, 'dashboard, swept', { minRatio: 1.0 });
+
+    await page.goto('/app/courses');
+    await useDarkTheme(page);
+    await expectSweepWithinBudget(page, 'courses, swept', { minRatio: 1.0 });
+
+    // Lesson 1 is the first lesson of the first course, so the sequential
+    // gate lets a brand-new account open it without any seeded progress --
+    // the same reason the rest of this file sticks to reachable surfaces.
+    await page.goto('/app/lessons/1');
+    await useDarkTheme(page);
+    await page.waitForTimeout(600);
+    await expectSweepWithinBudget(page, 'lesson 1, swept', { minRatio: 1.0 });
   });
 
   test('a dropdown over the header stays within budget', async ({ page }) => {

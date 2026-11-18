@@ -44,6 +44,28 @@ interface DropdownContextValue {
 
 const DropdownContext = createContext<DropdownContextValue | null>(null);
 
+/**
+ * The bottom edge of the nearest fixed/sticky ancestor, or -Infinity.
+ *
+ * A bottom-placed panel is positioned off its trigger, which inside the app
+ * header leaves it overlapping the header's lower 8px (trigger bottom 49,
+ * panel top 57, header bottom 65). That costs nothing visually but breaks the
+ * blur budget: the panel's blur, the header's blur and a card scrolled under
+ * the header composite THREE layers in that band -- measured at 310 of 324
+ * sampled points, and invisible to a census that only samples scroll 0.
+ *
+ * Clearing the container rather than the trigger fixes every header dropdown
+ * at once and stays correct if the header's height changes, which hardcoding
+ * a larger `offset` at each call site would not.
+ */
+function pinnedAncestorBottom(trigger: HTMLElement): number {
+  for (let el: HTMLElement | null = trigger; el; el = el.parentElement) {
+    const { position } = getComputedStyle(el);
+    if (position === 'fixed' || position === 'sticky') return el.getBoundingClientRect().bottom;
+  }
+  return -Infinity;
+}
+
 function DropdownRoot({
   children,
   position = 'bottom',
@@ -88,7 +110,7 @@ function DropdownRoot({
 
     let top = position === 'top' ? triggerRect.top - panelHeight - offset
       : position === 'left' || position === 'right' ? triggerRect.top
-      : triggerRect.bottom + offset;
+      : Math.max(triggerRect.bottom, pinnedAncestorBottom(trigger)) + offset;
 
     const maxLeft = window.innerWidth - panelWidth - margin;
     left = Math.min(Math.max(left, margin), Math.max(maxLeft, margin));

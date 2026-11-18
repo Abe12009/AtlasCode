@@ -356,7 +356,11 @@ export function Landing() {
             </div>
             <div className="mt-8">
               <div className="relative bg-bg-secondary/50 border border-border-primary/50 rounded-2xl p-1 backdrop-blur-xl">
-                <div className="bg-bg-code/80 rounded-xl overflow-hidden border border-border-primary/50 backdrop-blur-xl">
+                {/* No blur of its own: the frame above it already carries one,
+                    and nesting backdrop-blur-xl inside backdrop-blur-xl put
+                    three blurred layers under the fixed header at scrollY
+                    ~1350 (F2). The outer frame is the one that reads. */}
+                <div className="bg-bg-code/80 rounded-xl overflow-hidden border border-border-primary/50">
                   <div className="flex items-center gap-2 px-4 py-3 bg-bg-code-light/80 border-b border-border-primary/50">
                     <div className="flex gap-1.5">
                       <div className="w-3 h-3 rounded-full bg-red-500" />
