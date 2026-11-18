@@ -355,7 +355,23 @@
 
   --color-text-primary: #F8FAFC;
   --color-text-secondary: #A6B4C8;
-  --color-text-tertiary: #7C8CA5;
+  /* #8FA0BA, up from #7C8CA5 (F20). Two things were wrong with the old value.
+     It failed outright on --color-bg-tertiary at 4.41:1 -- the surface the
+     `locked` StatusBadge and every `disabled:` input actually use. And after
+     phase 8 lifted quaternary to #8695AE it was LIGHTER than tertiary
+     (luminance 0.2962 vs 0.2576), so the ramp was inverted: the quieter token
+     read louder than the one above it.
+     #8FA0BA (luminance 0.3453) clears every surface tertiary lands on and
+     restores the order. Opaque, so these are exact:
+       bg-primary 7.58  bg-code 7.59  bg-code-light 7.13
+       bg-secondary 6.40  bg-elevated 6.20  bg-tertiary 5.66  (worst 5.66)
+     Composited, measured from rendered pixels over the live ambient field:
+       glass 7.16  completed tint 6.67  secondary/80+blur 6.85
+       secondary/50 7.16  secondary/30+blur 7.40  bg-code/80 7.65
+       in situ, worst observed: page ground 6.00, footer 6.18
+     The secondary-tertiary luminance gap narrows from 0.1916 to 0.1039, which
+     is still 2x the tertiary-quaternary step, so the hierarchy still reads. */
+  --color-text-tertiary: #8FA0BA;
   /* Measured against every dark surface it actually lands on, not just the
      page ground. The old #7686A0 cleared --color-bg-primary at 5.46:1 but
      failed on --color-bg-elevated at 4.46:1 and on --color-bg-tertiary at

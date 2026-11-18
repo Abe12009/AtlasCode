@@ -133,6 +133,78 @@ describe('contrast: text-quaternary clears every surface it lands on', () => {
   });
 });
 
+/**
+ * The text ramp has to stay ordered, and the order is about PROMINENCE, not
+ * raw luminance: in dark a quieter token is darker, in light it is lighter, so
+ * a luminance comparison has to be written twice and one of the two is always
+ * backwards. Contrast against the theme's own page ground says the same thing
+ * once and means the same thing in both themes -- secondary must read loudest,
+ * then tertiary, then quaternary.
+ *
+ * This was inverted in dark (F20): phase 8 lifted `--color-text-quaternary` to
+ * #8695AE to fix its own failures and left it LIGHTER than `--color-text-
+ * tertiary` #7C8CA5 (luminance 0.2962 vs 0.2576), so the quieter token read
+ * louder. Tertiary is now #8FA0BA.
+ */
+describe('contrast: the text ramp is ordered in both themes', () => {
+  it.each([
+    ['dark', DARK],
+    ['light', LIGHT],
+  ])('%s: secondary reads louder than tertiary, tertiary than quaternary', (_name, theme) => {
+    const ground = resolve('--color-bg-primary', [theme, THEME]);
+    const against = (token: string) => ratio(resolve(token, [theme, THEME]), ground);
+    const secondary = against('--color-text-secondary');
+    const tertiary = against('--color-text-tertiary');
+    const quaternary = against('--color-text-quaternary');
+    const seen = `secondary ${secondary.toFixed(2)} > tertiary ${tertiary.toFixed(2)} > quaternary ${quaternary.toFixed(2)}`;
+
+    expect(secondary, `${seen}: secondary must out-contrast tertiary`).toBeGreaterThan(tertiary);
+    expect(tertiary, `${seen}: tertiary must out-contrast quaternary`).toBeGreaterThan(quaternary);
+  });
+});
+
+describe('contrast: text-tertiary clears every dark surface it lands on', () => {
+  // The same five surfaces quaternary is held to, because tertiary lands on
+  // all of them and more: the page ground (body copy, input placeholders),
+  // bg-secondary (the footer), bg-tertiary (the `locked` StatusBadge pill and
+  // every `disabled:` input -- Input.tsx's `disabled:bg-bg-tertiary
+  // disabled:text-text-tertiary`), bg-elevated (the select popup) and bg-code
+  // (the terminal's empty-output line).
+  //
+  // bg-quaternary is deliberately NOT here: it only ever appears as Button's
+  // `active:` fill, under `text-text-primary` / `text-text-secondary`, so
+  // tertiary never renders on it. Were it included it would fail at 4.33 and
+  // pin a pair that does not exist.
+  const DARK_SURFACES = [
+    '--color-bg-primary',
+    '--color-bg-secondary',
+    '--color-bg-tertiary',
+    '--color-bg-elevated',
+    '--color-bg-code',
+  ];
+
+  it.each(DARK_SURFACES)('dark: readable on %s', (surface) => {
+    const fg = resolve('--color-text-tertiary', [DARK, THEME]);
+    const bg = resolve(surface, [DARK, THEME]);
+    const r = ratio(fg, bg);
+    expect(
+      r,
+      `--color-text-tertiary ${fg} on ${surface} ${bg} is ${r.toFixed(2)}:1, below ${FLOOR}:1`,
+    ).toBeGreaterThanOrEqual(FLOOR);
+  });
+
+  it('dark: the pair the `locked` StatusBadge actually uses', () => {
+    // `bg-bg-tertiary text-text-tertiary` -- the one variant built from
+    // semantic tokens, and the one that was failing at 4.41:1 while a browser
+    // probe reported 5.79 by sampling the page behind the pill. Both sides are
+    // opaque, so this calculation is the authority, not the screenshot.
+    const fg = resolve('--color-text-tertiary', [DARK, THEME]);
+    const bg = resolve('--color-bg-tertiary', [DARK, THEME]);
+    const r = ratio(fg, bg);
+    expect(r, `locked badge: ${fg} on ${bg} is ${r.toFixed(2)}:1`).toBeGreaterThanOrEqual(FLOOR);
+  });
+});
+
 describe('contrast: the guard itself works', () => {
   it('computes a known ratio correctly', () => {
     // Black on white is 21:1 exactly; if this drifts the maths is wrong and
