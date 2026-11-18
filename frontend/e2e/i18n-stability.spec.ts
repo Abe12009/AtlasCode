@@ -40,7 +40,7 @@ test.describe('Language switching does not disturb app state', () => {
 
     // Progress survives: the API still reports a started lesson.
     const status = await page.evaluate(async () => {
-      const res = await fetch('http://localhost:8000/lessons/61/progress', {
+      const res = await fetch('/api/lessons/61/progress', {
         headers: { Authorization: `Bearer ${localStorage.getItem('access_token')}` },
       });
       return (await res.json()).status;
