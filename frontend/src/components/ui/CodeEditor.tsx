@@ -255,12 +255,15 @@ export function TerminalPanel({ output, error, isRunning, clearable = true, onCl
         aria-live="polite"
         className="flex-1 p-4 font-mono text-sm text-gray-100 overflow-y-auto min-h-[150px] max-h-[400px]"
       >
-        {output && (
-          <div className="whitespace-pre-wrap text-text-primary animate-fade-in">{output}</div>
-        )}
-        {error && (
-          <div className="whitespace-pre-wrap text-error-400 animate-fade-in mt-2">{error}</div>
-        )}
+        {/* No entrance here (F21). These two divs mount conditionally, so once
+            the animations were made to actually run (phase 8 fixed a shorthand
+            that had been silently dropping them) every code run replayed a
+            fade from opacity 0 inside an aria-live region -- measured mounting
+            at opacity 0.000 and not fully visible until 474ms after the output
+            arrived. Terminal output is a work surface: it appears instantly,
+            which is also what it did before the animations were repaired. */}
+        {output && <div className="whitespace-pre-wrap text-text-primary">{output}</div>}
+        {error && <div className="whitespace-pre-wrap text-error-400 mt-2">{error}</div>}
         {!output && !error && !isRunning && (
           <div className="text-text-tertiary italic">{t('lessons.no_output')}</div>
         )}
