@@ -275,9 +275,6 @@
   --glass-highlight: var(--depth-raise-top);
   --glass-shadow: var(--shadow-card);
   --glass-shadow-raised: var(--shadow-elevated);
-  /* How strongly an ambient field may tint a surface. 0 in light: the fields
-   * are dark-only, so nothing may lighten a light-mode card. */
-  --glass-tint-strength: 0;
 
   /* Hover / press fills for an interactive glass surface (see
    * `.glass-interactive`). Light glass is the opaque elevated surface, so
@@ -290,6 +287,25 @@
    * ramp meant pressing made the surface *lighter* than hovering -- the
    * press looked like a release. `outline` and `ghost` already do it in this
    * order, and dark does too (0.10 -> 0.14 white). Pinned by test. */
+  /* Status badges. `StatusBadge` used to hard-code dark-mode ramp steps
+   * (`bg-success-900/30 text-success-400`) and reuse them in light, where a
+   * 400-step foreground on a pale pill is close to invisible: measured 1.58:1
+   * for completed, 2.30 current/available, 2.38 in progress, 1.52 pending --
+   * five of six variants below the 4.5:1 floor. Only `locked` passed, and it
+   * was the one variant already built from semantic tokens.
+   *
+   * Light pairs an 800-step foreground with a 100-step pill, which is inside
+   * the existing ramps and clears the floor with room:
+   *   success 6.49  primary 7.15  accent 7.64  warning 6.37 */
+  --badge-success-bg: var(--color-success-100);
+  --badge-success-fg: var(--color-success-800);
+  --badge-primary-bg: var(--color-primary-100);
+  --badge-primary-fg: var(--color-primary-800);
+  --badge-accent-bg: var(--color-accent-100);
+  --badge-accent-fg: var(--color-accent-800);
+  --badge-warning-bg: var(--color-warning-100);
+  --badge-warning-fg: var(--color-warning-800);
+
   --glass-hover: var(--color-bg-tertiary);
   --glass-press: var(--color-bg-quaternary);
 
@@ -340,9 +356,14 @@
   --color-text-primary: #F8FAFC;
   --color-text-secondary: #A6B4C8;
   --color-text-tertiary: #7C8CA5;
-  /* 5.1:1 against --color-bg-primary -- the old #5B6A82 was ~3.4:1, also
-     failing WCAG AA (4.5:1), same issue as the light theme above. */
-  --color-text-quaternary: #7686A0;
+  /* Measured against every dark surface it actually lands on, not just the
+     page ground. The old #7686A0 cleared --color-bg-primary at 5.46:1 but
+     failed on --color-bg-elevated at 4.46:1 and on --color-bg-tertiary at
+     4.07:1 -- and bg-elevated is where it really renders, as the FALSE label
+     on a Circuit Lab node. #8695AE clears all five:
+       bg-primary 6.64  bg-code 6.65  bg-secondary 5.61
+       bg-elevated 5.43  bg-tertiary 4.96  (worst 4.96) */
+  --color-text-quaternary: #8695AE;
   --color-text-inverse: #0F172A;
   --color-text-link: #7DAAFF;
   --color-text-link-hover: #A9C7FF;
@@ -447,13 +468,6 @@
   --glass-highlight: inset 0 1px 0 rgb(255 255 255 / 0.12);
   --glass-shadow: 0 16px 32px -12px rgb(0 0 0 / 0.6), 0 2px 6px -2px rgb(0 0 0 / 0.5);
   --glass-shadow-raised: 0 24px 48px -16px rgb(0 0 0 / 0.7), 0 4px 10px -4px rgb(0 0 0 / 0.55);
-  /* Capped deliberately. A field behind a translucent card lightens the
-   * composite locally, which makes contrast position-dependent -- the same
-   * label can pass over a dark patch and fail over a glow. text-tertiary sits
-   * at 4.82:1 on dark today, 0.32 above the floor, so this is the budget that
-   * keeps a tinted card from eating it. Raise it only with a fresh composited
-   * measurement. */
-  --glass-tint-strength: 0.05;
 
   /* Hover / press fills for an interactive glass surface. Translucent white
    * steps rather than the opaque --color-bg-quaternary / -tertiary the Button
@@ -461,6 +475,19 @@
    * would stop the surface reading as glass the moment a pointer touched it.
    * Same white the resting fill uses, two steps up, so hover and press read
    * as the glass catching more light. */
+  /* Unchanged from the hard-coded values these replace, so dark stays
+   * pixel-identical: a 900/30 pill with a 400-step foreground. Measured
+   * 11.34 completed, 7.77 current/available, 8.75 in progress, 11.81
+   * pending -- dark was never the problem. */
+  --badge-success-bg: color-mix(in oklab, var(--color-success-900) 30%, transparent);
+  --badge-success-fg: var(--color-success-400);
+  --badge-primary-bg: color-mix(in oklab, var(--color-primary-900) 30%, transparent);
+  --badge-primary-fg: var(--color-primary-400);
+  --badge-accent-bg: color-mix(in oklab, var(--color-accent-900) 30%, transparent);
+  --badge-accent-fg: var(--color-accent-400);
+  --badge-warning-bg: color-mix(in oklab, var(--color-warning-900) 30%, transparent);
+  --badge-warning-fg: var(--color-warning-400);
+
   --glass-hover: rgb(255 255 255 / 0.10);
   --glass-press: rgb(255 255 255 / 0.14);
 
@@ -635,27 +662,27 @@ html[dir="rtl"] .prose {
 }
 
 .animate-fade-in {
-  animation: fadeIn var(--transition-normal) var(--animate-ease) both;
+  animation: fadeIn var(--transition-normal) both;
 }
 
 .animate-slide-up {
-  animation: slideUp var(--transition-slow) var(--animate-ease) both;
+  animation: slideUp var(--transition-slow) both;
 }
 
 .animate-slide-down {
-  animation: slideDown var(--transition-normal) var(--animate-ease) both;
+  animation: slideDown var(--transition-normal) both;
 }
 
 .animate-scale-in {
-  animation: scaleIn var(--transition-fast) var(--animate-ease) both;
+  animation: scaleIn var(--transition-fast) both;
 }
 
 .animate-slide-in-right {
-  animation: slideInRight var(--transition-normal) var(--animate-ease) both;
+  animation: slideInRight var(--transition-normal) both;
 }
 
 .animate-slide-out-right {
-  animation: slideOutRight var(--transition-fast) var(--animate-ease) both;
+  animation: slideOutRight var(--transition-fast) both;
 }
 
 @keyframes fadeIn {
@@ -1554,7 +1581,18 @@ html[dir="rtl"] .prose ol {
   *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
+    /* The delay has to go too, not just the duration. Every `.animate-*`
+     * entrance uses `fill-mode: both`, and `both` includes `backwards`: during
+     * the delay the element is pinned to the FIRST keyframe, which for fadeIn
+     * and scaleIn is `opacity: 0`. Collapsing only the duration therefore left
+     * a reduced-motion visitor staring at invisible content for up to 500ms
+     * and then watching it pop in staggered -- the exact effect the preference
+     * asks us not to produce. Zero delay plus a 0.01ms duration means the
+     * animation is already finished on the first frame, so every element
+     * starts and stays at its final keyframe. */
+    animation-delay: 0s !important;
     transition-duration: 0.01ms !important;
+    transition-delay: 0s !important;
     scroll-behavior: auto !important;
   }
 
