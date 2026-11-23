@@ -39,8 +39,12 @@ cd frontend; npx playwright test e2e/microquest.spec.ts
 ```
 
 bash: `ATLASCODE_API_ORIGIN=http://127.0.0.1:8010 npm run dev`. Confirm the
-proxy before spending a suite on it -- `curl http://localhost:5173/api/health`
-must answer `{"status":"ok"}`.
+proxy before spending a suite on it, and confirm it against an AtlasCode route
+rather than `/health`: `curl http://localhost:5173/api/courses` must answer
+`401 {"detail":"Not authenticated"}`. `/health` is useless as a check -- what
+holds 8000 on this machine is another project's FastAPI in Docker, and its
+`/health` also answers `{"status":"ok"}`, so the default target looks alive
+while every real call 404s.
 
 `baseURL` in `playwright.config.ts` is hardcoded `http://localhost:5173`, so
 vite has to be on 5173. The trap is that `reuseExistingServer` cuts both ways:
