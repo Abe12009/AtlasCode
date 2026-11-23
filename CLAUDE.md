@@ -18,6 +18,37 @@ Working rules for this repo. Setup, deploy and seeding live in [README.md](READM
 - Do not commit without an explicit instruction, and never push — the user pushes from their own terminal.
 - Never chain `git stash` with `&&`/`;`. A `push` that fails on a bad pathspec leaves the `pop` to run anyway and apply someone else's stash, which has already conflicted `package-lock.json` here. To compare against `main`, commit the WIP on a branch, or use `git worktree`/`git checkout <ref> -- <paths>`.
 
+## Running e2e when 8000 is busy
+
+`frontend/vite.config.ts` proxies `/api` to `ATLASCODE_API_ORIGIN`, defaulting
+to `http://127.0.0.1:8000`. Since F24 that is the only port in the harness --
+every in-page `fetch` is a relative `/api/...` through the proxy -- so moving
+the backend is one env var, not a sweep.
+
+```powershell
+# 1. backend off 8000
+cd backend; uvicorn app.main:app --reload --port 8010
+
+# 2. vite on its usual 5173, proxying /api to 8010
+cd frontend; $env:ATLASCODE_API_ORIGIN = 'http://127.0.0.1:8010'; npm run dev
+
+# 3. e2e against that vite -- `webServer.reuseExistingServer: true` in
+#    playwright.config.ts is what makes Playwright reuse it instead of
+#    starting a second one
+cd frontend; npx playwright test e2e/microquest.spec.ts
+```
+
+bash: `ATLASCODE_API_ORIGIN=http://127.0.0.1:8010 npm run dev`. Confirm the
+proxy before spending a suite on it -- `curl http://localhost:5173/api/health`
+must answer `{"status":"ok"}`.
+
+`baseURL` in `playwright.config.ts` is hardcoded `http://localhost:5173`, so
+vite has to be on 5173. The trap is that `reuseExistingServer` cuts both ways:
+a dev server already parked on 5173 **without** the env var is reused as-is and
+502s every `/api` call, with no hint that the port knob was ignored. Restart
+that server rather than adding a second one on 5174, which Playwright will
+never look at.
+
 ## Production and data
 
 - Never touch production or a production `DATABASE_URL` from an agent session. A production write needs a Render snapshot, a `pg_dump`, a read-only `--check` dry run the user reviews, and explicit approval.
