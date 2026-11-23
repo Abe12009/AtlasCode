@@ -45,7 +45,15 @@ interface DropdownContextValue {
 const DropdownContext = createContext<DropdownContextValue | null>(null);
 
 /**
- * The bottom edge of the nearest fixed/sticky ancestor, or -Infinity.
+ * How far below the trigger a pinned ancestor's bottom may sit and still count
+ * as "the bar the trigger sits in". A header row's padding puts its bottom
+ * 12-15px under the trigger (measured: Landing and app header, 1440px, EN and
+ * AR); anything further down is a container the trigger merely lives inside.
+ */
+const BAR_SLACK = 24;
+
+/**
+ * The bottom edge of the bar the trigger sits in, or -Infinity.
  *
  * A bottom-placed panel is positioned off its trigger, which inside the app
  * header leaves it overlapping the header's lower 8px (trigger bottom 49,
@@ -57,11 +65,26 @@ const DropdownContext = createContext<DropdownContextValue | null>(null);
  * Clearing the container rather than the trigger fixes every header dropdown
  * at once and stays correct if the header's height changes, which hardcoding
  * a larger `offset` at each call site would not.
+ *
+ * But only for a bar the trigger actually sits IN. A fixed/sticky ancestor
+ * that merely CONTAINS the trigger -- a `fixed inset-0` modal, a `sticky`
+ * sidebar card -- has its bottom hundreds of px lower, and clearing that threw
+ * the panel to the foot of the viewport: measured with the open panel, a
+ * trigger at bottom 445 inside `Overlay.tsx`'s modal put the panel at top 986
+ * in an 800px viewport, and a trigger at bottom 137 inside a `sticky` card put
+ * it at 662 (clamped), 525px from its own trigger. So the clearance applies
+ * only when the ancestor's bottom is within BAR_SLACK of the trigger's.
+ *
+ * Exported for `__tests__/dropdownClearance.test.ts`, which is the only place
+ * the modal and sticky shapes can be asserted without a harness route.
  */
-function pinnedAncestorBottom(trigger: HTMLElement): number {
+export function pinnedBarBottom(trigger: HTMLElement): number {
   for (let el: HTMLElement | null = trigger; el; el = el.parentElement) {
     const { position } = getComputedStyle(el);
-    if (position === 'fixed' || position === 'sticky') return el.getBoundingClientRect().bottom;
+    if (position === 'fixed' || position === 'sticky') {
+      const bottom = el.getBoundingClientRect().bottom;
+      return bottom - trigger.getBoundingClientRect().bottom <= BAR_SLACK ? bottom : -Infinity;
+    }
   }
   return -Infinity;
 }
@@ -110,7 +133,7 @@ function DropdownRoot({
 
     let top = position === 'top' ? triggerRect.top - panelHeight - offset
       : position === 'left' || position === 'right' ? triggerRect.top
-      : Math.max(triggerRect.bottom, pinnedAncestorBottom(trigger)) + offset;
+      : Math.max(triggerRect.bottom, pinnedBarBottom(trigger)) + offset;
 
     const maxLeft = window.innerWidth - panelWidth - margin;
     left = Math.min(Math.max(left, margin), Math.max(maxLeft, margin));
