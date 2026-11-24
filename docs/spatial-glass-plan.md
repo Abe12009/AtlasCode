@@ -115,7 +115,7 @@ From the audit. `F6` is confirmed in-browser; the rest are from reading.
 | F20 | The dark text ramp is inverted after F19: `text-quaternary` #8695AE (luminance 0.2962) is now LIGHTER than `text-tertiary` #7C8CA5 (0.2576). Separately, `text-tertiary` already fails on `--color-bg-tertiary` at 4.41:1 — the pair `StatusBadge` `locked` actually uses (`bg-bg-tertiary text-text-tertiary`) | `index.css` dark block | 8b — **fixed**, option A applied (`#8FA0BA`) |
 | F21 | Fixing the inert animations (F17) makes them fire on remount. `CodeEditor.tsx:259/262` mounts its output/error div conditionally, so the fade now replays on every code run, inside an `aria-live="polite"` region. 59 live sites across four classes; the page-level wrappers are once-per-navigation and fine | `CodeEditor.tsx:259`, `262`; `Feedback.tsx:341`, `441`; `ExerciseAnswer.tsx:17`; `Dropdown.tsx:154`; `Overlay.tsx:263/277/285`; `MicroQuestLesson.tsx:170/190/231` | 8b — **judged**: `CodeEditor` fixed, the rest kept |
 | F22 | A dropdown over the scrolled app shell composites **3** blurred layers: the menu panel opens at y=57 and the fixed header ends at y=65, so an 8px band stacks `glass-menu` + header blur + a card scrolled under the header. 310 of 324 points sampled in that band were over budget. Phase 7 recorded this state at 2 because its census only sampled scroll 0 | `Dropdown.tsx` position calc; `Layout.tsx` header | 8b — **fixed**, panel now clears its pinned ancestor |
-| F23 | `text-tertiary` fails in **light** on two surfaces it really renders on: `--color-bg-tertiary` at 4.29:1 (the `locked` StatusBadge pill and every `disabled:` input — `Input.tsx:78` `disabled:bg-bg-tertiary disabled:text-text-tertiary`), and the code surfaces at 2.82:1 on `--color-bg-code-light` — measured **1.87:1** composited on Landing's `bg-bg-code/80` code frame, whose `main.py` label is `text-text-tertiary`. `bg-code` is dark in BOTH themes, so light's dark-on-light tertiary lands on a dark surface. `text-quaternary` also fails light on `--color-bg-secondary` (4.30:1) | `index.css` `:root`; `Landing.tsx:366`; `Input.tsx:78`; `CodeEditor.tsx:265` | **open — 9**, light ramp was out of 8b's brief |
+| F23 | `text-tertiary` fails in **light** on two surfaces it really renders on: `--color-bg-tertiary` at 4.29:1 (the `locked` StatusBadge pill and every `disabled:` input — `Input.tsx:78` `disabled:bg-bg-tertiary disabled:text-text-tertiary`), and the code surfaces at 2.82:1 on `--color-bg-code-light` — measured in place at **2.63:1** on Landing's code frame, whose `main.py` label is `text-text-tertiary`. (The earlier 1.87:1 composited `bg-code/80` straight onto `bg-primary`; the real ground is four layers — the title bar's own `bg-bg-code-light/80` over `bg-bg-code/80` over the section's `bg-bg-secondary/50` over `bg-bg-primary` — which renders a flat `rgb(36,46,63)`, darker than the one-layer estimate.) `bg-code` is dark in BOTH themes, so light's dark-on-light tertiary lands on a dark surface. `text-quaternary` also fails light on `--color-bg-secondary` (4.30:1) | `index.css` `:root`; `Landing.tsx:366`; `Input.tsx:78`; `CodeEditor.tsx:265` | **open — 9**, light ramp was out of 8b's brief |
 | F24 | The e2e harness hardcoded port 8000 in eleven places — the vite proxy target plus ten in-page `fetch('http://localhost:8000/...')` calls. Any other local service holding 8000 404s the whole suite. The in-page calls are now relative `/api/...` through the proxy, which `lesson-locking.spec.ts:19` already documented as the right pattern, and the proxy target reads `ATLASCODE_API_ORIGIN` | `vite.config.ts`; `e2e/*.spec.ts`; `e2e/helpers.ts` | 8b — **fixed** |
 
 Not findings, recorded so they are not re-investigated: reduced motion is
@@ -622,7 +622,7 @@ explained — and the proxy target reads `ATLASCODE_API_ORIGIN`, defaulting to
 
 Carries F23 from 8b: the LIGHT ramp. `text-tertiary` is 4.29 on
 `--color-bg-tertiary` (the `locked` pill, every `disabled:` input) and
-**1.87** composited on Landing's code frame, because `--color-bg-code` is dark
+**2.63** in place on Landing's code frame, because `--color-bg-code` is dark
 in both themes and light's dark tertiary lands on it; `text-quaternary` is
 4.30 on `--color-bg-secondary`. The code-surface case may want a theme-neutral
 "on code" token rather than another ramp nudge, since the surface itself does
@@ -634,6 +634,33 @@ cognates — `Description`, `Modules`, `Mission` — and interpolation-only stri
 AR render pass on the recent pages. Fold in the dead-code deletions: the 8
 `bg-grid-pattern-opacity` usages, the 7 unrouted `Test*.tsx` pages, the two
 unused `animate-slide-*-right` classes.
+
+**Two Dropdowns, and an `export *` that picks the wrong halves.** Found while
+restricting the panel clearance (`1d4ad99`); cleanup, so it lands here.
+
+`Overlay.tsx:12` exports a second component also called `Dropdown` — an older
+one, `content`-prop API, physical `left-0`/`right-0` placement, no clearance
+and no RTL handling. Nothing imports it. The one every call site gets is
+`ui/Dropdown.tsx`, because `ui/index.ts` lists `export { Dropdown } from
+'./Dropdown'` explicitly and an explicit named export wins over the
+`export * from './Overlay'` below it.
+
+`DropdownItem` and `DropdownSeparator` are the halves that go wrong.
+`ui/index.ts` does *not* re-export them from `./Dropdown`, so `export * from
+'./Overlay'` is the only thing that provides those names — and `Layout.tsx:14`
+and `NotificationBell.tsx:6` both import them from `./ui`. They therefore get
+**Overlay's** items paired with `Dropdown.tsx`'s root, which means every
+`child.type === DropdownItem` test inside `DropdownRoot` compares against a
+different component identity and is permanently false. Harmless today only
+because both call sites nest their items inside a wrapper `<div>` rather than
+passing them as direct children — the trigger is still found by the
+"first non-item child" rule, by luck rather than design.
+
+Fix is a deletion plus one line: drop `Overlay.tsx`'s `Dropdown`,
+`DropdownItem` and `DropdownSeparator`, and re-export all three names from
+`./Dropdown` in `ui/index.ts`. Do it with the `Dropdown.tsx` item-identity
+checks under test, since they have never actually run against the items they
+are written for.
 
 ### Later — Landing convergence
 
