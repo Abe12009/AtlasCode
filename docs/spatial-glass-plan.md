@@ -648,8 +648,10 @@ and no RTL handling. Nothing imports it. The one every call site gets is
 `DropdownItem` and `DropdownSeparator` are the halves that go wrong.
 `ui/index.ts` does *not* re-export them from `./Dropdown`, so `export * from
 './Overlay'` is the only thing that provides those names — and `Layout.tsx:14`
-and `NotificationBell.tsx:6` both import them from `./ui`. They therefore get
-**Overlay's** items paired with `Dropdown.tsx`'s root, which means every
+and `NotificationBell.tsx:6` both import them from `./ui`. Checked by identity
+rather than by reading: `index.Dropdown === Dropdown.tsx`'s is true, while
+`index.DropdownItem` and `index.DropdownSeparator` are both Overlay's. So the
+call sites get **Overlay's** items paired with `Dropdown.tsx`'s root, so every
 `child.type === DropdownItem` test inside `DropdownRoot` compares against a
 different component identity and is permanently false. Harmless today only
 because both call sites nest their items inside a wrapper `<div>` rather than
