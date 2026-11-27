@@ -396,7 +396,7 @@ async function failBlueprint(page: Page, quest: Quest) {
 
 async function readXp(page: Page): Promise<number> {
   const dashboard = await page.evaluate(async () => {
-    const res = await fetch('http://localhost:8000/dashboard', {
+    const res = await fetch('/api/dashboard', {
       headers: { Authorization: `Bearer ${localStorage.getItem('access_token')}` },
     });
     return res.json();
@@ -407,7 +407,7 @@ async function readXp(page: Page): Promise<number> {
 
 async function readLessonStatus(page: Page, lessonId: number): Promise<string> {
   return page.evaluate(async (id) => {
-    const res = await fetch(`http://localhost:8000/lessons/${id}/progress`, {
+    const res = await fetch(`/api/lessons/${id}/progress`, {
       headers: { Authorization: `Bearer ${localStorage.getItem('access_token')}` },
     });
     return (await res.json()).status as string;

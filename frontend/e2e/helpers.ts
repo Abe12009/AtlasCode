@@ -203,7 +203,7 @@ export async function registerThroughUiForm(page: Page) {
  */
 export async function expectedTotalXp(page: Page, lessonId: number): Promise<number> {
   const lesson = await page.evaluate(async (id) => {
-    const res = await fetch(`http://localhost:8000/lessons/${id}`, {
+    const res = await fetch(`/api/lessons/${id}`, {
       headers: { Authorization: `Bearer ${localStorage.getItem('access_token')}` },
     });
     return res.json();
@@ -219,7 +219,7 @@ export async function expectedTotalXp(page: Page, lessonId: number): Promise<num
   // started being credited -- the formula was short by whichever achievement
   // the lesson completion unlocked, e.g. first-lesson's 50.
   const dashboard = await page.evaluate(async () => {
-    const res = await fetch('http://localhost:8000/dashboard', {
+    const res = await fetch('/api/dashboard', {
       headers: { Authorization: `Bearer ${localStorage.getItem('access_token')}` },
     });
     return res.json();

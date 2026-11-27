@@ -94,7 +94,7 @@ From the audit. `F6` is confirmed in-browser; the rest are from reading.
 | # | Finding | Evidence | Phase |
 |---|---|---|---|
 | F1 | Modal stack exceeds the budget: header `backdrop-blur-xl` + overlay `backdrop-blur-sm` + panel `.glass-strong` blur(20px) = 3 overlapping | `Layout.tsx:134`, `Overlay.tsx:271`, `Overlay.tsx:278` | 7 — **done** |
-| F2 | Landing code window nests `backdrop-blur-xl` directly inside `backdrop-blur-xl`; + the fixed header = 3 | `Landing.tsx:358`, `359`, `106` | **still open** — re-measured in phase 8 |
+| F2 | Landing code window nests `backdrop-blur-xl` directly inside `backdrop-blur-xl`; + the fixed header = 3 | `Landing.tsx:358`, `359`, `106` | 8b — **fixed**, inner blur dropped, swept 3 → 2 |
 | F3 | Background/border utilities passed to glass `Card`s are dead — unlayered `.glass-*` beats `@layer utilities`, and `twMerge` keeps both | `Dashboard.tsx:308`, `487`, `513`; `Login.tsx:73`; `Register.tsx:154`; `ResetPassword.tsx:59`; `ForgotPassword.tsx:50`; `Landing.tsx:464` | 5 |
 | F4 | `Button` `secondary` has dead `hover:`/`active:` backgrounds for the same reason; in dark mode `--glass-base` is `transparent`, so there is no hover feedback at all | `Button.tsx:54` | 5 |
 | F5 | Physical utilities where logical belong (done in 6; the recorded list was 13 sites, the sweep found 29) | `Layout.tsx:85`, `195`, `338`; `Dropdown.tsx:214`; `Feedback.tsx:282`; `AchievementToast.tsx:65`; `XpToast.tsx:47`; `NotificationBell.tsx:80`; `LessonDetail.tsx:350`, `391`; `Landing.tsx:222`, `372`, `530` | 6 |
@@ -103,7 +103,7 @@ From the audit. `F6` is confirmed in-browser; the rest are from reading.
 | F8 | Reduced motion: the global block overrides `animation-duration` but not `animation-delay`, and `.animate-fade-in` is `both` fill — delayed entrances hold at `opacity: 0` | `index.css` reduced-motion block, `581`, `605`; `Landing.tsx:268`, `415`, `447` | 8 — **done, and see F17** |
 | F9 | `--glass-tint-strength` is defined in both themes with a long justification and consumed by nothing | `index.css` | 8 — **done, removed** |
 | F10 | Two parallel glass systems: `.glass`/`.glass-strong` are hardcoded blur, not token-driven, and blur in light mode too | `index.css:1236`, `1241`; used at `Overlay.tsx:278`, `Dropdown.tsx:160`, `CodyBubble.tsx:166`, `OnboardingTour.tsx:197` | 7 — **done** |
-| F11 | `text-quaternary` on glass is the tightest text in the system and was never measured — every phase measured `text-tertiary` instead | `index.css:42`; `StatusBadge.tsx:220` | 8 — **corrected, see below** |
+| F11 | `text-quaternary` on glass is the tightest text in the system and was never measured — every phase measured `text-tertiary` instead | `index.css:42`; `StatusBadge.tsx:220` | 8b — **closed as wrong as written**; the real defect it pointed at became F19 |
 | F12 | Dead code: 7 unrouted `Test*.tsx` pages, `.animate-slide-in-right`/`-out-right`, `ar.json`'s `common.or_continue_with` | `pages/Test*.tsx`; `index.css:596-602`; `locales/ar.json` | 9 |
 | F13 | Landing's "Create Free Account" CTA is `variant="secondary"` with `bg-gradient-to-r from-accent-700 to-accent-800`. Dead for the F3 reason, so the CTA renders as dark glass, not orange — measured `backgroundImage: linear-gradient(rgba(255,255,255,0.07), …)`. Unlike F3 the intent here is clearly a coloured CTA, so deleting the utility is the wrong fix | `Landing.tsx:482` | 5b — **done** |
 | F14 | `Courses` passes conditional paint to an `interactive` Card: `isCompleted && 'border-success-500/30 bg-success-500/5'` and `!isStarted && !isLocked && 'border-border-primary/50'`. Both dead. The completed-course green tint therefore never renders, so a real state signal is silently missing | `Courses.tsx:203`, `205` | 5b — **done** |
@@ -112,8 +112,11 @@ From the audit. `F6` is confirmed in-browser; the rest are from reading.
 | F17 | Every `.animate-*` entrance was inert. `animation: fadeIn var(--transition-normal) var(--animate-ease) both` carried two easing functions, because `--transition-normal` is `200ms cubic-bezier(...)` — duration *and* easing — so the shorthand was invalid and the declaration dropped. Measured `animation-name: none` on all 14 Landing elements, in both motion modes | `index.css` `.animate-fade-in` and five siblings | 8 — **fixed** |
 | F18 | Five of six `StatusBadge` variants failed contrast in light: the styles were dark-mode ramp recipes (`bg-success-900/30 text-success-400`) reused unchanged. Measured completed 1.58:1 (1.02 in situ), current/available 2.30, in progress 2.38, pending 1.52. Only `locked` passed — the one variant already built from semantic tokens | `StatusBadge.tsx` `statusStyles` | 8 — **fixed** |
 | F19 | `--color-text-quaternary` failed in dark on the surfaces it actually renders on: 4.46:1 on `--color-bg-elevated` and 4.07:1 on `--color-bg-tertiary`. Its own comment only ever claimed 5.1:1 against `--color-bg-primary` | `index.css` dark block | 8 — **fixed** |
-| F20 | The dark text ramp is inverted after F19: `text-quaternary` #8695AE (luminance 0.2962) is now LIGHTER than `text-tertiary` #7C8CA5 (0.2576). Separately, `text-tertiary` already fails on `--color-bg-tertiary` at 4.41:1 — the pair `StatusBadge` `locked` actually uses (`bg-bg-tertiary text-text-tertiary`) | `index.css` dark block | **8b — options costed, not applied** |
-| F21 | Fixing the inert animations (F17) makes them fire on remount. `CodeEditor.tsx:259/262` mounts its output/error div conditionally, so the fade now replays on every code run, inside an `aria-live="polite"` region. 59 live sites across four classes; the page-level wrappers are once-per-navigation and fine | `CodeEditor.tsx:259`, `262`; `Feedback.tsx:341`, `441`; `ExerciseAnswer.tsx:17`; `Dropdown.tsx:154`; `Overlay.tsx:263/277/285`; `MicroQuestLesson.tsx:170/190/231` | **8b — watch** |
+| F20 | The dark text ramp is inverted after F19: `text-quaternary` #8695AE (luminance 0.2962) is now LIGHTER than `text-tertiary` #7C8CA5 (0.2576). Separately, `text-tertiary` already fails on `--color-bg-tertiary` at 4.41:1 — the pair `StatusBadge` `locked` actually uses (`bg-bg-tertiary text-text-tertiary`) | `index.css` dark block | 8b — **fixed**, option A applied (`#8FA0BA`) |
+| F21 | Fixing the inert animations (F17) makes them fire on remount. `CodeEditor.tsx:259/262` mounts its output/error div conditionally, so the fade now replays on every code run, inside an `aria-live="polite"` region. 59 live sites across four classes; the page-level wrappers are once-per-navigation and fine | `CodeEditor.tsx:259`, `262`; `Feedback.tsx:341`, `441`; `ExerciseAnswer.tsx:17`; `Dropdown.tsx:154`; `Overlay.tsx:263/277/285`; `MicroQuestLesson.tsx:170/190/231` | 8b — **judged**: `CodeEditor` fixed, the rest kept |
+| F22 | A dropdown over the scrolled app shell composites **3** blurred layers: the menu panel opens at y=57 and the fixed header ends at y=65, so an 8px band stacks `glass-menu` + header blur + a card scrolled under the header. 310 of 324 points sampled in that band were over budget. Phase 7 recorded this state at 2 because its census only sampled scroll 0 | `Dropdown.tsx` position calc; `Layout.tsx` header | 8b — **fixed**, panel now clears its pinned ancestor |
+| F23 | `text-tertiary` fails in **light** on two surfaces it really renders on: `--color-bg-tertiary` at 4.29:1 (the `locked` StatusBadge pill and every `disabled:` input — `Input.tsx:78` `disabled:bg-bg-tertiary disabled:text-text-tertiary`), and the code surfaces at 2.82:1 on `--color-bg-code-light` — measured in place at **2.63:1** on Landing's code frame, whose `main.py` label is `text-text-tertiary`. (The earlier 1.87:1 composited `bg-code/80` straight onto `bg-primary`; the real ground is four layers — the title bar's own `bg-bg-code-light/80` over `bg-bg-code/80` over the section's `bg-bg-secondary/50` over `bg-bg-primary` — which renders a flat `rgb(36,46,63)`, darker than the one-layer estimate.) `bg-code` is dark in BOTH themes, so light's dark-on-light tertiary lands on a dark surface. `text-quaternary` also fails light on `--color-bg-secondary` (4.30:1) | `index.css` `:root`; `Landing.tsx:366`; `Input.tsx:78`; `CodeEditor.tsx:265` | **open — 9**, light ramp was out of 8b's brief |
+| F24 | The e2e harness hardcoded port 8000 in eleven places — the vite proxy target plus ten in-page `fetch('http://localhost:8000/...')` calls. Any other local service holding 8000 404s the whole suite. The in-page calls are now relative `/api/...` through the proxy, which `lesson-locking.spec.ts:19` already documented as the right pattern, and the proxy target reads `ATLASCODE_API_ORIGIN` | `vite.config.ts`; `e2e/*.spec.ts`; `e2e/helpers.ts` | 8b — **fixed** |
 
 Not findings, recorded so they are not re-investigated: reduced motion is
 otherwise handled correctly (`App.tsx:158` `<MotionConfig reducedMotion="user">`
@@ -475,58 +478,191 @@ scrollY 1560 — `header.backdrop-blur-xl | div.backdrop-blur-xl |
 div.backdrop-blur-xl`, the nested code window passing under the fixed header.
 Left unfixed here: it is a Landing bug under decision 3 and was not in this
 phase's brief. One line (drop the inner blur at `Landing.tsx:359`) should
-close it.
+close it. **Closed in 8b**, and the re-run there found a second over-budget
+state this scan missed — see F22.
 
-### Phase 8b — carried forward from phase 8
+### Phase 8b — the ramp and the nested blur (F2, F20, F21) — **done**
 
-**1. F2, the Landing nested blur — measured, still unfixed.** Phase 7 recorded
-Landing at 1 overlapping blurred layer, but its census only sampled at scroll
-0. Scanning the fixed-header strip across the whole scroll range finds:
+Measured first, in a browser, before editing anything. Two of the three items
+came back different from the finding that described them, and the census that
+was re-run to check one of them found a second bug.
 
-    3 overlapping blurred layers, scrollY 1560, point (52, 4)
-    header.backdrop-blur-xl | div.backdrop-blur-xl | div.backdrop-blur-xl
+**The census under-measured because it sampled one scroll position.** Phase 7
+counted overlapping blurred layers at scroll 0 only. Re-run as a *sweep* —
+scrollY 0 to the page bottom in steps of viewport/4, sampling the header strip
+and a grid at each step, worst taken across the whole sweep — two states phase
+7 recorded as within budget are not:
 
-That is `Landing.tsx:358` wrapping `359`, passing under the fixed header at
-`106`. Budget is 2. Deliberately left in this branch: it is a Landing bug
-under decision 3 and was outside phase 8's brief. Dropping the inner
-`backdrop-blur-xl` at `Landing.tsx:359` should close it; the measurement
-above is the before number to beat, and `e2e/blur-budget.spec.ts` would need
-a scrolled Landing case to catch it, which it currently has not.
+                       phase 7   swept before   swept after
+  landing                  1          3              2        <- F2
+  dashboard                1          1              1
+  courses                  1          1              1
+  course detail            -          1              1
+  lesson                   1          2              2
+  dashboard + modal        2          2              2
+  dashboard + dropdown     2          3              2        <- F22
+  dashboard + cody         2          2              2
+  onboarding tour          2          2              2
 
-**2. F20, the inverted dark text ramp.** `text-quaternary` is now lighter than
-`text-tertiary`. Both options were measured; neither is applied.
+**F2, the Landing nested blur — fixed.** Confirmed at 3 overlapping layers,
+scrollY 1350, point (52,52): `header.backdrop-blur-xl | div.backdrop-blur-xl |
+div.backdrop-blur-xl` — the nested code window passing under the fixed header.
+The inner `backdrop-blur-xl` at `Landing.tsx:359` is gone; the outer frame at
+`358` keeps its blur and is the one that reads. Swept after: 2.
 
-                      bg-primary  bg-code  bg-secondary  bg-elevated  bg-tertiary
-      tertiary now       5.90      5.91       4.98          4.82        4.41 FAIL
-      A: #8FA0BA         7.58      7.59       6.40          6.20        5.66
-      B: collapse to
-         tertiary        5.90      5.91       4.98          4.82        4.41 FAIL
+**F22, the dropdown over a scrolled shell — fixed, and it was not in the
+brief.** The sweep found `glass-menu | header.backdrop-blur-xl |
+glass-surface` at scrollY 450. The cause is 8px of geometry: the menu panel
+opens at y=57 and the fixed header ends at y=65, so wherever a card has
+scrolled under the header, three blurs stack in that band — 310 of 324 points
+sampled inside it were over budget. Fixed in the `Dropdown.tsx` position calc
+rather than at the three header call sites: a bottom-placed panel now clears
+the bottom edge of its nearest fixed/sticky ancestor, which fixes
+notifications, the user menu and the language switcher at once and stays
+correct if the header height changes. Overlap after: 0px, 0 points over.
 
-Option A lifts tertiary to #8FA0BA: luminance 0.3453 against quaternary's
-0.2962, so the hierarchy is restored, and it also clears the pre-existing
-`bg-tertiary` failure. It touches every surface tertiary renders on,
-including the composited completed tint (5.14 dark today), so it needs its
-own re-measurement pass. Option B collapses quaternary back onto tertiary:
-the hierarchy stops being inverted but becomes flat, the `bg-tertiary`
-failure stays, and phase 8's quaternary fix is partly undone — the contrast
-guard fails on it. Recommended: A.
+`e2e/blur-budget.spec.ts` gained the sweep for Landing, Courses, Dashboard and
+lesson 1, and was confirmed to FAIL on main at the Landing pair before the fix
+("landing, swept: 3 overlapping blurred layers at scrollY 1350"). One
+compromise worth recording: the brief asked every swept surface to assert
+`scrollHeight > 1.5 x innerHeight` so the sweep cannot pass vacuously, and at
+1440x900 on a brand-new account only Landing is reliably that tall (4.65).
+Dashboard measured 1.60 and 1.20 on two runs — content height moves with what
+has rendered — and courses 1.03, lesson 1 1.08. Pinning 1.5 on those three
+would assert a false fact about the app, so Landing carries the real ratio and
+the others assert that the sweep left scroll 0 and that the sampler found real
+glass. The reasoning is in the spec's own comments.
 
-Note the correction this uncovered: the browser probe reported the dark
-`locked` badge at 5.79:1, but that probe takes the most common pixel in a
-small pill crop and picked up the page behind it. Both sides of that pair are
-opaque, so the token computation is authoritative: **4.41:1**.
+**F20, the inverted dark ramp — option A applied.** `--color-text-tertiary`
+#7C8CA5 -> #8FA0BA. Every surface it renders on was enumerated first, in the
+browser, then measured: opaque pairs by token maths (exact), translucent ones
+from rendered pixels with the text itself made transparent for the capture, so
+the number is the real composite over the live ambient field rather than a
+prediction.
 
-**3. F21, remount-fired entrances.** See the finding; `CodeEditor`'s output
-panel is the one to watch.
+                                    before   after
+  OPAQUE (token maths)
+    bg-primary                       5.90     7.58
+    bg-secondary                     4.98     6.40
+    bg-tertiary                      4.41     5.66   <- FAIL before
+    bg-elevated                      4.82     6.20
+    bg-code                          5.91     7.59
+    bg-code-light                    5.55     7.13
+  COMPOSITED (rendered pixels)
+    glass-surface / -flat / -raised  5.57     7.16
+    completed tint                   5.19     6.67
+    bg-secondary/50                  5.57     7.16
+    bg-secondary/80 + blur-xl        5.33     6.85
+    bg-secondary/30 + blur-sm        5.76     7.40
+    bg-code/80                       5.95     7.65
+  IN SITU (worst observed)
+    locked badge / disabled input    4.41     5.66
+    page ground under the field      4.84     6.22
+    footer                           4.98     6.40
+  worst case overall                 4.41     5.66
 
-### Phase 9 — trilingual audit and cleanup (F7, F12)
+`bg-quaternary` is deliberately absent: it is only Button's `active:` fill,
+under `text-primary`/`text-secondary`, so tertiary never lands on it. Included,
+it would read 4.33 after and pin a pair that does not exist.
 
-Locales are already at parity, so this is small: drop `ar.json`'s dead
+Ordering, checked in both themes. Raw luminance is the wrong test — in dark a
+quieter token is darker, in light it is lighter — so the guard compares
+contrast against the theme's own page ground, which says the same thing once
+and means the same thing in both:
+
+              secondary   tertiary   quaternary
+  dark before    9.58       5.90        6.64     <- inverted
+  dark after     9.58       7.58        6.64     ok
+  light          7.30       4.92        4.58     ok (unchanged)
+
+The secondary-tertiary luminance gap narrows from 0.1916 to 0.1039, still
+roughly twice the tertiary-quaternary step (0.0491), and the hierarchy reads
+in all twelve review screenshots (Dashboard, Courses, lesson 1 x dark/light x
+EN/AR). Light is untouched by this change and measures identically.
+
+**F23, which this uncovered: light fails where dark now passes.** Measuring
+light alongside dark found `text-tertiary` under the floor on surfaces it
+really renders on — `bg-tertiary` at 4.29 (the same `locked` pill and every
+`disabled:` input), and the code surfaces, where it is worst: `bg-code` is
+dark in BOTH themes, so light's dark tertiary lands on a dark ground and
+Landing's `main.py` label measures **1.87:1** composited. `text-quaternary`
+also fails light on `bg-secondary` at 4.30. Left for phase 9: the light ramp
+was outside this brief, and Landing is a decision-3 surface.
+
+`contrastTokens.test.ts` grew three groups: ramp ordering in both themes, all
+five dark surfaces for tertiary as well as quaternary, and the locked badge
+pair by name. Confirmed to fail on the old `#7C8CA5` in exactly the three ways
+it should — inverted ordering, `bg-tertiary` 4.41, locked badge 4.41 — before
+being trusted.
+
+**F21, remount-fired entrances — judged, one fix.** `CodeEditor.tsx:259/262`
+was the one that mattered and is fixed: sampled per animation frame across a
+real Python run, the output div mounted at **opacity 0.000** and did not reach
+1.0 until 474ms after the output arrived, inside an `aria-live="polite"`
+region. The two `animate-fade-in` classes are gone; re-measured, both divs
+report `animation-name: none` and opacity **1.000 on their first frame**,
+which is also what they did before phase 8 repaired the animations.
+
+`MicroQuestLesson.tsx:170/190/231` does **not** stack three animations, which
+is how the finding reads. The three are mutually exclusive stage branches
+(`stage === hook | blueprint | quest`), so exactly one is ever mounted.
+Sampled across a real hook -> blueprint change: one element, `fadeIn 0.2s`,
+fully visible at **237ms** — under the 300ms bar, so it was left alone. The
+intended entrances (toasts, dropdowns, modals, page wrappers) were not
+touched.
+
+**A harness fix that had to come first (F24).** The suite hardcoded port 8000
+in eleven places. The in-page `fetch` calls are now relative `/api/...` through
+the dev proxy — the pattern `lesson-locking.spec.ts:19` already documented and
+explained — and the proxy target reads `ATLASCODE_API_ORIGIN`, defaulting to
+8000. No behaviour change when 8000 is free.
+
+
+### Phase 9 — trilingual audit and cleanup (F7, F12, F23)
+
+Carries F23 from 8b: the LIGHT ramp. `text-tertiary` is 4.29 on
+`--color-bg-tertiary` (the `locked` pill, every `disabled:` input) and
+**2.63** in place on Landing's code frame, because `--color-bg-code` is dark
+in both themes and light's dark tertiary lands on it; `text-quaternary` is
+4.30 on `--color-bg-secondary`. The code-surface case may want a theme-neutral
+"on code" token rather than another ramp nudge, since the surface itself does
+not change between themes. Numbers and sites are in the 8b section.
+
+Locales are already at parity, so the rest is small: drop `ar.json`'s dead
 `common.or_continue_with`, review the 42 FR values identical to EN (mostly true
 cognates — `Description`, `Modules`, `Mission` — and interpolation-only strings),
 AR render pass on the recent pages. Fold in the dead-code deletions: the 8
 `bg-grid-pattern-opacity` usages, the 7 unrouted `Test*.tsx` pages, the two
 unused `animate-slide-*-right` classes.
+
+**Two Dropdowns, and an `export *` that picks the wrong halves.** Found while
+restricting the panel clearance (`1d4ad99`); cleanup, so it lands here.
+
+`Overlay.tsx:12` exports a second component also called `Dropdown` — an older
+one, `content`-prop API, physical `left-0`/`right-0` placement, no clearance
+and no RTL handling. Nothing imports it. The one every call site gets is
+`ui/Dropdown.tsx`, because `ui/index.ts` lists `export { Dropdown } from
+'./Dropdown'` explicitly and an explicit named export wins over the
+`export * from './Overlay'` below it.
+
+`DropdownItem` and `DropdownSeparator` are the halves that go wrong.
+`ui/index.ts` does *not* re-export them from `./Dropdown`, so `export * from
+'./Overlay'` is the only thing that provides those names — and `Layout.tsx:14`
+and `NotificationBell.tsx:6` both import them from `./ui`. Checked by identity
+rather than by reading: `index.Dropdown === Dropdown.tsx`'s is true, while
+`index.DropdownItem` and `index.DropdownSeparator` are both Overlay's. So the
+call sites get **Overlay's** items paired with `Dropdown.tsx`'s root, so every
+`child.type === DropdownItem` test inside `DropdownRoot` compares against a
+different component identity and is permanently false. Harmless today only
+because both call sites nest their items inside a wrapper `<div>` rather than
+passing them as direct children — the trigger is still found by the
+"first non-item child" rule, by luck rather than design.
+
+Fix is a deletion plus one line: drop `Overlay.tsx`'s `Dropdown`,
+`DropdownItem` and `DropdownSeparator`, and re-export all three names from
+`./Dropdown` in `ui/index.ts`. Do it with the `Dropdown.tsx` item-identity
+checks under test, since they have never actually run against the items they
+are written for.
 
 ### Later — Landing convergence
 

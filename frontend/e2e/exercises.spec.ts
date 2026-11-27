@@ -28,7 +28,7 @@ async function advanceToExercise(page: Page) {
 
 async function readXp(page: Page): Promise<number> {
   const dashboard = await page.evaluate(async () => {
-    const res = await fetch('http://localhost:8000/dashboard', {
+    const res = await fetch('/api/dashboard', {
       headers: { Authorization: `Bearer ${localStorage.getItem('access_token')}` },
     });
     return res.json();
@@ -38,7 +38,7 @@ async function readXp(page: Page): Promise<number> {
 
 async function readNotificationTypes(page: Page): Promise<string[]> {
   const notifications = await page.evaluate(async () => {
-    const res = await fetch('http://localhost:8000/notifications?limit=50', {
+    const res = await fetch('/api/notifications?limit=50', {
       headers: { Authorization: `Bearer ${localStorage.getItem('access_token')}` },
     });
     return res.json();
@@ -103,7 +103,7 @@ test.describe('Multiple-choice exercises end to end', () => {
     expect(await readXp(page)).toBe(mcqTotalXp);
 
     const status = await page.evaluate(async () => {
-      const res = await fetch('http://localhost:8000/lessons/31/progress', {
+      const res = await fetch('/api/lessons/31/progress', {
         headers: { Authorization: `Bearer ${localStorage.getItem('access_token')}` },
       });
       return (await res.json()).status;
@@ -128,7 +128,7 @@ test.describe('Multiple-choice exercises end to end', () => {
     await expect(page.getByTestId('submit-answer')).toBeDisabled();
 
     const direct = await page.evaluate(async () => {
-      const res = await fetch('http://localhost:8000/exercises/42/submit', {
+      const res = await fetch('/api/exercises/42/submit', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -147,7 +147,7 @@ test.describe('Multiple-choice exercises end to end', () => {
   test('the page never receives which option is correct before submitting', async ({ page }) => {
     await registerNewUser(page);
     const payload = await page.evaluate(async () => {
-      const res = await fetch('http://localhost:8000/lessons/31', {
+      const res = await fetch('/api/lessons/31', {
         headers: { Authorization: `Bearer ${localStorage.getItem('access_token')}` },
       });
       return res.text();

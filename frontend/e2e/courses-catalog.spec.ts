@@ -28,7 +28,7 @@ type CatalogCourse = { id: number; title: string };
 /** The course list exactly as the app's own client fetches it. */
 async function fetchCatalog(page: Page): Promise<CatalogCourse[]> {
   const courses = await page.evaluate(async () => {
-    const res = await fetch('http://localhost:8000/courses?language=en', {
+    const res = await fetch('/api/courses?language=en', {
       headers: { Authorization: `Bearer ${localStorage.getItem('access_token')}` },
     });
     if (!res.ok) throw new Error(`GET /courses returned ${res.status}`);
